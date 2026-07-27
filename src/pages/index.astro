@@ -1,80 +1,31 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
 ---
 
 <Layout title="Developer Portfolio | LCARS Interface">
 	<!-- HERO / BIO SECTION -->
 	<section class="hero">
-		<div class="status-badge">ONLINE // ACCESS GRANTED</div>
 		<h1>Software Developer & <span class="highlight">Systems Engineer</span></h1>
 		<p class="bio-text">
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut 
 			labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris 
 			nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate 
-			velit esse cillum dolore eu fugiat nulla pariatur.
+			velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
+			sunt in culpa qui officia deserunt mollit anim id est laborum.
 		</p>
-	</section>
-
-	<!-- PROJECTS SECTION -->
-	<section class="projects-section">
-		<h2 class="section-title">
-			<span class="title-bar"></span>
-			Featured Deployments
-		</h2>
-		
-		<div class="grid">
-			<ProjectCard 
-				title="Local LLM Benchmark Dashboard"
-				description="A comprehensive dashboard comparing inference speeds, memory usage (VRAM), and quality of quantized models on consumer hardware."
-				tags={['Python', 'Ollama', 'Evaluation', 'LLMs']}
-				link="#benchmarks"
-				accentColor="var(--lcars-amber)"
-			/>
-
-			<ProjectCard 
-				title="Private RAG Pipeline"
-				description="Designed a Retrieval-Augmented Generation pipeline ensuring zero external data leakage. Optimized for local network inference."
-				tags={['VectorDB', 'Embeddings', 'Security']}
-				link="#evals"
-				accentColor="var(--lcars-blue)"
-			/>
-
-			<ProjectCard 
-				title="Single-GPU Fine-Tuning Guide"
-				description="A technical guide and toolkit for parameter-efficient fine-tuning (LoRA/QLoRA) of models using local consumer GPUs."
-				tags={['PyTorch', 'QLoRA', 'Hardware']}
-				link="#games"
-				accentColor="var(--lcars-purple)"
-			/>
-		</div>
 	</section>
 </Layout>
 
 <style>
-	/* Hero Section */
 	.hero {
-		padding: 20px 0 60px 0;
-		max-width: 850px;
-	}
-
-	.status-badge {
-		display: inline-block;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: #000;
-		background-color: var(--lcars-amber);
-		padding: 3px 10px;
-		border-radius: 12px;
-		font-weight: bold;
-		letter-spacing: 1px;
-		margin-bottom: 20px;
+		padding: 40px 0 60px 0;
+		max-width: 900px;
 	}
 
 	.hero h1 {
-		font-size: 2.8rem;
+		font-size: 3.2rem;
 		line-height: 1.15;
-		margin-bottom: 25px;
+		margin-bottom: 30px;
 		font-weight: 800;
 		letter-spacing: -0.5px;
 	}
@@ -86,41 +37,14 @@ import ProjectCard from '../components/ProjectCard.astro';
 	}
 
 	.bio-text {
-		font-size: 1.15rem;
+		font-size: 1.2rem;
 		color: var(--text-muted);
 		line-height: 1.8;
 	}
 
-	/* Projects Section */
-	.section-title {
-		font-family: var(--font-mono);
-		font-size: 1.4rem;
-		text-transform: uppercase;
-		letter-spacing: 2px;
-		margin-bottom: 30px;
-		display: flex;
-		align-items: center;
-		gap: 15px;
-		color: var(--text-main);
-	}
-
-	.title-bar {
-		width: 30px;
-		height: 15px;
-		background-color: var(--lcars-blue);
-		display: inline-block;
-		border-radius: 2px;
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 25px;
-	}
-
 	@media (max-width: 600px) {
 		.hero h1 {
-			font-size: 2.2rem;
+			font-size: 2.4rem;
 		}
 	}
 </style>

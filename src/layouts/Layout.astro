@@ -17,6 +17,13 @@ const { title } = Astro.props;
 	</head>
 	<body>
 		<div class="lcars-frame">
+			<!-- ROW 1: FULL WIDTH SWOOP -->
+			<div class="lcars-elbow-top"></div>
+			<header class="lcars-swoop-ext">
+				<span class="status-text">ONLINE // ACCESS GRANTED</span>
+			</header>
+
+			<!-- ROW 2: SIDEBAR & MAIN CONTENT -->
 			<Sidebar />
 			<main class="content-viewport">
 				<slot />
@@ -71,21 +78,52 @@ const { title } = Astro.props;
 		transition: opacity 0.2s ease, color 0.2s ease;
 	}
 
-	ul {
-		list-style: none;
-	}
-
-	/* Master LCARS Layout */
+	/* Master LCARS Layout - Widened */
 	.lcars-frame {
 		display: grid;
-		grid-template-columns: 260px 1fr;
-		min-height: 100vh;
-		max-width: 1600px;
+		grid-template-columns: 300px 1fr;
+		grid-template-rows: auto 1fr;
+		gap: 8px 20px; /* Authentic LCARS black segmentation gaps */
+		min-height: 96vh;
+		max-width: 1800px;
+		width: 95%;
 		margin: 0 auto;
+		padding-top: 20px;
 	}
 
+	/* Top Swoop Architecture */
+	.lcars-elbow-top {
+		width: 100%;
+		height: 65px;
+		background-color: var(--lcars-amber);
+		border-top-left-radius: 35px;
+	}
+
+	.lcars-swoop-ext {
+		width: 100%;
+		height: 40px; /* Thinner than elbow corner to create the classic LCARS step */
+		align-self: start;
+		background-color: var(--lcars-amber);
+		border-top-right-radius: 4px;
+		border-bottom-right-radius: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		padding-right: 25px;
+	}
+
+	.status-text {
+		font-family: var(--font-mono);
+		font-weight: bold;
+		font-size: 0.85rem;
+		color: #000;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+	}
+
+	/* Content Area */
 	.content-viewport {
-		padding: 40px 5% 20px 5%;
+		padding: 20px 2% 20px 2%;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -125,6 +163,9 @@ const { title } = Astro.props;
 	@media (max-width: 850px) {
 		.lcars-frame {
 			grid-template-columns: 1fr;
+		}
+		.lcars-elbow-top, .lcars-swoop-ext {
+			display: none;
 		}
 	}
 </style>

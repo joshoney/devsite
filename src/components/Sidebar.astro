@@ -13,14 +13,6 @@ const navLinks = [
 ---
 
 <aside class="lcars-sidebar">
-	<!-- Top LCARS Elbow -->
-	<div class="elbow-top">
-		<div class="elbow-top-left"></div>
-		<div class="elbow-top-right">
-			<span class="system-title">LCARS // SYS-409</span>
-		</div>
-	</div>
-
 	<!-- Navigation Stack -->
 	<nav class="nav-stack">
 		{navLinks.map((link, index) => (
@@ -35,7 +27,7 @@ const navLinks = [
 		))}
 	</nav>
 
-	<!-- Bottom filler block to complete the frame -->
+	<!-- Bottom filler block matching button width -->
 	<div class="sidebar-filler"></div>
 </aside>
 
@@ -43,56 +35,27 @@ const navLinks = [
 	.lcars-sidebar {
 		display: flex;
 		flex-direction: column;
-		padding: 20px 0 20px 20px;
+		gap: 8px;
+		width: 100%;
+		height: 100%;
 		user-select: none;
 	}
 
-	/* Elbow Architecture */
-	.elbow-top {
-		display: flex;
-		height: 70px;
-		margin-bottom: 10px;
-	}
-
-	.elbow-top-left {
-		width: 120px;
-		height: 100%;
-		background-color: var(--lcars-amber);
-		border-top-left-radius: 35px;
-	}
-
-	.elbow-top-right {
-		flex-grow: 1;
-		height: 35px;
-		background-color: var(--lcars-amber);
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		padding-right: 15px;
-		border-top-right-radius: 4px;
-	}
-
-	.system-title {
-		font-family: var(--font-mono);
-		font-weight: bold;
-		font-size: 0.8rem;
-		color: #000;
-		letter-spacing: 2px;
-	}
-
-	/* Navigation Buttons */
+	/* Navigation Buttons - Now uniformly 100% column width */
 	.nav-stack {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		padding-right: 15px;
+		gap: 8px;
+		width: 100%;
 	}
 
 	.lcars-btn {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: 42px;
+		width: 100%;
+		min-height: 48px;
+		padding: 8px 18px;
 		background-color: var(--btn-color);
 		color: #000;
 		font-family: var(--font-sans);
@@ -100,15 +63,13 @@ const navLinks = [
 		font-size: 0.85rem;
 		text-transform: uppercase;
 		letter-spacing: 1px;
-		padding: 0 15px;
-		border-top-left-radius: 21px;
-		border-bottom-left-radius: 21px;
+		border-top-left-radius: 24px;
+		border-bottom-left-radius: 24px;
 		border-top-right-radius: 4px;
 		border-bottom-right-radius: 4px;
 		transition: filter 0.2s, transform 0.1s;
 	}
 
-	/* Make dark stub buttons white text for readability */
 	.lcars-btn[style*="--lcars-dark"] {
 		color: var(--text-muted);
 	}
@@ -121,30 +82,35 @@ const navLinks = [
 
 	.btn-num {
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		opacity: 0.7;
+		flex-shrink: 0;
 	}
 
+	.btn-text {
+		/* Forces multi-line wrapped text to align right consistently */
+		text-align: right;
+		line-height: 1.15;
+		margin-left: 10px;
+	}
+
+	/* Bottom filler now matches exact width of the buttons above it */
 	.sidebar-filler {
 		flex-grow: 1;
-		width: 80px;
+		width: 100%;
+		min-height: 150px;
 		background-color: var(--lcars-blue);
-		border-radius: 4px;
-		margin-top: 10px;
-		opacity: 0.3;
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
+		border-bottom-left-radius: 24px;
+		border-bottom-right-radius: 4px;
+		opacity: 0.25;
 	}
 
 	@media (max-width: 850px) {
-		.lcars-sidebar {
-			padding: 15px;
-		}
-		.elbow-top {
-			display: none;
-		}
 		.nav-stack {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-			padding-right: 0;
 		}
 		.lcars-btn {
 			border-radius: 20px;
