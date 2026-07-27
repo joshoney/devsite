@@ -1,0 +1,130 @@
+---
+import Sidebar from '../components/Sidebar.astro';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<div class="lcars-frame">
+			<Sidebar />
+			<main class="content-viewport">
+				<slot />
+				<footer>
+					<div class="social-links">
+						<a href="https://github.com/joshoney" target="_blank" rel="noopener noreferrer">GitHub</a>
+						<a href="https://www.linkedin.com/in/joshua-oney-sf" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+					</div>
+					<p>&copy; 2026. All rights reserved.</p>
+				</footer>
+			</main>
+		</div>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		--bg-color: #0b0d10;
+		--card-bg: #14181f;
+		--text-main: #f0f4f8;
+		--text-muted: #8b949e;
+		
+		/* Readable LCARS Palette */
+		--lcars-amber: #ff9900;
+		--lcars-blue: #6699cc;
+		--lcars-purple: #cc6699;
+		--lcars-red: #cc4444;
+		--lcars-tan: #ffcc99;
+		--lcars-dark: #1a1e24;
+
+		--font-mono: 'Courier New', Courier, monospace;
+		--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	}
+
+	* {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background-color: var(--bg-color);
+		color: var(--text-main);
+		font-family: var(--font-sans);
+		line-height: 1.6;
+		overflow-x: hidden;
+	}
+
+	a {
+		text-decoration: none;
+		color: inherit;
+		transition: opacity 0.2s ease, color 0.2s ease;
+	}
+
+	ul {
+		list-style: none;
+	}
+
+	/* Master LCARS Layout */
+	.lcars-frame {
+		display: grid;
+		grid-template-columns: 260px 1fr;
+		min-height: 100vh;
+		max-width: 1600px;
+		margin: 0 auto;
+	}
+
+	.content-viewport {
+		padding: 40px 5% 20px 5%;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	/* Footer */
+	footer {
+		text-align: center;
+		padding-top: 60px;
+		margin-top: 60px;
+		border-top: 1px solid #21262d;
+		color: var(--text-muted);
+		font-size: 0.9rem;
+		font-family: var(--font-mono);
+	}
+
+	.social-links {
+		display: flex;
+		justify-content: center;
+		gap: 30px;
+		margin-bottom: 15px;
+	}
+
+	.social-links a {
+		color: var(--lcars-amber);
+		font-weight: bold;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+	}
+
+	.social-links a:hover {
+		color: var(--text-main);
+		text-decoration: underline;
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 850px) {
+		.lcars-frame {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

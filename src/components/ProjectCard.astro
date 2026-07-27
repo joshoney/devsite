@@ -1,0 +1,103 @@
+---
+interface Props {
+	title: string;
+	description: string;
+	tags: string[];
+	link: string;
+	linkText?: string;
+	accentColor?: string;
+}
+
+const { 
+	title, 
+	description, 
+	tags, 
+	link, 
+	linkText = "View Project →", 
+	accentColor = "var(--lcars-blue)" 
+} = Astro.props;
+---
+
+<article class="card" style={`--accent: ${accentColor};`}>
+	<div class="card-header">
+		<div class="accent-bar"></div>
+		<h3>{title}</h3>
+	</div>
+	<p>{description}</p>
+	<div class="tags">
+		{tags.map((tag) => (
+			<span class="tag">{tag}</span>
+		))}
+	</div>
+	<a href={link} class="card-link">{linkText}</a>
+</article>
+
+<style>
+	.card {
+		background-color: var(--card-bg);
+		border: 1px solid #21262d;
+		border-left: 4px solid var(--accent);
+		padding: 25px;
+		border-radius: 4px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		transition: transform 0.2s ease, border-color 0.2s ease;
+	}
+
+	.card:hover {
+		transform: translateY(-4px);
+		border-color: var(--accent);
+	}
+
+	.card-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 15px;
+	}
+
+	.card h3 {
+		font-size: 1.3rem;
+		color: #fff;
+		font-family: var(--font-sans);
+		font-weight: 600;
+	}
+
+	.card p {
+		color: var(--text-muted);
+		margin-bottom: 25px;
+		font-size: 0.95rem;
+		flex-grow: 1;
+	}
+
+	.tags {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin-bottom: 20px;
+	}
+
+	.tag {
+		font-size: 0.75rem;
+		background-color: #1f242c;
+		color: var(--text-main);
+		padding: 4px 10px;
+		border-radius: 12px;
+		font-family: var(--font-mono);
+	}
+
+	.card-link {
+		color: var(--accent);
+		font-weight: bold;
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		align-self: flex-start;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.card-link:hover {
+		text-decoration: underline;
+	}
+</style>
