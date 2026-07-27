@@ -10,10 +10,21 @@ const navLinks = [
 	{ title: 'Action 08', href: '#', color: 'var(--lcars-dark)' },
 	{ title: 'Action 09', href: '#', color: 'var(--lcars-dark)' },
 ];
+
+const socialLinks = [
+	{ title: 'GitHub ↗', href: 'https://github.com/joshoney', color: 'var(--lcars-tan)' },
+	{ title: 'LinkedIn ↗', href: 'https://www.linkedin.com/in/joshua-oney-sf', color: 'var(--lcars-red)' },
+];
 ---
 
 <aside class="lcars-sidebar">
-	<!-- Navigation Stack -->
+	<!-- 1. Name Badge at the very top (Fuses with the top elbow) -->
+	<div class="sidebar-name">
+		<span class="name-text">JOSH ONEY</span>
+		<span class="name-sub">DEV // 01</span>
+	</div>
+
+	<!-- 2. Main Navigation Stack -->
 	<nav class="nav-stack">
 		{navLinks.map((link, index) => (
 			<a 
@@ -27,26 +38,94 @@ const navLinks = [
 		))}
 	</nav>
 
-	<!-- Bottom filler block matching button width -->
+	<!-- 3. Flexible Filler (Stretches to push socials downwards) -->
 	<div class="sidebar-filler"></div>
+
+	<!-- 4. Socials Button Group anchored comfortably above the bottom -->
+	<div class="social-stack">
+		<div class="stack-label">CONNECT // SOCIALS</div>
+		{socialLinks.map((link, index) => (
+			<a 
+				href={link.href} 
+				target="_blank" 
+				rel="noopener noreferrer" 
+				class="lcars-btn social-btn" 
+				style={`--btn-color: ${link.color};`}
+			>
+				<span class="btn-num">S{index + 1}</span>
+				<span class="btn-text">{link.title}</span>
+			</a>
+		))}
+	</div>
+
+	<!-- 5. Taller Bottom Cap Block (Provides ~2 buttons of breathing room) -->
+	<div class="sidebar-filler-bottom"></div>
 </aside>
 
 <style>
 	.lcars-sidebar {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
 		width: 100%;
-		height: 100%;
+		height: calc(100vh - 70px);
+		overflow-y: auto;
 		user-select: none;
+		padding-bottom: 20px; /* Extra bottom breathing room */
+		background-color: var(--bg-color);
 	}
 
-	/* Navigation Buttons - Now uniformly 100% column width */
-	.nav-stack {
+	/* Hide scrollbar for authentic LCARS look */
+	.lcars-sidebar::-webkit-scrollbar {
+		display: none;
+	}
+	.lcars-sidebar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	/* Top Name Header Block */
+	.sidebar-name {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-height: 46px;
+		padding: 8px 18px;
+		background-color: var(--lcars-amber);
+		color: #000;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		letter-spacing: 1.5px;
+		border-bottom-left-radius: 20px;
+		margin-bottom: 8px; /* Classic LCARS segmentation line below the name */
+		flex-shrink: 0;
+	}
+
+	.name-text {
+		font-size: 1.1rem;
+	}
+
+	.name-sub {
+		font-size: 0.75rem;
+		opacity: 0.7;
+	}
+
+	/* Button Groups */
+	.nav-stack, .social-stack {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 6px;
 		width: 100%;
+		flex-shrink: 0;
+	}
+
+	.stack-label {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		letter-spacing: 2px;
+		padding: 4px 0 2px 18px;
+		text-transform: uppercase;
 	}
 
 	.lcars-btn {
@@ -54,8 +133,8 @@ const navLinks = [
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
-		min-height: 48px;
-		padding: 8px 18px;
+		min-height: 44px;
+		padding: 6px 18px;
 		background-color: var(--btn-color);
 		color: #000;
 		font-family: var(--font-sans);
@@ -63,8 +142,8 @@ const navLinks = [
 		font-size: 0.85rem;
 		text-transform: uppercase;
 		letter-spacing: 1px;
-		border-top-left-radius: 24px;
-		border-bottom-left-radius: 24px;
+		border-top-left-radius: 22px;
+		border-bottom-left-radius: 22px;
 		border-top-right-radius: 4px;
 		border-bottom-right-radius: 4px;
 		transition: filter 0.2s, transform 0.1s;
@@ -88,27 +167,41 @@ const navLinks = [
 	}
 
 	.btn-text {
-		/* Forces multi-line wrapped text to align right consistently */
 		text-align: right;
 		line-height: 1.15;
 		margin-left: 10px;
 	}
 
-	/* Bottom filler now matches exact width of the buttons above it */
+	/* Expanding Vertical Filler */
 	.sidebar-filler {
 		flex-grow: 1;
 		width: 100%;
-		min-height: 150px;
+		min-height: 30px;
 		background-color: var(--lcars-blue);
 		border-top-left-radius: 4px;
-		border-top-right-radius: 4px;
-		border-bottom-left-radius: 24px;
-		border-bottom-right-radius: 4px;
+		border-bottom-left-radius: 18px;
 		opacity: 0.25;
+		margin: 6px 0;
+	}
+
+	/* Bottom Cap Block - Expanded to 92px (~2 button heights) */
+	.sidebar-filler-bottom {
+		width: 100%;
+		height: 92px;
+		background-color: var(--lcars-purple);
+		border-top-left-radius: 4px;
+		border-bottom-left-radius: 24px;
+		opacity: 0.25;
+		margin-top: 8px;
+		flex-shrink: 0;
 	}
 
 	@media (max-width: 850px) {
-		.nav-stack {
+		.lcars-sidebar {
+			height: auto;
+			overflow-y: visible;
+		}
+		.nav-stack, .social-stack {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		}
@@ -117,7 +210,7 @@ const navLinks = [
 			justify-content: center;
 			gap: 8px;
 		}
-		.sidebar-filler {
+		.sidebar-filler, .sidebar-filler-bottom, .stack-label {
 			display: none;
 		}
 	}
