@@ -1,0 +1,888 @@
+---
+import { getMatrixData } from '../utils/evaluerBench';
+
+const matrixData = getMatrixData();
+
+function formatDate(isoString: string) {
+	try {
+		const d = new Date(isoString);
+		const month = d.toLocaleString('en-US', { month: 'short' });
+		const day = d.getDate();
+		const hours = d.getHours().toString().padStart(2, '0');
+		const mins = d.getMinutes().toString().padStart(2, '0');
+		return `${month} ${day} ${hours}:${mins}`;
+	} catch {
+		return isoString;
+	}
+}
+---
+
+<div class="matrix-container">
+	<!-- CONTROL TOOLBAR -->
+	<div class="matrix-toolbar">
+		<div class="toolbar-title">
+			<span class="lcars-tag amber">EV-MATRIX</span>
+			<h3>MODEL BENCHMARK HEATMAP</h3>
+		</div>
+		<div class="toolbar-legend">
+			<span class="legend-item"><span class="dot pass"></span> 100% Passed</span>
+			<span class="legend-item"><span class="dot fail"></span> Failed</span>
+			<span class="legend-item"><span class="dot untested"></span> Untested / N/A</span>
+		</div>
+	</div>
+
+	<!-- MATRIX TABLE SCROLL CONTAINER -->
+	<div class="table-wrapper">
+		<table class="matrix-table">
+			<thead>
+				<!-- ROW 1: CATEGORY HEADERS -->
+				<tr class="category-header-row">
+					<th class="sticky-col corner-header">MODEL / RUN</th>
+					{matrixData.categories.map((catGroup) => (
+						<th 
+							colspan={catGroup.columns.length} 
+							class="category-group-header"
+						>
+							<span class="cat-label">{catGroup.category.toUpperCase()}</span>
+						</th>
+					))}
+				</tr>
+
+				<!-- ROW 2: INDIVIDUAL EVAL COLUMNS -->
+				<tr class="eval-header-row">
+					<th class="sticky-col sub-corner-header">
+						<span class="count-pill">{matrixData.rows.length} RUNS</span>
+					</th>
+					{matrixData.allColumns.map((col) => (
+						<th class="eval-column-header">
+							<div class="eval-col-title" title={col.evalName}>
+								{col.evalName}
+							</div>
+							<div class="eval-col-id">{col.evalId}</div>
+						</th>
+					))}
+				</tr>
+			</thead>
+
+			<tbody>
+				{matrixData.rows.map((row) => (
+					<tr class="matrix-row">
+						<!-- FIXED LEFT COLUMN: MODEL NAME + TIMESTAMP -->
+						<td class="sticky-col model-cell">
+							<div class="model-row-header">
+								<span class="model-title-text">{row.modelName}</span>
+								{row.isLatest && <span class="latest-tag">LATEST</span>}
+							</div>
+							<div class="model-sub-info">
+								<span class="run-date">{formatDate(row.timestamp)}</span>
+								<span class="speed-badge">{row.summary.averageTokensPerSecond} t/s</span>
+							</div>
+						</td>
+
+						<!-- EVAL RESULTS CELLS -->
+						{matrixData.allColumns.map((col) => {
+							const cell = row.cells[col.evalId];
+							if (!cell || !cell.tested || !cell.result) {
+								return (
+									<td class="eval-cell untested">
+										<div class="untested-box" title="Eval not executed in this run">
+											<span class="dash">—</span>
+											<span class="na-text">N/A</span>
+										</div>
+									</td>
+								);
+							}
+
+							const res = cell.result;
+							const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
+							const isPass = res.judge?.passed;
+							const isVisual = res.display_type === 'html-iframe' || (res.evalId && res.evalId.startsWith('visual-'));
+							const pillClass = hasJudge ? (isPass ? 'pass' : 'fail') : 'unjudged';
+
+							return (
+								<td class="eval-cell">
+									<button 
+										class={`eval-pill-btn ${pillClass}`}
+										data-eval-id={res.evalId}
+										data-run-id={row.runId}
+										data-eval-name={res.evalName}
+										data-model-name={row.modelName}
+										data-has-judge={hasJudge ? 'true' : 'false'}
+										data-score={res.judge?.score}
+										data-tps={res.metrics?.tokensPerSecond}
+										data-ttft={res.metrics?.timeToFirstTokenMs}
+										data-latency={res.metrics?.totalLatencyMs}
+										data-input-tok={res.metrics?.inputTokens}
+										data-output-tok={res.metrics?.outputTokens}
+										data-reasoning={encodeURIComponent(res.judge?.reasoning || '')}
+										data-prompt={encodeURIComponent(res.prompt || '')}
+										data-raw-output={encodeURIComponent(res.rawOutput || '')}
+										data-display-type={res.display_type}
+										data-artifact-url={res.artifactUrl || ''}
+									>
+										<div class="pill-top">
+											<span class="score">{hasJudge ? `${res.judge?.score}%` : 'UNJUDGED'}</span>
+											<span class="status-icon">{hasJudge ? (isPass ? '✓' : '✗') : '–'}</span>
+										</div>
+										<div class="pill-bottom">
+											<span class="tps">{res.metrics?.tokensPerSecond !== undefined ? res.metrics.tokensPerSecond : '--'} t/s</span>
+											{isVisual && <span class="visual-badge" title="Has interactive visual demo">DEMO ⚡</span>}
+										</div>
+									</button>
+								</td>
+							);
+						})}
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<!-- EVAL INSPECTION MODAL -->
+<div id="evalModal" class="modal-overlay hidden">
+	<div class="modal-card">
+		<!-- MODAL HEADER -->
+		<div class="modal-header">
+			<div class="modal-title-group">
+				<span class="modal-lcars-tag" id="modalCategoryTag">EVAL DETAILS</span>
+				<h3 id="modalEvalName">Eval Name</h3>
+				<span class="modal-sub" id="modalModelRun">Model / Run</span>
+			</div>
+			<button id="closeModalBtn" class="modal-close-btn">✕ CLOSE</button>
+		</div>
+
+		<!-- METRICS STRIP -->
+		<div class="modal-metrics-bar">
+			<div class="metric-item">
+				<span class="m-label">SCORE</span>
+				<span class="m-val highlight" id="modalScore">100%</span>
+			</div>
+			<div class="metric-item">
+				<span class="m-label">SPEED</span>
+				<span class="m-val" id="modalTps">57.8 t/s</span>
+			</div>
+			<div class="metric-item">
+				<span class="m-label">TTFT</span>
+				<span class="m-val" id="modalTtft">301 ms</span>
+			</div>
+			<div class="metric-item">
+				<span class="m-label">LATENCY</span>
+				<span class="m-val" id="modalLatency">6.4s</span>
+			</div>
+			<div class="metric-item">
+				<span class="m-label">TOKENS</span>
+				<span class="m-val" id="modalTokens">46 in / 368 out</span>
+			</div>
+			<div id="visualLaunchWrapper" class="metric-item action-item hidden">
+				<button id="launchVisualBtn" class="launch-demo-btn">
+					⚡ LAUNCH VISUAL APP
+				</button>
+			</div>
+		</div>
+
+		<!-- TAB CONTROLS -->
+		<div class="modal-tabs">
+			<button class="tab-btn active" data-tab="judgeTab">JUDGE REASONING</button>
+			<button class="tab-btn" data-tab="promptTab">PROMPT</button>
+			<button class="tab-btn" data-tab="outputTab">RAW OUTPUT</button>
+		</div>
+
+		<!-- TAB CONTENTS -->
+		<div class="modal-tab-body">
+			<div id="judgeTab" class="tab-pane active">
+				<div class="pane-box judge-box" id="modalReasoningText">Loading reasoning...</div>
+			</div>
+
+			<div id="promptTab" class="tab-pane hidden">
+				<pre class="pane-box code-box" id="modalPromptText"></pre>
+			</div>
+
+			<div id="outputTab" class="tab-pane hidden">
+				<pre class="pane-box code-box" id="modalOutputText"></pre>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const modal = document.getElementById('evalModal');
+		const closeModalBtn = document.getElementById('closeModalBtn');
+		const tabBtns = document.querySelectorAll('.tab-btn');
+		const tabPanes = document.querySelectorAll('.tab-pane');
+
+		// Modal Elements
+		const modalEvalName = document.getElementById('modalEvalName');
+		const modalModelRun = document.getElementById('modalModelRun');
+		const modalScore = document.getElementById('modalScore');
+		const modalTps = document.getElementById('modalTps');
+		const modalTtft = document.getElementById('modalTtft');
+		const modalLatency = document.getElementById('modalLatency');
+		const modalTokens = document.getElementById('modalTokens');
+		const modalReasoningText = document.getElementById('modalReasoningText');
+		const modalPromptText = document.getElementById('modalPromptText');
+		const modalOutputText = document.getElementById('modalOutputText');
+		const visualLaunchWrapper = document.getElementById('visualLaunchWrapper');
+		const launchVisualBtn = document.getElementById('launchVisualBtn');
+
+		// Visual Overlay Elements
+		const visualOverlay = document.getElementById('visualOverlay');
+		const exitVisualOverlayBtn = document.getElementById('exitVisualOverlayBtn');
+		const overlayEvalTitle = document.getElementById('overlayEvalTitle');
+		const overlayModelTitle = document.getElementById('overlayModelTitle');
+		const overlayExternalLink = document.getElementById('overlayExternalLink');
+		const artifactIframe = document.getElementById('artifactIframe');
+
+		let currentArtifactUrl = '';
+
+		// Click handler for matrix cells
+		document.querySelectorAll('.eval-pill-btn').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const evalId = btn.getAttribute('data-eval-id');
+				const evalName = btn.getAttribute('data-eval-name');
+				const modelName = btn.getAttribute('data-model-name');
+				const score = btn.getAttribute('data-score');
+				const tps = btn.getAttribute('data-tps');
+				const ttft = btn.getAttribute('data-ttft');
+				const latency = btn.getAttribute('data-latency');
+				const inputTok = btn.getAttribute('data-input-tok');
+				const outputTok = btn.getAttribute('data-output-tok');
+				const reasoning = decodeURIComponent(btn.getAttribute('data-reasoning') || '');
+				const prompt = decodeURIComponent(btn.getAttribute('data-prompt') || '');
+				const rawOutput = decodeURIComponent(btn.getAttribute('data-raw-output') || '');
+				const artifactUrl = btn.getAttribute('data-artifact-url') || '';
+
+				currentArtifactUrl = artifactUrl;
+
+				if (modalEvalName) modalEvalName.textContent = evalName || evalId || 'Eval';
+				if (modalModelRun) modalModelRun.textContent = `${modelName}`;
+				if (modalScore) modalScore.textContent = `${score}%`;
+				if (modalTps) modalTps.textContent = `${tps} t/s`;
+				if (modalTtft) modalTtft.textContent = `${ttft} ms`;
+				if (modalLatency) modalLatency.textContent = `${(Number(latency) / 1000).toFixed(1)}s`;
+				if (modalTokens) modalTokens.textContent = `${inputTok} in / ${outputTok} out`;
+
+				if (modalReasoningText) modalReasoningText.textContent = reasoning || 'No judge reasoning available.';
+				if (modalPromptText) modalPromptText.textContent = prompt || '';
+				if (modalOutputText) modalOutputText.textContent = rawOutput || '';
+
+				// Show/hide launch button for visual artifacts
+				if (artifactUrl && visualLaunchWrapper) {
+					visualLaunchWrapper.classList.remove('hidden');
+				} else if (visualLaunchWrapper) {
+					visualLaunchWrapper.classList.add('hidden');
+				}
+
+				// Reset to first tab
+				switchTab('judgeTab');
+
+				if (modal) modal.classList.remove('hidden');
+			});
+		});
+
+		// Modal Close
+		if (closeModalBtn && modal) {
+			closeModalBtn.addEventListener('click', () => {
+				modal.classList.add('hidden');
+			});
+			modal.addEventListener('click', (e) => {
+				if (e.target === modal) modal.classList.add('hidden');
+			});
+		}
+
+		// Tab Switching
+		function switchTab(targetTabId: string) {
+			tabBtns.forEach((b) => {
+				if (b.getAttribute('data-tab') === targetTabId) {
+					b.classList.add('active');
+				} else {
+					b.classList.remove('active');
+				}
+			});
+
+			tabPanes.forEach((p) => {
+				if (p.id === targetTabId) {
+					p.classList.remove('hidden');
+					p.classList.add('active');
+				} else {
+					p.classList.add('hidden');
+					p.classList.remove('active');
+				}
+			});
+		}
+
+		tabBtns.forEach((b) => {
+			b.addEventListener('click', () => {
+				const tabId = b.getAttribute('data-tab');
+				if (tabId) switchTab(tabId);
+			});
+		});
+
+		// Launch Visual Overlay
+		if (launchVisualBtn) {
+			launchVisualBtn.addEventListener('click', () => {
+				if (!currentArtifactUrl) return;
+
+				if (overlayEvalTitle && modalEvalName) overlayEvalTitle.textContent = modalEvalName.textContent || '';
+				if (overlayModelTitle && modalModelRun) overlayModelTitle.textContent = ` (${modalModelRun.textContent})`;
+				if (overlayExternalLink) overlayExternalLink.setAttribute('href', currentArtifactUrl);
+				if (artifactIframe) artifactIframe.src = currentArtifactUrl;
+
+				if (modal) modal.classList.add('hidden');
+				if (visualOverlay) visualOverlay.classList.remove('hidden');
+			});
+		}
+
+		// Exit Visual Overlay
+		if (exitVisualOverlayBtn && visualOverlay) {
+			exitVisualOverlayBtn.addEventListener('click', () => {
+				visualOverlay.classList.add('hidden');
+				if (artifactIframe) artifactIframe.src = 'about:blank';
+			});
+		}
+	});
+</script>
+
+<style>
+	.matrix-container {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		width: 100%;
+	}
+
+	.matrix-toolbar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		background: #14181f;
+		padding: 12px 18px;
+		border-radius: 6px;
+		border: 1px solid #21262d;
+	}
+
+	.toolbar-title {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.toolbar-title h3 {
+		font-family: var(--font-mono);
+		font-size: 1.1rem;
+		color: #fff;
+		margin: 0;
+	}
+
+	.lcars-tag {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: bold;
+		padding: 3px 8px;
+		border-radius: 4px;
+
+	}
+	.lcars-tag.amber {
+		background-color: var(--lcars-amber);
+		color: #000;
+	}
+
+	.toolbar-legend {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--text-muted);
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+	}
+
+	.dot.pass { background-color: #2ea043; }
+	.dot.fail { background-color: #da3633; }
+	.dot.untested { background-color: #30363d; }
+
+	/* TABLE & SCROLL CONTAINER */
+	.table-wrapper {
+		width: 100%;
+		max-height: calc(100vh - 220px);
+		overflow: auto;
+		border: 1px solid #21262d;
+		border-radius: 6px;
+		background: var(--bg-color);
+	}
+
+	.matrix-table {
+		width: 100%;
+		border-collapse: separate;
+		border-spacing: 0;
+		text-align: left;
+	}
+
+	/* Sticky Headers */
+	.matrix-table th {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		background: #161b22;
+		border-bottom: 1px solid #30363d;
+		border-right: 1px solid #21262d;
+		padding: 10px 14px;
+	}
+
+	.category-header-row th {
+		top: 0;
+		z-index: 11;
+		background: #0d1117;
+		border-bottom: 2px solid var(--lcars-amber);
+	}
+
+	.eval-header-row th {
+		top: 38px; /* Height of category row */
+		z-index: 10;
+	}
+
+	.category-group-header {
+		text-align: center;
+		background: #141922 !important;
+	}
+
+	.cat-label {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 800;
+		color: var(--lcars-amber);
+		letter-spacing: 1.5px;
+	}
+
+	.eval-column-header {
+		min-width: 160px;
+		max-width: 200px;
+	}
+
+	.eval-col-title {
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--text-main);
+		white-space: normal;
+		line-height: 1.2;
+		margin-bottom: 4px;
+		word-wrap: break-word;
+	}
+
+	.eval-col-id {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		color: var(--text-muted);
+	}
+
+	/* STICKY LEFT MODEL COLUMN */
+	.sticky-col {
+		position: sticky;
+		left: 0;
+		z-index: 12 !important;
+		background: #12161f !important;
+		border-right: 2px solid #30363d !important;
+		min-width: 240px;
+		max-width: 280px;
+	}
+
+	.corner-header {
+		top: 0;
+		z-index: 15 !important;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--lcars-tan);
+		letter-spacing: 1px;
+	}
+
+	.sub-corner-header {
+		top: 38px;
+		z-index: 14 !important;
+	}
+
+	.count-pill {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		background: #0b0d10;
+		padding: 2px 8px;
+		border-radius: 10px;
+	}
+
+	/* MODEL CELL IN ROW */
+	.model-cell {
+		padding: 12px 14px !important;
+	}
+
+	.model-row-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		margin-bottom: 4px;
+	}
+
+	.model-title-text {
+		font-family: var(--font-mono);
+		font-size: 0.88rem;
+		font-weight: bold;
+		color: var(--lcars-blue);
+	}
+
+	.latest-tag {
+		font-size: 0.6rem;
+		font-family: var(--font-mono);
+		background: var(--lcars-amber);
+		color: #000;
+		font-weight: 800;
+		padding: 1px 5px;
+		border-radius: 3px;
+	}
+
+	.model-sub-info {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--text-muted);
+	}
+
+	.speed-badge {
+		color: var(--lcars-tan);
+	}
+
+	/* CELL DATA */
+	.matrix-row td {
+		border-bottom: 1px solid #1f242c;
+		border-right: 1px solid #1f242c;
+		padding: 8px 10px;
+		vertical-align: middle;
+	}
+
+	.eval-pill-btn {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 8px 10px;
+		border: 1px solid transparent;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		text-align: left;
+	}
+
+	.eval-pill-btn.pass {
+		background-color: rgba(46, 160, 67, 0.12);
+		border-color: rgba(46, 160, 67, 0.4);
+		color: #3fb950;
+	}
+
+	.eval-pill-btn.pass:hover {
+		background-color: rgba(46, 160, 67, 0.25);
+		border-color: #3fb950;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+	}
+
+	.eval-pill-btn.unjudged {
+		background-color: rgba(163, 113, 247, 0.12);
+		border-color: rgba(163, 113, 247, 0.4);
+		color: var(--lcars-purple);
+	}
+
+	.eval-pill-btn.unjudged:hover {
+		background-color: rgba(163, 113, 247, 0.25);
+		border-color: var(--lcars-purple);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(163, 113, 247, 0.2);
+	}
+
+	.eval-pill-btn.fail {
+		background-color: rgba(218, 54, 51, 0.12);
+		border-color: rgba(218, 54, 51, 0.4);
+		color: #f85149;
+	}
+
+	.eval-pill-btn.fail:hover {
+		background-color: rgba(218, 54, 51, 0.25);
+		border-color: #f85149;
+		transform: translateY(-2px);
+	}
+
+	.pill-top, .pill-bottom {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.score {
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		font-weight: 800;
+	}
+
+	.status-icon {
+		font-size: 0.9rem;
+		font-weight: bold;
+	}
+
+	.tps {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--text-main);
+		opacity: 0.85;
+	}
+
+	.visual-badge {
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		background: rgba(255, 153, 0, 0.2);
+		color: var(--lcars-amber);
+		border: 1px solid var(--lcars-amber);
+		padding: 1px 4px;
+		border-radius: 3px;
+		font-weight: bold;
+	}
+
+	.untested-box {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 10px;
+		background: #0d1117;
+		border: 1px dashed #21262d;
+		border-radius: 6px;
+		color: #30363d;
+		font-family: var(--font-mono);
+	}
+
+	.dash { font-size: 1rem; }
+	.na-text { font-size: 0.65rem; }
+
+	/* MODAL STYLING */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: rgba(0, 0, 0, 0.75);
+		backdrop-filter: blur(4px);
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 20px;
+	}
+
+	.modal-overlay.hidden {
+		display: none;
+	}
+
+	.modal-card {
+		background: #14181f;
+		border: 1px solid #30363d;
+		border-left: 6px solid var(--lcars-amber);
+		border-radius: 8px;
+		width: 100%;
+		max-width: 900px;
+		max-height: 90vh;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+		overflow: hidden;
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding: 18px 24px;
+		border-bottom: 1px solid #21262d;
+		background: #0d1117;
+	}
+
+	.modal-lcars-tag {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		background: var(--lcars-amber);
+		color: #000;
+		font-weight: bold;
+		padding: 2px 6px;
+		border-radius: 3px;
+	}
+
+	.modal-title-group h3 {
+		font-family: var(--font-sans);
+		font-size: 1.3rem;
+		color: #fff;
+		margin: 6px 0 2px 0;
+	}
+
+	.modal-sub {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--lcars-blue);
+	}
+
+	.modal-close-btn {
+		background: #21262d;
+		color: var(--text-muted);
+		border: 1px solid #30363d;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		padding: 6px 14px;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.modal-close-btn:hover {
+		background: var(--lcars-red);
+		color: #000;
+	}
+
+	.modal-metrics-bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16px;
+		padding: 12px 24px;
+		background: #181d26;
+		border-bottom: 1px solid #21262d;
+	}
+
+	.metric-item {
+		display: flex;
+		flex-direction: column;
+		font-family: var(--font-mono);
+	}
+
+	.m-label {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.m-val {
+		font-size: 0.9rem;
+		font-weight: bold;
+		color: #fff;
+	}
+
+	.m-val.highlight {
+		color: var(--lcars-amber);
+	}
+
+	.action-item {
+		margin-left: auto;
+		justify-content: center;
+	}
+
+	.launch-demo-btn {
+		background: var(--lcars-amber);
+		color: #000;
+		border: none;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		font-size: 0.82rem;
+		padding: 8px 16px;
+		border-radius: 20px;
+		cursor: pointer;
+		transition: transform 0.15s, filter 0.15s;
+		box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3);
+	}
+
+	.launch-demo-btn:hover {
+		filter: brightness(1.2);
+		transform: scale(1.03);
+	}
+
+	.modal-tabs {
+		display: flex;
+		gap: 2px;
+		background: #0d1117;
+		padding: 8px 24px 0 24px;
+		border-bottom: 1px solid #21262d;
+	}
+
+	.tab-btn {
+		background: #14181f;
+		color: var(--text-muted);
+		border: 1px solid #21262d;
+		border-bottom: none;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: bold;
+		padding: 8px 16px;
+		border-radius: 6px 6px 0 0;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.tab-btn.active {
+		background: var(--lcars-blue);
+		color: #000;
+		border-color: var(--lcars-blue);
+	}
+
+	.modal-tab-body {
+		padding: 20px 24px;
+		overflow-y: auto;
+		flex-grow: 1;
+	}
+
+	.tab-pane.hidden {
+		display: none;
+	}
+
+	.pane-box {
+		font-family: var(--font-sans);
+		font-size: 0.92rem;
+		line-height: 1.6;
+		color: var(--text-main);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.code-box {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		background: #0b0d10;
+		border: 1px solid #21262d;
+		padding: 16px;
+		border-radius: 6px;
+		color: #e6edf3;
+		max-height: 400px;
+		overflow: auto;
+	}
+
+	.judge-box {
+		background: #0e1218;
+		border: 1px solid #21262d;
+		border-left: 4px solid var(--lcars-blue);
+		padding: 16px;
+		border-radius: 4px;
+	}
+	.action-item.hidden {
+		display: none;
+	}
+</style>

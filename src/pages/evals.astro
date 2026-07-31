@@ -1,0 +1,328 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MatrixGridView from '../components/MatrixGridView.astro';
+import ComparisonView from '../components/ComparisonView.astro';
+import RunDetailView from '../components/RunDetailView.astro';
+import { getAllRuns, getModelGroups } from '../utils/evaluerBench';
+
+const searchParams = Astro.url.searchParams;
+const runIdParam = searchParams.get('runId') || undefined;
+const runAParam = searchParams.get('runA') || undefined;
+const runBParam = searchParams.get('runB') || undefined;
+
+const allRuns = getAllRuns();
+const modelGroups = getModelGroups();
+---
+
+<Layout 
+	title="evaluerBench // LCARS Benchmark System" 
+	isEvalsPage={true} 
+>
+	<div class="evals-container">
+		<!-- HEADER TELEMETRY STRIP -->
+		<header class="telemetry-strip">
+			<div class="telemetry-pill amber">
+				<span class="telemetry-label">SYSTEM</span>
+				<span class="telemetry-val">evaluerBench v1.0</span>
+			</div>
+			<div class="telemetry-pill blue">
+				<span class="telemetry-label">TOTAL RUNS</span>
+				<span class="telemetry-val">{allRuns.length} EXECUTIONS</span>
+			</div>
+			<div class="telemetry-pill purple">
+				<span class="telemetry-label">MODELS TESTED</span>
+				<span class="telemetry-val">{modelGroups.length} MODELS</span>
+			</div>
+			<div class="telemetry-pill dark">
+				<span class="telemetry-label">ACTIVE VIEW</span>
+				<span class="telemetry-val" id="activeViewTelemetry">MATRIX</span>
+			</div>
+		</header>
+
+		<!-- VIEW VIEWPORT (CONTAINING ALL 3 VIEW PANES) -->
+		<div class="view-viewport">
+			<div id="view-matrix" class="view-section">
+				<MatrixGridView />
+			</div>
+
+			<div id="view-compare" class="view-section hidden">
+				<ComparisonView runIdA={runAParam} runIdB={runBParam} />
+			</div>
+
+			<div id="view-run" class="view-section hidden">
+				<RunDetailView runId={runIdParam} />
+			</div>
+		</div>
+	</div>
+	
+	<!-- FULLSCREEN LCARS VISUAL ARTIFACT OVERLAY -->
+	<div id="visualOverlay" class="fullscreen-overlay hidden">
+		<div class="overlay-header">
+			<div class="overlay-title-block">
+				<button id="exitVisualOverlayBtn" class="overlay-back-btn">
+					◄ CLOSE VISUAL APP
+				</button>
+				<div class="overlay-meta">
+					<span class="overlay-tag">LIVE VISUAL ARTIFACT</span>
+					<span id="overlayEvalTitle" class="overlay-eval-title"></span>
+					<span id="overlayModelTitle" class="overlay-model-title"></span>
+				</div>
+			</div>
+			<a id="overlayExternalLink" href="#" target="_blank" class="overlay-ext-btn">
+				OPEN IN NEW TAB ↗
+			</a>
+		</div>
+		<div class="overlay-body">
+			<iframe id="artifactIframe" class="artifact-iframe" src="about:blank"></iframe>
+		</div>
+	</div>
+</Layout><script>
+	document.addEventListener('astro:page-load', () => {
+		const activeViewTelemetry = document.getElementById('activeViewTelemetry');
+
+		const viewMatrix = document.getElementById('view-matrix');
+		const viewCompare = document.getElementById('view-compare');
+		const viewRun = document.getElementById('view-run');
+
+		function updateActiveView() {
+			const params = new URLSearchParams(window.location.search);
+			const view = params.get('view') || 'matrix';
+			const runId = params.get('runId') || '';
+
+			// 1. Hide all view sections
+			if (viewMatrix) viewMatrix.classList.add('hidden');
+			if (viewCompare) viewCompare.classList.add('hidden');
+			if (viewRun) viewRun.classList.add('hidden');
+
+			// 2. Show target view section
+			if (view === 'compare' && viewCompare) {
+				viewCompare.classList.remove('hidden');
+				if (activeViewTelemetry) activeViewTelemetry.textContent = 'COMPARE';
+				window.dispatchEvent(new Event('render-comparison'));
+			} else if (view === 'run' && viewRun) {
+				viewRun.classList.remove('hidden');
+				if (activeViewTelemetry) activeViewTelemetry.textContent = 'RUN DETAIL';
+				window.dispatchEvent(new Event('render-run-detail'));
+			} else if (viewMatrix) {
+				viewMatrix.classList.remove('hidden');
+				if (activeViewTelemetry) activeViewTelemetry.textContent = 'MATRIX (GRID)';
+			}
+
+			// 3. Sync Sidebar Buttons state
+			document.querySelectorAll('.lcars-btn-view').forEach((btn) => {
+				const btnView = btn.getAttribute('data-view');
+				if (btnView === view && (view === 'matrix' || view === 'compare')) {
+					btn.classList.add('active');
+				} else {
+					btn.classList.remove('active');
+				}
+			});
+
+			// 4. Sync Run Submenu state
+			document.querySelectorAll('.run-sub-btn').forEach((btn) => {
+				const btnRunId = btn.getAttribute('data-run-id');
+				if (view === 'run' && btnRunId === runId) {
+					btn.classList.add('active-run');
+				} else {
+					btn.classList.remove('active-run');
+				}
+			});
+		}
+
+		// Intercept internal evals links for instant 0ms switching
+		document.querySelectorAll('a[href*="/evals?"]').forEach((link) => {
+			link.addEventListener('click', (e) => {
+				const href = link.getAttribute('href');
+				if (href && href.startsWith('/evals?')) {
+					e.preventDefault();
+					window.history.pushState(null, '', href);
+					updateActiveView();
+				}
+			});
+		});
+
+		window.addEventListener('popstate', updateActiveView);
+		updateActiveView();
+
+		// Bind Visual Overlay close button
+		const exitVisualOverlayBtn = document.getElementById('exitVisualOverlayBtn');
+		const visualOverlay = document.getElementById('visualOverlay');
+		if (exitVisualOverlayBtn && visualOverlay) {
+			exitVisualOverlayBtn.addEventListener('click', () => {
+				visualOverlay.classList.add('hidden');
+				const artifactIframe = document.getElementById('artifactIframe');
+				if (artifactIframe) artifactIframe.src = 'about:blank';
+			});
+		}
+	});
+</script>
+
+<style>
+	.evals-container {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.telemetry-strip {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.telemetry-pill {
+		display: flex;
+		flex-direction: column;
+		padding: 6px 14px;
+		border-radius: 4px;
+		font-family: var(--font-mono);
+		min-width: 140px;
+	}
+
+	.telemetry-pill.amber {
+		background-color: var(--lcars-amber);
+		color: #000;
+	}
+
+	.telemetry-pill.blue {
+		background-color: var(--lcars-blue);
+		color: #000;
+	}
+
+	.telemetry-pill.purple {
+		background-color: var(--lcars-purple);
+		color: #000;
+	}
+
+	.telemetry-pill.dark {
+		background-color: #1c2128;
+		border: 1px solid #30363d;
+		color: var(--text-main);
+	}
+
+	.telemetry-label {
+		font-size: 0.65rem;
+		font-weight: bold;
+		letter-spacing: 1px;
+		opacity: 0.8;
+	}
+
+	.telemetry-val {
+		font-size: 0.9rem;
+		font-weight: 800;
+	}
+
+	.view-section.hidden {
+		display: none !important;
+	}
+</style>
+
+<style is:global>
+	/* FULLSCREEN VISUAL OVERLAY */
+	.fullscreen-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: #0b0d10;
+		z-index: 2000;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.fullscreen-overlay.hidden {
+		display: none;
+	}
+
+	.overlay-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 54px;
+		background: #14181f;
+		border-bottom: 2px solid var(--lcars-amber);
+		padding: 0 20px;
+	}
+
+	.overlay-title-block {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	.overlay-back-btn {
+		background: var(--lcars-amber);
+		color: #000;
+		border: none;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		font-size: 0.82rem;
+		padding: 8px 18px;
+		border-radius: 20px;
+		cursor: pointer;
+		transition: filter 0.15s, transform 0.1s;
+	}
+
+	.overlay-back-btn:hover {
+		filter: brightness(1.25);
+		transform: translateX(-3px);
+	}
+
+	.overlay-meta {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-family: var(--font-mono);
+		font-size: 0.88rem;
+	}
+
+	.overlay-tag {
+		background: var(--lcars-blue);
+		color: #000;
+		font-weight: bold;
+		font-size: 0.68rem;
+		padding: 2px 6px;
+		border-radius: 3px;
+	}
+
+	.overlay-eval-title {
+		color: #fff;
+		font-weight: bold;
+	}
+
+	.overlay-model-title {
+		color: var(--text-muted);
+	}
+
+	.overlay-ext-btn {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--lcars-tan);
+		text-decoration: none;
+		font-weight: bold;
+		padding: 6px 12px;
+		border: 1px solid var(--lcars-tan);
+		border-radius: 4px;
+		transition: all 0.2s;
+	}
+
+	.overlay-ext-btn:hover {
+		background: var(--lcars-tan);
+		color: #000;
+	}
+
+	.overlay-body {
+		flex-grow: 1;
+		width: 100%;
+		height: calc(100vh - 54px);
+		background: #000;
+	}
+
+	.artifact-iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+		background: #ffffff;
+	}
+</style>

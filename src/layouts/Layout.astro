@@ -1,11 +1,16 @@
 ---
 import Sidebar from '../components/Sidebar.astro';
+import EvalsSidebar from '../components/EvalsSidebar.astro';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
 	title: string;
+	isEvalsPage?: boolean;
+	activeView?: 'matrix' | 'compare' | 'run';
+	activeRunId?: string;
 }
 
-const { title } = Astro.props;
+const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro.props;
 ---
 
 <!doctype html>
@@ -14,18 +19,23 @@ const { title } = Astro.props;
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{title}</title>
+		<ClientRouter />
 	</head>
 	<body>
 		<div class="lcars-frame">
 			<!-- ROW 1: FULL WIDTH SWOOP & CORNER ELBOW -->
 			<div class="lcars-elbow-top"></div>
 			<header class="lcars-swoop-ext">
-				<span class="status-text">ONLINE // ACCESS GRANTED</span>
+				<span class="status-text">{isEvalsPage ? 'EVALUER BENCH // TELEMETRY ACCESS' : 'ONLINE // ACCESS GRANTED'}</span>
 			</header>
 
 			<!-- ROW 2: LOCKED SIDEBAR & SCROLLABLE MAIN CONTENT -->
-			<Sidebar />
-			<main class="content-viewport">
+			{isEvalsPage ? (
+				<EvalsSidebar activeView={activeView} activeRunId={activeRunId} />
+			) : (
+				<Sidebar />
+			)}
+			<main class="content-viewport" style="view-transition-name: main-pane">
 				<slot />
 				<footer>
 					<p>&copy; 2026 Josh Oney. All rights reserved.</p>
@@ -149,6 +159,27 @@ const { title } = Astro.props;
 		font-family: var(--font-mono);
 	}
 
+	/* LCARS Scrollbars */
+	::-webkit-scrollbar {
+		width: 12px;
+		height: 12px;
+	}
+	::-webkit-scrollbar-track {
+		background: #0d1117;
+		border-left: 1px solid #21262d;
+	}
+	::-webkit-scrollbar-thumb {
+		background: var(--lcars-amber);
+		border-radius: 6px;
+		border: 3px solid #0d1117;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: var(--lcars-tan);
+	}
+	::-webkit-scrollbar-corner {
+		background: #0d1117;
+	}
+
 	/* Mobile Responsive */
 	@media (max-width: 850px) {
 		body {
@@ -166,6 +197,24 @@ const { title } = Astro.props;
 			height: auto;
 			overflow-y: visible;
 			padding: 20px 5%;
-		}
+	}
+
+	/* Custom View Transitions */
+	::view-transition-old(main-pane),
+	::view-transition-old(sidebar-pane) {
+		animation: slideUpOut 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+	::view-transition-new(main-pane),
+	::view-transition-new(sidebar-pane) {
+		animation: slideDownIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+
+	@keyframes slideUpOut {
+		from { transform: translateY(0); opacity: 1; }
+		to { transform: translateY(-100px); opacity: 0; }
+	}
+	@keyframes slideDownIn {
+		from { transform: translateY(-100px); opacity: 0; }
+		to { transform: translateY(0); opacity: 1; }
 	}
 </style>

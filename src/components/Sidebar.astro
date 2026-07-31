@@ -1,8 +1,8 @@
 ---
 const navLinks = [
-	{ title: 'Local LLM Benchmarks', href: '#benchmarks', color: 'var(--lcars-amber)' },
-	{ title: 'Local Evals', href: '#evals', color: 'var(--lcars-blue)' },
+	{ title: 'Local LLM Evals', href: '/evals', color: 'var(--lcars-amber)' },
 	{ title: 'Games', href: '#games', color: 'var(--lcars-purple)' },
+	{ title: 'Action 03', href: '#', color: 'var(--lcars-dark)' },
 	{ title: 'Action 04', href: '#', color: 'var(--lcars-dark)' },
 	{ title: 'Action 05', href: '#', color: 'var(--lcars-dark)' },
 	{ title: 'Action 06', href: '#', color: 'var(--lcars-dark)' },
@@ -17,7 +17,7 @@ const socialLinks = [
 ];
 ---
 
-<aside class="lcars-sidebar">
+<aside class="lcars-sidebar" style="view-transition-name: sidebar-pane">
 	<!-- 1. Name Badge at the very top (Fuses with the top elbow) -->
 	<div class="sidebar-name">
 		<span class="name-text">JOSH ONEY</span>
@@ -43,7 +43,7 @@ const socialLinks = [
 
 	<!-- 4. Socials Button Group anchored comfortably above the bottom -->
 	<div class="social-stack">
-		<div class="stack-label">CONNECT // SOCIALS</div>
+		<div class="stack-label">CONNECT</div>
 		{socialLinks.map((link, index) => (
 			<a 
 				href={link.href} 

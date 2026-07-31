@@ -1,0 +1,724 @@
+---
+import { getAllRuns } from '../utils/evaluerBench';
+
+interface Props {
+	runId?: string;
+}
+
+const { runId } = Astro.props;
+const allRuns = getAllRuns();
+const defaultRun = allRuns.find(r => r.runId === runId) || allRuns[0];
+const safeRunsJson = JSON.stringify(allRuns).replace(/</g, '\\u003c');
+
+function formatDate(isoString: string) {
+	try {
+		const d = new Date(isoString);
+		return d.toLocaleString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		});
+	} catch {
+		return isoString;
+	}
+}
+---
+
+<div class="run-detail-container" id="runDetailContainer">
+	<!-- HEADER TOOLBAR -->
+	<div class="run-header-card">
+		<div class="header-top">
+			<div class="header-title-group">
+				<span class="lcars-tag amber">RUN TELEMETRY</span>
+				<h2 id="runModelName">{defaultRun?.meta?.modelName || 'Unknown Model'}</h2>
+				<span class="run-id-sub" id="runIdDisplay">{defaultRun?.runId}</span>
+			</div>
+			<div class="header-meta-group">
+				<div class="meta-item">
+					<span class="m-label">TIMESTAMP</span>
+					<span class="m-val" id="runTimestamp">{formatDate(defaultRun?.meta?.timestamp || '')}</span>
+				</div>
+				<div class="meta-item">
+					<span class="m-label">EXECUTION MODE</span>
+					<span class="m-val" id="runExecutionMode">{defaultRun?.meta?.executionMode || 'sequential-loop'}</span>
+				</div>
+				<div class="meta-item">
+					<span class="m-label">ERRORS</span>
+					<span class="m-val" id="runErrorCount">{defaultRun?.meta?.errorCount || 0}</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- TELEMETRY SUMMARY CARDS -->
+		<div class="run-telemetry-grid">
+			<div class="t-card pass-card">
+				<span class="t-label">PASS RATE</span>
+				<span class="t-val" id="runPassRate">{defaultRun?.summary?.passRatePercentage || 0}%</span>
+				<span class="t-sub" id="runPassCount">{defaultRun?.results?.filter(r => r.judge?.passed).length || 0} / {defaultRun?.results?.length || 0} Passed</span>
+			</div>
+
+			<div class="t-card speed-card">
+				<span class="t-label">AVG GENERATION SPEED</span>
+				<span class="t-val" id="runAvgTps">{defaultRun?.summary?.averageTokensPerSecond || 0} t/s</span>
+				<span class="t-sub">Tokens per second</span>
+			</div>
+
+			<div class="t-card ttft-card">
+				<span class="t-label">AVG TIME TO FIRST TOKEN</span>
+				<span class="t-val" id="runAvgTtft">{defaultRun?.summary?.averageTimeToFirstTokenMs || 0} ms</span>
+				<span class="t-sub">TTFT Latency</span>
+			</div>
+
+			<div class="t-card token-card">
+				<span class="t-label">TOTAL OUTPUT TOKENS</span>
+				<span class="t-val" id="runTotalTokens">
+					{defaultRun?.results?.reduce((sum, r) => sum + (r.metrics?.outputTokens || 0), 0) || 0}
+				</span>
+				<span class="t-sub">Generated across evals</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- FILTER & CATEGORY TOOLBAR -->
+	<div class="filter-toolbar">
+		<span class="filter-label">FILTER EVALS:</span>
+		<div class="filter-pills" id="filterPillsContainer">
+			<button class="filter-pill active" data-filter="all">ALL EVALS</button>
+			<button class="filter-pill" data-filter="formatting">FORMATTING</button>
+			<button class="filter-pill" data-filter="coding">CODING</button>
+			<button class="filter-pill" data-filter="visual-demo">VISUAL DEMO</button>
+			<button class="filter-pill" data-filter="passed">PASSED ONLY</button>
+			<button class="filter-pill" data-filter="failed">FAILED ONLY</button>
+		</div>
+	</div>
+
+	<!-- SCROLLABLE EVAL CARDS CONTAINER -->
+	<div class="evals-stack" id="evalsStackContainer">
+		<!-- DYNAMICALLY POPULATED BY CLIENT JS -->
+	</div>
+</div>
+
+<script id="runDetailData" type="application/json" set:html={safeRunsJson}></script>
+<script>
+	(function() {
+		const dataEl = document.getElementById('runDetailData');
+		const runsData = dataEl ? JSON.parse(dataEl.textContent) : [];
+
+		let activeFilter = 'all';
+
+		function formatDate(isoString) {
+			try {
+				const d = new Date(isoString);
+				return d.toLocaleString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit'
+				});
+			} catch {
+				return isoString || '';
+			}
+		}
+
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text || '';
+			return div.innerHTML;
+		}
+
+		function renderRunDetail() {
+			const runDetailContainer = document.getElementById('runDetailContainer');
+			if (!runDetailContainer) return;
+
+			const runModelName = document.getElementById('runModelName');
+			const runIdDisplay = document.getElementById('runIdDisplay');
+			const runTimestamp = document.getElementById('runTimestamp');
+			const runExecutionMode = document.getElementById('runExecutionMode');
+			const runErrorCount = document.getElementById('runErrorCount');
+
+			const runPassRate = document.getElementById('runPassRate');
+			const runPassCount = document.getElementById('runPassCount');
+			const runAvgTps = document.getElementById('runAvgTps');
+			const runAvgTtft = document.getElementById('runAvgTtft');
+			const runTotalTokens = document.getElementById('runTotalTokens');
+
+			const evalsStackContainer = document.getElementById('evalsStackContainer');
+			const filterPillsContainer = document.getElementById('filterPillsContainer');
+
+			const params = new URLSearchParams(window.location.search);
+			const runId = params.get('runId') || (runsData[0] ? runsData[0].runId : '');
+
+				const run = runsData.find((r) => r.runId === runId) || runsData[0];
+				if (!run) return;
+
+				// 1. Update Header Telemetry
+				if (runModelName) runModelName.textContent = run.meta?.modelName || 'Unknown Model';
+				if (runIdDisplay) runIdDisplay.textContent = run.runId || '';
+				if (runTimestamp) runTimestamp.textContent = formatDate(run.meta?.timestamp);
+				if (runExecutionMode) runExecutionMode.textContent = run.meta?.executionMode || 'sequential-loop';
+				if (runErrorCount) runErrorCount.textContent = `${run.meta?.errorCount || 0}`;
+
+				const results = run.results || [];
+				const judgedResults = results.filter((r) => r.hasJudge || (r.judge && r.judge.score !== undefined));
+				const passedCount = results.filter((r) => r.judge?.passed).length;
+				const totalOutputTokens = results.reduce((acc, r) => acc + (r.metrics?.outputTokens || 0), 0);
+
+				const computedPassRate = run.summary?.passRatePercentage !== null && run.summary?.passRatePercentage !== undefined
+					? run.summary.passRatePercentage
+					: (judgedResults.length > 0 ? Math.round((passedCount / judgedResults.length) * 100) : 0);
+
+				if (runPassRate) runPassRate.textContent = `${computedPassRate}%`;
+				if (runPassCount) runPassCount.textContent = judgedResults.length > 0
+					? `${passedCount} / ${judgedResults.length} Passed`
+					: `${results.length} Tests (Unjudged)`;
+				if (runAvgTps) runAvgTps.textContent = `${run.summary?.averageTokensPerSecond || 0} t/s`;
+				if (runAvgTtft) runAvgTtft.textContent = `${run.summary?.averageTimeToFirstTokenMs || 0} ms`;
+				if (runTotalTokens) runTotalTokens.textContent = `${totalOutputTokens.toLocaleString()}`;
+
+				// 2. Filter Results
+				let filteredResults = results;
+				if (activeFilter === 'formatting') {
+					filteredResults = results.filter((r) => r.category && r.category.toLowerCase().includes('format'));
+				} else if (activeFilter === 'coding') {
+					filteredResults = results.filter((r) => r.category && (r.category.toLowerCase().includes('code') || r.category.toLowerCase().includes('coding')));
+				} else if (activeFilter === 'visual-demo') {
+					filteredResults = results.filter((r) => 
+						(r.category && r.category.toLowerCase().includes('visual')) || 
+						(r.tags && r.tags.includes('visual-demo')) || 
+						r.display_type === 'html-iframe' ||
+						r.evalId.startsWith('visual-')
+					);
+				} else if (activeFilter === 'passed') {
+					filteredResults = results.filter((r) => r.judge?.passed);
+				} else if (activeFilter === 'failed') {
+					filteredResults = results.filter((r) => (r.hasJudge || r.judge) && !r.judge?.passed);
+				}
+
+				// 3. Render Evals Stack
+				if (!evalsStackContainer) return;
+				evalsStackContainer.innerHTML = '';
+
+				if (filteredResults.length === 0) {
+					evalsStackContainer.innerHTML = `
+						<div class="empty-evals">No evals found matching filter "${activeFilter}".</div>
+					`;
+					return;
+				}
+
+				filteredResults.forEach((res, index) => {
+					const isPass = res.judge?.passed;
+					const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
+					const isVisual = res.display_type === 'html-iframe' || res.evalId.startsWith('visual-');
+
+					const cardEl = document.createElement('details');
+					cardEl.className = 'eval-card-accordion';
+					if (index === 0) cardEl.open = true;
+
+					const badgeHtml = hasJudge 
+						? `<span class="score-badge ${isPass ? 'pass' : 'fail'}">${res.judge?.score || 0}% ${isPass ? '✓' : '✗'}</span>`
+						: `<span class="score-badge unjudged">UNJUDGED</span>`;
+
+					cardEl.innerHTML = `
+						<summary class="eval-card-header">
+							<div class="header-left">
+								<span class="cat-pill">${res.category || 'general'}</span>
+								<div class="title-group">
+									<h4 class="eval-title">${escapeHtml(res.evalName)}</h4>
+									<span class="eval-id">${res.evalId}</span>
+								</div>
+							</div>
+
+							<div class="header-right">
+								<div class="eval-meta-strip">
+									<span class="meta-tag">${res.metrics?.tokensPerSecond || 0} t/s</span>
+									<span class="meta-tag">${res.metrics?.timeToFirstTokenMs || 0} ms TTFT</span>
+									<span class="meta-tag">${((res.metrics?.totalLatencyMs || 0) / 1000).toFixed(1)}s</span>
+								</div>
+
+								${badgeHtml}
+							</div>
+						</summary>
+
+						<div class="eval-card-body">
+							<!-- METRICS GRID -->
+							<div class="eval-metrics-grid">
+								<div class="m-box"><span class="lbl">INPUT TOKENS</span><span class="val">${res.metrics?.inputTokens || 0}</span></div>
+								<div class="m-box"><span class="lbl">OUTPUT TOKENS</span><span class="val">${res.metrics?.outputTokens || 0}</span></div>
+								<div class="m-box"><span class="lbl">LATENCY</span><span class="val">${((res.metrics?.totalLatencyMs || 0) / 1000).toFixed(2)}s</span></div>
+								<div class="m-box"><span class="lbl">FORMAT TYPE</span><span class="val">${res.display_type || 'code'}</span></div>
+								${isVisual && res.artifactUrl ? `
+									<div class="m-box visual-box">
+										<button class="launch-artifact-btn" data-url="${res.artifactUrl}" data-title="${escapeHtml(res.evalName)}" data-model="${escapeHtml(run.meta?.modelName)}">
+											⚡ LAUNCH VISUAL APP
+										</button>
+									</div>
+								` : ''}
+							</div>
+
+							<!-- JUDGE REASONING BLOCK -->
+							<div class="detail-block">
+								<span class="block-label">AUTOMATED JUDGE EVALUATION & REASONING</span>
+								<div class="judge-reasoning-box">${escapeHtml(res.judge?.reasoning)}</div>
+							</div>
+
+							<!-- PROMPT BLOCK -->
+							<div class="detail-block">
+								<span class="block-label">SYSTEM & USER PROMPT</span>
+								<pre class="prompt-box"><code>${escapeHtml(res.prompt)}</code></pre>
+							</div>
+
+							<!-- RAW OUTPUT BLOCK -->
+							<div class="detail-block">
+								<span class="block-label">RAW GENERATED MODEL OUTPUT</span>
+								<pre class="code-box"><code>${escapeHtml(res.rawOutput)}</code></pre>
+							</div>
+						</div>
+					`;
+
+					evalsStackContainer.appendChild(cardEl);
+				});
+
+				// Bind launch visual artifact buttons
+				evalsStackContainer.querySelectorAll('.launch-artifact-btn').forEach((btn) => {
+					btn.addEventListener('click', (e) => {
+						e.preventDefault();
+						const url = btn.getAttribute('data-url');
+						const title = btn.getAttribute('data-title');
+						const model = btn.getAttribute('data-model');
+
+						const overlay = document.getElementById('visualOverlay');
+						const iframe = document.getElementById('artifactIframe');
+						const evalTitle = document.getElementById('overlayEvalTitle');
+						const modelTitle = document.getElementById('overlayModelTitle');
+						const extLink = document.getElementById('overlayExternalLink');
+
+						if (overlay && iframe && url) {
+							if (evalTitle) evalTitle.textContent = title || '';
+							if (modelTitle) modelTitle.textContent = ` (${model || ''})`;
+							if (extLink) extLink.setAttribute('href', url);
+							iframe.src = url;
+							overlay.classList.remove('hidden');
+						}
+					});
+				});
+
+				// Filter Pill Clicks
+				if (filterPillsContainer && !filterPillsContainer.hasAttribute('data-bound')) {
+					filterPillsContainer.setAttribute('data-bound', 'true');
+					filterPillsContainer.querySelectorAll('.filter-pill').forEach((pill) => {
+						pill.addEventListener('click', () => {
+							filterPillsContainer.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
+							pill.classList.add('active');
+							activeFilter = pill.getAttribute('data-filter') || 'all';
+							renderRunDetail();
+						});
+					});
+				}
+			}
+
+			document.addEventListener('astro:page-load', renderRunDetail);
+			window.addEventListener('popstate', renderRunDetail);
+			window.addEventListener('render-run-detail', renderRunDetail);
+		})();
+</script>
+
+<style is:global>
+	.run-detail-container {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		width: 100%;
+	}
+
+	.run-header-card {
+		background: #14181f;
+		border: 1px solid #21262d;
+		border-left: 6px solid var(--lcars-amber);
+		padding: 20px 24px;
+		border-radius: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.header-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 16px;
+		border-bottom: 1px solid #21262d;
+		padding-bottom: 14px;
+	}
+
+	.header-title-group h2 {
+		font-family: var(--font-mono);
+		font-size: 1.6rem;
+		color: #fff;
+		margin: 6px 0 2px 0;
+	}
+
+	.run-id-sub {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--text-muted);
+	}
+
+	.header-meta-group {
+		display: flex;
+		gap: 20px;
+		flex-wrap: wrap;
+	}
+
+	.meta-item {
+		display: flex;
+		flex-direction: column;
+		font-family: var(--font-mono);
+	}
+
+	.meta-item .m-label {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.meta-item .m-val {
+		font-size: 0.88rem;
+		font-weight: bold;
+		color: var(--lcars-blue);
+	}
+
+	/* TELEMETRY GRID */
+	.run-telemetry-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 14px;
+	}
+
+	.t-card {
+		background: #0d1117;
+		border: 1px solid #21262d;
+		padding: 14px 16px;
+		border-radius: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.t-card.pass-card { border-top: 3px solid #2ea043; }
+	.t-card.speed-card { border-top: 3px solid var(--lcars-amber); }
+	.t-card.ttft-card { border-top: 3px solid var(--lcars-blue); }
+	.t-card.token-card { border-top: 3px solid var(--lcars-purple); }
+
+	.t-label {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.t-val {
+		font-family: var(--font-mono);
+		font-size: 1.3rem;
+		font-weight: 800;
+		color: #fff;
+	}
+
+	.t-sub {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--text-muted);
+	}
+
+	/* FILTER TOOLBAR */
+	.filter-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		background: #14181f;
+		padding: 12px 18px;
+		border-radius: 6px;
+		border: 1px solid #21262d;
+		flex-wrap: wrap;
+	}
+
+	.filter-label {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: bold;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.filter-pills {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.filter-pill {
+		background: #0d1117;
+		color: var(--text-muted);
+		border: 1px solid #30363d;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: bold;
+		padding: 6px 14px;
+		border-radius: 20px;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.filter-pill:hover {
+		color: #fff;
+		border-color: var(--lcars-amber);
+	}
+
+	.filter-pill.active {
+		background: var(--lcars-amber);
+		color: #000;
+		border-color: var(--lcars-amber);
+	}
+
+	/* EVALS STACK */
+	.evals-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.eval-card-accordion {
+		background: #14181f;
+		border: 1px solid #21262d;
+		border-radius: 6px;
+		overflow: hidden;
+		transition: border-color 0.2s;
+	}
+
+	.eval-card-accordion[open] {
+		border-color: #30363d;
+	}
+
+	.eval-card-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 14px 20px;
+		background: #161b22;
+		cursor: pointer;
+		user-select: none;
+		list-style: none;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+
+	.eval-card-header::-webkit-details-marker { display: none; }
+
+	.eval-card-header:hover {
+		background: #1c212b;
+	}
+
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-grow: 1;
+		min-width: 240px;
+	}
+
+	.cat-pill {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: bold;
+		background: #0b0d10;
+		color: var(--lcars-amber);
+		padding: 3px 8px;
+		border-radius: 4px;
+		text-transform: uppercase;
+		border: 1px solid #21262d;
+	}
+
+	.title-group {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.eval-title {
+		font-family: var(--font-sans);
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: #fff;
+		margin: 0;
+	}
+
+	.eval-id {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	.eval-meta-strip {
+		display: flex;
+		gap: 10px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.meta-tag {
+		background: #0d1117;
+		padding: 3px 8px;
+		border-radius: 4px;
+		border: 1px solid #1f242c;
+	}
+
+	.score-badge {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 800;
+		padding: 4px 12px;
+		border-radius: 20px;
+	}
+
+	.score-badge.pass {
+		background: rgba(46, 160, 67, 0.15);
+		color: #3fb950;
+		border: 1px solid rgba(46, 160, 67, 0.4);
+	}
+
+	.score-badge.fail {
+		background: rgba(218, 54, 51, 0.15);
+		color: #f85149;
+		border: 1px solid rgba(218, 54, 51, 0.4);
+	}
+
+	.score-badge.unjudged {
+		background: rgba(255, 153, 0, 0.15);
+		color: var(--lcars-amber);
+		border: 1px solid rgba(255, 153, 0, 0.4);
+	}
+
+	/* EVAL CARD BODY */
+	.eval-card-body {
+		padding: 20px;
+		background: #0b0d10;
+		border-top: 1px solid #21262d;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.eval-metrics-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: 10px;
+		background: #14181f;
+		padding: 12px 16px;
+		border-radius: 6px;
+		border: 1px solid #21262d;
+	}
+
+	.m-box {
+		display: flex;
+		flex-direction: column;
+		font-family: var(--font-mono);
+	}
+
+	.m-box .lbl {
+		font-size: 0.62rem;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.m-box .val {
+		font-size: 0.85rem;
+		font-weight: bold;
+		color: #fff;
+	}
+
+	.visual-box {
+		grid-column: span 2;
+		justify-content: center;
+	}
+
+	.launch-artifact-btn {
+		background: var(--lcars-amber);
+		color: #000;
+		border: none;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		font-size: 0.78rem;
+		padding: 6px 14px;
+		border-radius: 20px;
+		cursor: pointer;
+		transition: filter 0.15s, transform 0.1s;
+	}
+
+	.launch-artifact-btn:hover {
+		filter: brightness(1.2);
+		transform: scale(1.02);
+	}
+
+	.detail-block {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+	}
+
+	.block-label {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		font-weight: bold;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.judge-reasoning-box {
+		font-family: var(--font-sans);
+		font-size: 0.88rem;
+		color: var(--text-main);
+		background: #0e1218;
+		padding: 14px;
+		border-radius: 4px;
+		line-height: 1.6;
+		border-left: 4px solid var(--lcars-blue);
+		word-break: break-word;
+	}
+
+	.prompt-box, .code-box {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		background: #080a0d;
+		padding: 14px;
+		border-radius: 4px;
+		border: 1px solid #1f242c;
+		max-height: 300px;
+		overflow: auto;
+		color: #e6edf3;
+		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+		max-width: 100%;
+	}
+
+	.empty-evals {
+		font-family: var(--font-mono);
+		color: var(--text-muted);
+		background: #14181f;
+		padding: 30px;
+		border-radius: 6px;
+		text-align: center;
+		border: 1px dashed #21262d;
+	}
+</style>

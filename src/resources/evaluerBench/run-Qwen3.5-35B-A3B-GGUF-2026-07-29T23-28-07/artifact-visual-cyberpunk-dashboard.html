@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERPUNK_SYS_MONITOR_V.9.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --panel-bg: rgba(10, 15, 20, 0.85);
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #0aff00;
+            --text-dim: #8899a6;
+            --border-color: rgba(0, 243, 255, 0.3);
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Share Tech Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- CRT SCANLINE EFFECT --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanlineMove 10s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 250px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 5px 0 15px rgba(0, 243, 255, 0.1);
+            z-index: 10;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--neon-magenta);
+            border-radius: 50%;
+            margin-right: 15px;
+            background: radial-gradient(circle, #333, #000);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="%23ff00ff" stroke-width="2" fill="none"/></svg>');
+            opacity: 0.5;
+        }
+
+        .user-info h2 {
+            font-family: var(--font-head);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+
+        .user-info span {
+            font-size: 0.8rem;
+            color: var(--neon-magenta);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            padding-left: 25px;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--neon-cyan);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .nav-btn:hover::before, .nav-btn.active::before {
+            transform: scaleY(1);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            border-bottom: 2px solid var(--border-color);
+            background: rgba(0,0,0,0.6);
+        }
+
+        .dashboard-title {
+            font-family: var(--font-head);
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 0px var(--neon-magenta), -2px -2px 0px var(--neon-cyan);
+            position: relative;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--neon-green);
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 10px var(--neon-green); }
+            50% { opacity: 0.5; box-shadow: 0 0 20px var(--neon-green); }
+            100% { opacity: 1; box-shadow: 0 0 10px var(--neon-green); }
+        }
+
+        /* --- GLITCH ANIMATION --- */
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 1px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(1px, -1px); }
+        }
+
+        .glitch-text {
+            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+        }
+
+        /* --- GRID LAYOUT --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* --- PANELS --- */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+            /* Custom Sci-Fi Shape: Top-Right inward cut */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% 85%, 
+                85% 100%, 
+                0 100%
+            );
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-family: var(--font-head);
+            font-size: 1rem;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .panel-icon {
+            font-size: 1.2rem;
+            color: var(--neon-magenta);
+        }
+
+        /* --- PANEL 1: TELEMETRY --- */
+        .telemetry-item {
+            margin-bottom: 25px;
+        }
+
+        .telemetry-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--neon-cyan);
+            width: 0%;
+            position: relative;
+            transition: width 0.3s ease-out;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(
+                90deg, 
+                transparent, 
+                rgba(255,255,255,0.4), 
+                transparent
+            );
+            transform: translateX(-100%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        /* --- PANEL 2: TERMINAL --- */
+        .terminal-output {
+            height: 250px;
+            overflow-y: hidden;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--neon-green);
+            text-shadow: 0 0 5px rgba(10, 255, 0, 0.5);
+            display: flex;
+            flex-direction: column-reverse; /* Newest at bottom visually if we prepend, but we append so reverse helps */
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        }
+
+        .log-line {
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .log-time {
+            color: var(--text-dim);
+            margin-right: 10px;
+        }
+
+        .log-msg {
+            color: #fff;
+        }
+
+        .log-highlight {
+            color: var(--neon-magenta);
+            font-weight: bold;
+        }
+
+        /* --- PANEL 3: SYSTEM INFO --- */
+        .system-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-block {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-left: 2px solid var(--neon-cyan);
+        }
+
+        .info-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        /* --- DECORATIVE ELEMENTS --- */
+        .corner-deco {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            border-bottom: 2px solid var(--neon-cyan);
+            border-right: 2px solid var(--neon-cyan);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <div class="sidebar">
+        <div class="user-profile">
+            <div class="avatar"></div>
+            <div class="user-info">
+                <h2>Operator_01</h2>
+                <span>LEVEL 5 ACCESS</span>
+            </div>
+        </div>
+        <button class="nav-btn active">System Monitor</button>
+        <button class="nav-btn">Data Network</button>
+        <button class="nav-btn">Firewall</button>
+        <button class="nav-btn">Settings</button>
+        <div style="margin-top: auto; font-size: 0.7rem; color: #555;">
+            SYS.VER 9.0.1<br>
+            SECURE CONNECTION
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="dashboard-title glitch-text">CYBERPUNK MONITOR</div>
+            <div class="status-indicator">
+                <div class="pulse-dot"></div>
+                SYSTEM ONLINE
+            </div>
+        </div>
+
+        <div class="grid-container">
+            
+            <!-- PANEL 1: LIVE TELEMETRY -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Live Telemetry</div>
+                    <div class="panel-icon">⚡</div>
+                </div>
+                
+                <div class="telemetry-item">
+                    <div class="telemetry-label">
+                        <span>CPU LOAD</span>
+                        <span id="cpu-val">0%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="cpu-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="telemetry-item">
+                    <div class="telemetry-label">
+                        <span>RAM USAGE</span>
+                        <span id="ram-val">0%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="ram-bar" style="width: 0%; background-color: var(--neon-magenta);"></div>
+                    </div>
+                </div>
+
+                <div class="telemetry-item">
+                    <div class="telemetry-label">
+                        <span>NET TRAFFIC</span>
+                        <span id="net-val">0 MB/s</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="net-bar" style="width: 0%; background-color: var(--neon-green);"></div>
+                    </div>
+                </div>
+                
+                <div class="corner-deco"></div>
+            </div>
+
+            <!-- PANEL 2: TERMINAL -->
+            <div class="panel" style="grid-column: span 2;">
+                <div class="panel-header">
+                    <div class="panel-title">System Logs</div>
+                    <div class="panel-icon">⌨</div>
+                </div>
+                <div class="terminal-output" id="terminal">
+                    <!-- Logs injected via JS -->
+                </div>
+                <div class="corner-deco"></div>
+            </div>
+
+            <!-- PANEL 3: STATIC STATS -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Network Status</div>
+                    <div class="panel-icon">📡</div>
+                </div>
+                <div class="system-info-grid">
+                    <div class="info-block">
+                        <div class="info-label">Ping</div>
+                        <div class="info-value">12ms</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Upload</div>
+                        <div class="info-value">450 MB/s</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Download</div>
+                        <div class="info-value">890 MB/s</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Packet Loss</div>
+                        <div class="info-value" style="color: var(--neon-green)">0.0%</div>
+                    </div>
+                </div>
+                <div class="corner-deco"></div>
+            </div>
+
+            <!-- PANEL 4: SECURITY -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Security Core</div>
+                    <div class="panel-icon">🛡</div>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="width: 100px; height: 100px; margin: 0 auto; border: 2px solid var(--neon-cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--neon-cyan);">
+                        <div style="width: 80px; height: 80px; border: 1px dashed var(--neon-magenta); border-radius: 50%; animation: spin 4s linear infinite;"></div>
+                    </div>
+                    <div style="margin-top: 15px; color: var(--neon-green);">DEFENSE ACTIVE</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">THREAT LEVEL: LOW</div>
+                </div>
+                <div class="corner-deco"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const terminalOutput = document.getElementById('terminal');
+        const cpuBar = document.getElementById('cpu-bar');
+        const cpuVal = document.getElementById('cpu-val');
+        const ramBar = document.getElementById('ram-bar');
+        const ramVal = document.getElementById('ram-val');
+        const netBar = document.getElementById('net-bar');
+        const netVal = document.getElementById('net-val');
+        const title = document.querySelector('.dashboard-title');
+
+        // --- TERMINAL LOGS ---
+        const logMessages = [
+            "Initializing handshake protocol...",
+            "Bypassing firewall proxy...",
+            "Access granted to sector 7G.",
+            "Decrypting user data...",
+            "0x00FF4A... MEMORY LEAK DETECTED",
+            "Uploading payload to mainframe...",
+            "Scanning for vulnerabilities...",
+            "Packet loss detected. Retrying...",
+            "Connection established with server node 44.",
+            "Injecting code sequence...",
+            "Optimizing neural pathways...",
+            "WARNING: Unauthorized access attempt blocked.",
+            "System integrity at 100%.",
+            "Syncing with satellite array..."
+        ];
+
+        function addLog() {
+            const now = new Date();
+            const timeStr = now.toISOString().split('T')[1].slice(0, -1);
+            
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            
+            // Randomly highlight some messages
+            const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+            const isHighlight = Math.random() > 0.8;
+            
+            div.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="${isHighlight ? 'log-highlight' : 'log-msg'}">${msg}</span>`;
+            
+            terminalOutput.appendChild(div);
+
+            // Keep DOM light
+            if (terminalOutput.children.length > 15) {
+                terminalOutput.removeChild(terminalOutput.firstChild);
+            }
+        }
+
+        // --- TELEMETRY UPDATES ---
+        function updateTelemetry() {
+            // CPU
+            const cpu = Math.floor(Math.random() * 100);
+            cpuBar.style.width = cpu + '%';
+            cpuVal.innerText = cpu + '%';
+            if(cpu > 90) cpuBar.style.backgroundColor = 'var(--neon-magenta)';
+            else cpuBar.style.backgroundColor = 'var(--neon-cyan)';
+
+            // RAM
+            const ram = Math.floor(Math.random() * 80) + 10;
+            ramBar.style.width = ram + '%';
+            ramVal.innerText = ram + '%';
+
+            // Network
+            const net = (Math.random() * 500).toFixed(1);
+            netBar.style.width = (Math.random() * 100) + '%';
+            netVal.innerText = net + ' MB/s';
+        }
+
+        // --- GLITCH EFFECT TRIGGER ---
+        function triggerGlitch() {
+            title.classList.add('glitch-text');
+            setTimeout(() => {
+                title.classList.remove('glitch-text');
+            }, 800); // Duration of glitch
+        }
+
+        // --- SPIN ANIMATION KEYFRAME INJECTION ---
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        // --- INTERVALS ---
+        // Update logs every 1.5s
+        setInterval(addLog, 1500);
+        
+        // Update telemetry every 800ms
+        setInterval(updateTelemetry, 800);
+
+        // Random glitch every 5-10 seconds
+        function randomGlitch() {
+            const delay = Math.random() * 5000 + 5000;
+            setTimeout(() => {
+                triggerGlitch();
+                randomGlitch();
+            }, delay);
+        }
+        randomGlitch();
+
+        // Initial calls
+        addLog();
+        updateTelemetry();
+
+    </script>
+</body>
+</html>

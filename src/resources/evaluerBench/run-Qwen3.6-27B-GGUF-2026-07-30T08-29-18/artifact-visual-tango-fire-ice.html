@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tango Logic Puzzle</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #e0e0e0;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 24px;
+    letter-spacing: 0.1em;
+  }
+
+  .game-container {
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    grid-template-rows: repeat(11, 1fr);
+    gap: 0;
+    width: 440px;
+    height: 440px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .cell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    cursor: pointer;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.15s ease;
+    user-select: none;
+    position: relative;
+  }
+
+  .cell:hover {
+    background: rgba(255,255,255,0.12);
+    transform: scale(1.05);
+    z-index: 2;
+  }
+
+  .cell.fixed {
+    cursor: default;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .cell.fixed:hover {
+    transform: none;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .cell.error {
+    background: rgba(255, 50, 50, 0.25) !important;
+    box-shadow: inset 0 0 12px rgba(255, 50, 50, 0.3);
+    animation: pulse-error 0.6s ease-in-out;
+  }
+
+  .cell.error-fixed {
+    background: rgba(255, 50, 50, 0.35) !important;
+  }
+
+  @keyframes pulse-error {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .border-cell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    background: transparent;
+    position: relative;
+  }
+
+  .border-cell.h-border {
+    color: #feca57;
+    font-size: 0.95rem;
+  }
+
+  .border-cell.v-border {
+    color: #48dbfb;
+    font-size: 0.95rem;
+  }
+
+  .border-cell.corner {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .border-cell.h-border::before {
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+    z-index: 0;
+  }
+
+  .border-cell.v-border::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 50%;
+    width: 1px;
+    background: rgba(255,255,255,0.15);
+    z-index: 0;
+  }
+
+  .border-cell span {
+    position: relative;
+    z-index: 1;
+    background: #1a1a2e;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 24px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.05em;
+    font-family: inherit;
+  }
+
+  button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  button.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    font-weight: 600;
+  }
+
+  button.primary:hover {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+
+  button.danger {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    border: none;
+    font-weight: 600;
+  }
+
+  button.danger:hover {
+    box-shadow: 0 4px 16px rgba(245, 87, 108, 0.4);
+  }
+
+  .message {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 0.95rem;
+    min-height: 24px;
+    letter-spacing: 0.03em;
+  }
+
+  .message.success {
+    color: #2ecc71;
+    font-weight: 600;
+  }
+
+  .message.error-msg {
+    color: #f5576c;
+  }
+
+  .message.info {
+    color: #48dbfb;
+  }
+
+  .rules {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    max-width: 440px;
+  }
+
+  .rules h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #888;
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+
+  .rules ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .rules li {
+    font-size: 0.82rem;
+    color: #aaa;
+    padding: 3px 0;
+    line-height: 1.5;
+  }
+
+  .rules li::before {
+    content: '→ ';
+    color: #667eea;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #feca57;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .timer {
+    font-size: 1.1rem;
+    color: #48dbfb;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 520px) {
+    .grid-wrapper {
+      width: 330px;
+      height: 330px;
+    }
+    .cell { font-size: 1.5rem; }
+    .game-container { padding: 16px; }
+    h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Tango</h1>
+<p class="subtitle">A Logic Puzzle of Fire &amp; Ice</p>
+
+<div class="game-container">
+  <div class="timer" id="timer">00:00</div>
+  <div class="grid-wrapper" id="grid"></div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="fire-count">0</div>
+      <div class="stat-label">🔥 Placed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="ice-count">0</div>
+      <div class="stat-label">🧊 Placed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="empty-count">36</div>
+      <div class="stat-label">Empty</div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="primary" onclick="checkSolution()">✓ Check Solution</button>
+    <button onclick="newGame()">⟳ New Puzzle</button>
+    <button class="danger" onclick="revealSolution()">⊘ Reveal</button>
+  </div>
+  <div class="message" id="message"></div>
+</div>
+
+<div class="rules">
+  <h3>Rules</h3>
+  <ul>
+    <li>Each row &amp; column must have exactly 3 🔥 and 3 🧊</li>
+    <li>No three identical symbols in a row or column</li>
+    <li><strong>=</strong> means adjacent cells are the same</li>
+    <li><strong>×</strong> means adjacent cells are different</li>
+    <li>Click a cell to cycle: empty → 🔥 → 🧊 → empty</li>
+  </ul>
+</div>
+
+<script>
+const EMPTY = 0;
+const FIRE = 1;
+const ICE = 2;
+const SIZE = 6;
+const HALF = 3;
+
+let solutionBoard = [];
+let playerBoard = [];
+let fixedCells = [];
+let constraints = [];
+let timerInterval = null;
+let seconds = 0;
+let gameActive = true;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function createEmptyBoard() {
+  return Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
+}
+
+function countSymbol(board, row, col, symbol, onlyLeft = false, onlyUp = false) {
+  let count = 0;
+  if (!onlyUp) {
+    for (let c = 0; c < (onlyLeft ? col : SIZE); c++) {
+      if (board[row][c] === symbol) count++;
+    }
+  }
+  if (!onlyLeft) {
+    for (let r = 0; r < (onlyUp ? row : SIZE); r++) {
+      if (board[r][col] === symbol) count++;
+    }
+  }
+  return count;
+}
+
+function rowCount(board, row, symbol) {
+  let c = 0;
+  for (let col = 0; col < SIZE; col++) {
+    if (board[row][col] === symbol) c++;
+  }
+  return c;
+}
+
+function colCount(board, col, symbol) {
+  let c = 0;
+  for (let row = 0; row < SIZE; row++) {
+    if (board[row][col] === symbol) c++;
+  }
+  return c;
+}
+
+function isValidPlacement(board, row, col, symbol) {
+  // Check no three in a row horizontally
+  if (col >= 2) {
+    if (board[row][col - 1] === symbol && board[row][col - 2] === symbol) return false;
+  }
+  if (col >= 1 && col < SIZE - 1) {
+    if (board[row][col - 1] === symbol && board[row][col + 1] === symbol) return false;
+  }
+
+  // Check no three in a row vertically
+  if (row >= 2) {
+    if (board[row - 1][col] === symbol && board[row - 2][col] === symbol) return false;
+  }
+  if (row >= 1 && row < SIZE - 1) {
+    if (board[row - 1][col] === symbol && board[row + 1][col] === symbol) return false;
+  }
+
+  // Check row balance (can't exceed HALF)
+  const currentRowFire = rowCount(board, row, FIRE);
+  const currentRowIce = rowCount(board, row, ICE);
+  if (symbol === FIRE && currentRowFire >= HALF) return false;
+  if (symbol === ICE && currentRowIce >= HALF) return false;
+
+  // Check column balance
+  const currentColFire = colCount(board, col, FIRE);
+  const currentColIce = colCount(board, col, ICE);
+  if (symbol === FIRE && currentColFire >= HALF) return false;
+  if (symbol === ICE && currentColIce >= HALF) return false;
+
+  // Check if placing this would make it impossible to complete the row
+  if (col === SIZE - 1) {
+    if (symbol === FIRE && currentRowFire >= HALF) return false;
+    if (symbol === ICE && currentRowIce >= HALF) return false;
+  }
+
+  // Check if placing this would make it impossible to complete the column
+  if (row === SIZE - 1) {
+    if (symbol === FIRE && currentColFire >= HALF) return false;
+    if (symbol === ICE && currentColIce >= HALF) return false;
+  }
+
+  return true;
+}
+
+function canCompleteRow(board, row) {
+  const fireCount = rowCount(board, row, FIRE);
+  const iceCount = rowCount(board, row, ICE);
+  const emptyCount = SIZE - fireCount - iceCount;
+  return (fireCount <= HALF && iceCount <= HALF && 
+          (HALF - fireCount) <= emptyCount && (HALF - iceCount) <= emptyCount &&
+          (HALF - fireCount) + (HALF - iceCount) === emptyCount);
+}
+
+function canCompleteCol(board, col) {
+  const fireCount = colCount(board, col, FIRE);
+  const iceCount = colCount(board, col, ICE);
+  const emptyCount = SIZE - fireCount - iceCount;
+  return (fireCount <= HALF && iceCount <= HALF && 
+          (HALF - fireCount) <= emptyCount && (HALF - iceCount) <= emptyCount &&
+          (HALF - fireCount) + (HALF - iceCount) === emptyCount);
+}
+
+function solveBoard(board, pos) {
+  if (pos === SIZE * SIZE) return true;
+
+  const row = Math.floor(pos / SIZE);
+  const col = pos % SIZE;
+
+  const symbols = Math.random() < 0.5 ? [FIRE, ICE] : [ICE, FIRE];
+
+  for (const symbol of symbols) {
+    if (isValidPlacement(board, row, col, symbol)) {
+      board[row][col] = symbol;
+
+      // Pruning: check if current row is complete and valid
+      const isLastInRow = col === SIZE - 1;
+      const isLastInCol = row === SIZE - 1;
+
+      if (isLastInRow && rowCount(board, row, FIRE) !== HALF) {
+        board[row][col] = EMPTY;
+        continue;
+      }
+      if (isLastInCol && colCount(board, col, FIRE) !== HALF) {
+        board[row][col] = EMPTY;
+        continue;
+      }
+
+      // Pruning: check if remaining cells in row can be filled
+      if (col === SIZE - 2) {
+        const fireCount = rowCount(board, row, FIRE);
+        const iceCount = rowCount(board, row, ICE);
+        if (fireCount > HALF || iceCount > HALF) {
+          board[row][col] = EMPTY;
+          continue;
+        }
+        if (fireCount + iceCount === SIZE - 1 && fireCount !== HALF && iceCount !== HALF - 1 && fireCount !== HALF - 1) {
+          // edge case handling
+        }
+      }
+
+      if (solveBoard(board, pos + 1)) return true;
+
+      board[row][col] = EMPTY;
+    }
+  }
+  return false;
+}
+
+function generateSolution() {
+  let attempts = 0;
+  while (attempts < 100) {
+    const board = createEmptyBoard();
+    if (solveBoard(board, 0)) {
+      return board;
+    }
+    attempts++;
+  }
+  // Fallback - should almost never happen
+  const board = createEmptyBoard();
+  solveBoard(board, 0);
+  return board;
+}
+
+function getAllAdjacentPairs() {
+  const pairs = [];
+  // Horizontal pairs
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE - 1; c++) {
+      pairs.push({ r1: r, c1: c, r2: r, c2: c + 1, type: 'h' });
+    }
+  }
+  // Vertical pairs
+  for (let r = 0; r < SIZE - 1; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      pairs.push({ r1: r, c1: c, r2: r + 1, c2: c, type: 'v' });
+    }
+  }
+  return pairs;
+}
+
+function placeConstraints(solution) {
+  const pairs = shuffle(getAllAdjacentPairs());
+  const numConstraints = 6 + Math.floor(Math.random() * 3); // 6-8
+  const constraints = [];
+  const usedPositions = new Set();
+
+  for (const pair of pairs) {
+    if (constraints.length >= numConstraints) break;
+
+    const key = `${pair.r1}-${pair.c1}-${pair.r2}-${pair.c2}`;
+    if (usedPositions.has(key)) continue;
+
+    const val1 = solution[pair.r1][pair.c1];
+    const val2 = solution[pair.r2][pair.c2];
+
+    if (val1 !== EMPTY && val2 !== EMPTY) {
+      const marker = val1 === val2 ? '=' : '×';
+      constraints.push({ ...pair, marker });
+      usedPositions.add(key);
+    }
+  }
+
+  return constraints;
+}
+
+function createPuzzle(solution, constraints) {
+  const player = createEmptyBoard();
+  const fixed = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+
+  // Keep about 30% of cells (roughly 10-11 cells)
+  const cellsToKeep = Math.floor(SIZE * SIZE * 0.3) + Math.floor(Math.random() * 3);
+  
+  // Collect all cell positions
+  const positions = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      positions.push({ r, c });
+    }
+  }
+  shuffle(positions);
+
+  // Keep constraint-adjacent cells preferentially
+  const constraintCells = new Set();
+  for (const con of constraints) {
+    constraintCells.add(`${con.r1}-${con.c1}`);
+    constraintCells.add(`${con.r2}-${con.c2}`);
+  }
+
+  // First keep constraint cells
+  for (const pos of positions) {
+    if (constraintCells.has(`${pos.r}-${pos.c}`)) {
+      player[pos.r][pos.c] = solution[pos.r][pos.c];
+      fixed[pos.r][pos.c] = true;
+    }
+  }
+
+  // Then fill remaining slots
+  let kept = 0;
+  for (const pos of positions) {
+    if (kept >= cellsToKeep) break;
+    if (!fixed[pos.r][pos.c]) {
+      player[pos.r][pos.c] = solution[pos.r][pos.c];
+      fixed[pos.r][pos.c] = true;
+      kept++;
+    }
+  }
+
+  return { player, fixed };
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  // Build 11x11 grid
+  for (let ir = 0; ir < 11; ir++) {
+    for (let ic = 0; ic < 11; ic++) {
+      const div = document.createElement('div');
+
+      if (ir % 2 === 0 && ic % 2 === 0) {
+        // Cell
+        const row = ir / 2;
+        const col = ic / 2;
+        div.className = 'cell';
+        div.dataset.row = row;
+        div.dataset.col = col;
+
+        if (fixedCells[row][col]) {
+          div.classList.add('fixed');
+        }
+
+        const val = playerBoard[row][col];
+        if (val === FIRE) div.textContent = '🔥';
+        else if (val === ICE) div.textContent = '🧊';
+
+        div.addEventListener('click', () => handleCellClick(row, col));
+        grid.appendChild(div);
+      } else if (ir % 2 === 0 && ic % 2 === 1) {
+        // Horizontal border
+        div.className = 'border-cell h-border';
+        const row = ir / 2;
+        const col = (ic - 1) / 2;
+        const con = constraints.find(c => 
+          c.type === 'h' && c.r1 === row && c.c1 === col && c.c2 === col + 1
+        );
+        if (con) {
+          div.innerHTML = `<span>${con.marker}</span>`;
+        }
+        grid.appendChild(div);
+      } else if (ir % 2 === 1 && ic % 2 === 0) {
+        // Vertical border
+        div.className = 'border-cell v-border';
+        const row = (ir - 1) / 2;
+        const col = ic / 2;
+        const con = constraints.find(c => 
+          c.type === 'v' && c.r1 === row && c.c1 === col && c.r2 === row + 1
+        );
+        if (con) {
+          div.innerHTML = `<span>${con.marker}</span>`;
+        }
+        grid.appendChild(div);
+      } else {
+        // Corner
+        div.className = 'border-cell corner';
+        grid.appendChild(div);
+      }
+    }
+  }
+}
+
+function handleCellClick(row, col) {
+  if (!gameActive) return;
+  if (fixedCells[row][col]) return;
+
+  // Cycle: EMPTY -> FIRE -> ICE -> EMPTY
+  playerBoard[row][col] = (playerBoard[row][col] + 1) % 3;
+
+  // Clear errors
+  clearErrors();
+  renderGrid();
+  updateStats();
+}
+
+function updateStats() {
+  let fireCount = 0, iceCount = 0, emptyCount = 0;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (playerBoard[r][c] === FIRE) fireCount++;
+      else if (playerBoard[r][c] === ICE) iceCount++;
+      else emptyCount++;
+    }
+  }
+  document.getElementById('fire-count').textContent = fireCount;
+  document.getElementById('ice-count').textContent = iceCount;
+  document.getElementById('empty-count').textContent = emptyCount;
+}
+
+function clearErrors() {
+  document.querySelectorAll('.cell.error').forEach(el => {
+    el.classList.remove('error', 'error-fixed');
+  });
+}
+
+function checkSolution() {
+  clearErrors();
+  const errors = [];
+  const errorCells = new Set();
+
+  // Check all cells are filled
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (playerBoard[r][c] === EMPTY) {
+        errorCells.add(`${r}-${c}`);
+      }
+    }
+  }
+
+  // Check row balance
+  for (let r = 0; r < SIZE; r++) {
+    const fireCount = rowCount(playerBoard, r, FIRE);
+    const iceCount = rowCount(playerBoard, r, ICE);
+    if (fireCount !== HALF || iceCount !== HALF) {
+      for (let c = 0; c < SIZE; c++) {
+        errorCells.add(`${r}-${c}`);
+      }
+    }
+  }
+
+  // Check column balance
+  for (let c = 0; c < SIZE; c++) {
+    const fireCount = colCount(playerBoard, c, FIRE);
+    const iceCount = colCount(playerBoard, c, ICE);
+    if (fireCount !== HALF || iceCount !== HALF) {
+      for (let r = 0; r < SIZE; r++) {
+        errorCells.add(`${r}-${c}`);
+      }
+    }
+  }
+
+  // Check no three in a row horizontally
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE - 2; c++) {
+      if (playerBoard[r][c] !== EMPTY && 
+          playerBoard[r][c] === playerBoard[r][c + 1] && 
+          playerBoard[r][c] === playerBoard[r][c + 2]) {
+        errorCells.add(`${r}-${c}`);
+        errorCells.add(`${r}-${c + 1}`);
+        errorCells.add(`${r}-${c + 2}`);
+      }
+    }
+  }
+
+  // Check no three in a row vertically
+  for (let c = 0; c < SIZE; c++) {
+    for (let r = 0; r < SIZE - 2; r++) {
+      if (playerBoard[r][c] !== EMPTY && 
+          playerBoard[r][c] === playerBoard[r + 1][c] && 
+          playerBoard[r][c] === playerBoard[r + 2][c]) {
+        errorCells.add(`${r}-${c}`);
+        errorCells.add(`${r + 1}-${c}`);
+        errorCells.add(`${r + 2}-${c}`);
+      }
+    }
+  }
+
+  // Check constraints
+  for (const con of constraints) {
+    const v1 = playerBoard[con.r1][con.c1];
+    const v2 = playerBoard[con.r2][con.c2];
+    if (v1 !== EMPTY && v2 !== EMPTY) {
+      if (con.marker === '=' && v1 !== v2) {
+        errorCells.add(`${con.r1}-${con.c1}`);
+        errorCells.add(`${con.r2}-${con.c2}`);
+      }
+      if (con.marker === '×' && v1 === v2) {
+        errorCells.add(`${con.r1}-${con.c1}`);
+        errorCells.add(`${con.r2}-${con.c2}`);
+      }
+    }
+  }
+
+  // Highlight errors
+  const cells = document.querySelectorAll('.cell');
+  let hasErrors = false;
+  cells.forEach(cell => {
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+    if (errorCells.has(`${r}-${c}`)) {
+      cell.classList.add('error');
+      if (fixedCells[r][c]) {
+        cell.classList.add('error-fixed');
+      }
+      hasErrors = true;
+    }
+  });
+
+  const msgEl = document.getElementById('message');
+  if (!hasErrors) {
+    msgEl.textContent = '🎉 Perfect! You solved the puzzle!';
+    msgEl.className = 'message success';
+    gameActive = false;
+    stopTimer();
+  } else {
+    msgEl.textContent = '❌ Errors found. Check the highlighted cells.';
+    msgEl.className = 'message error-msg';
+  }
+}
+
+function revealSolution() {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      playerBoard[r][c] = solutionBoard[r][c];
+    }
+  }
+  clearErrors();
+  renderGrid();
+  updateStats();
+  gameActive = false;
+  stopTimer();
+  document.getElementById('message').textContent = 'Solution revealed.';
+  document.getElementById('message').className = 'message info';
+}
+
+function startTimer() {
+  stopTimer();
+  seconds = 0;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    seconds++;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  document.getElementById('timer').textContent = `${mins}:${secs}`;
+}
+
+function newGame() {
+  gameActive = true;
+  document.getElementById('message').textContent = '';
+  document.getElementById('message').className = 'message';
+
+  solutionBoard = generateSolution();
+  constraints = placeConstraints(solutionBoard);
+  const puzzle = createPuzzle(solutionBoard, constraints);
+  playerBoard = puzzle.player;
+  fixedCells = puzzle.fixed;
+
+  clearErrors();
+  renderGrid();
+  updateStats();
+  startTimer();
+}
+
+// Initialize on load
+newGame();
+</script>
+</body>
+</html>

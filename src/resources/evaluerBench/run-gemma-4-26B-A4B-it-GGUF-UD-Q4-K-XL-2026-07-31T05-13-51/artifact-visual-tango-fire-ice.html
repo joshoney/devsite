@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tango Logic Puzzle</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --border-color: #cbd5e1;
+            --error-color: #ef4444;
+            --accent-color: #3b82f6;
+            --cell-size: 60px;
+            --grid-size: 360px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2rem;
+            letter-spacing: -1px;
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            max-width: 400px;
+        }
+
+        #grid-wrapper {
+            position: relative;
+            width: var(--grid-size);
+            height: var(--grid-size);
+            margin: 0 auto;
+            background: var(--border-color);
+            border: 3px solid var(--text-color);
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            user-select: none;
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cell:hover {
+            background-color: #f8fafc;
+        }
+
+        .cell:active {
+            transform: scale(0.95);
+        }
+
+        .cell.error {
+            background-color: #fee2e2 !important;
+            box-shadow: inset 0 0 0 2px var(--error-color);
+        }
+
+        .marker {
+            position: absolute;
+            z-index: 10;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #334155;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            background: white;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-check {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-check:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-new {
+            background-color: #e2e8f0;
+            color: var(--text-color);
+        }
+
+        .btn-new:hover {
+            background-color: #cbd5e1;
+        }
+
+        #status-msg {
+            margin-top: 1.5rem;
+            font-weight: 600;
+            min-height: 1.5rem;
+        }
+
+        .success { color: #10b981; }
+        .fail { color: var(--error-color); }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Tango Puzzle</h1>
+        <div class="instructions">
+            3 🔥 and 3 🧊 per row/col. No 3 identical symbols in a row. <br>
+            <b>=</b> means same, <b>×</b> means different.
+        </div>
+
+        <div id="grid-wrapper">
+            <!-- Cells and Markers will be injected here -->
+        </div>
+
+        <div id="status-msg"></div>
+
+        <div class="controls">
+            <button class="btn-new" onclick="game.init()">New Game</button>
+            <button class="btn-check" onclick="game.check()">Check Solution</button>
+        </div>
+    </div>
+
+    <script>
+        class TangoGame {
+            constructor() {
+                this.gridSize = 6;
+                this.symbols = [null, '🔥', '🧊']; // index 1 and 2
+                this.solution = [];
+                this.playerGrid = [];
+                this.constraints = [];
+                this.wrapper = document.getElementById('grid-wrapper');
+                this.statusMsg = document.getElementById('status-msg');
+                this.init();
+            }
+
+            init() {
+                this.statusMsg.textContent = '';
+                this.statusMsg.className = '';
+                this.generateLevel();
+                this.render();
+            }
+
+            generateLevel() {
+                // 1. Generate valid solution using backtracking
+                this.solution = Array.from({ length: 6 }, () => Array(6).fill(0));
+                this.solve(0, 0);
+
+                // 2. Place Constraints
+                this.constraints = [];
+                const numConstraints = 6 + Math.floor(Math.random() * 3); // 6-8
+                while (this.constraints.length < numConstraints) {
+                    const isVertical = Math.random() > 0.5;
+                    let r, c1, c2, r1, r2;
+
+                    if (isVertical) {
+                        r = Math.floor(Math.random() * 6);
+                        c1 = Math.floor(Math.random() * 5);
+                        c2 = c1 + 1;
+                        r1 = r; r2 = r;
+                    } else {
+                        r = Math.floor(Math.random() * 5);
+                        c1 = Math.floor(Math.random() * 6);
+                        r1 = r; r2 = r + 1;
+                        c2 = c1;
+                    }
+
+                    // Check if this constraint already exists
+                    const exists = this.constraints.some(con => 
+                        con.r1 === r1 && con.c1 === c1 && con.r2 === r2 && con.c2 === c2
+                    );
+
+                    if (!exists) {
+                        const type = (this.solution[r1][c1] === this.solution[r2][c2]) ? '=' : '×';
+                        this.constraints.push({ type, r1, c1, r2, c2, isVertical });
+                    }
+                }
+
+                // 3. Create Player Grid (Clear 70%)
+                this.playerGrid = Array.from({ length: 6 }, () => Array(6).fill(0));
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        // Leave ~30% of cells as hints
+                        if (Math.random() > 0.7) {
+                            this.playerGrid[r][c] = this.solution[r][c];
+                        }
+                    }
+                }
+            }
+
+            solve(r, c) {
+                if (r === 6) return true;
+                const nextR = c === 5 ? r + 1 : r;
+                const nextC = c === 5 ? 0 : c + 1;
+
+                const choices = [1, 2];
+                // Shuffle choices for randomness
+                for (let i = choices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [choices[i], choices[j]] = [choices[j], choices[i]];
+                }
+
+                for (const val of choices) {
+                    if (this.isValidPlacement(this.solution, r, c, val)) {
+                        this.solution[r][c] = val;
+                        if (this.solve(nextR, nextC)) return true;
+                        this.solution[r][c] = 0;
+                    }
+                }
+                return false;
+            }
+
+            isValidPlacement(grid, r, c, val) {
+                // Row count check
+                let rowCount = 0;
+                for (let j = 0; j < c; j++) if (grid[r][j] === val) rowCount++;
+                if (rowCount + 1 > 3) return false;
+
+                // Col count check
+                let colCount = 0;
+                for (let i = 0; i < r; i++) if (grid[i][c] === val) colCount++;
+                if (colCount + 1 > 3) return false;
+
+                // 3-in-a-row horizontal
+                if (c >= 2 && grid[r][c-1] === val && grid[r][c-2] === val) return false;
+
+                // 3-in-a-row vertical
+                if (r >= 2 && grid[r-1][c] === val && grid[r-2][c] === val) return false;
+
+                // End of row check
+                if (c === 5) {
+                    let fire = 0, ice = 0;
+                    for (let j = 0; j < 5; j++) {
+                        if (grid[r][j] === 1) fire++;
+                        else if (grid[r][j] === 2) ice++;
+                    }
+                    if (val === 1) fire++; else ice++;
+                    if (fire !== 3 || ice !== 3) return false;
+                }
+
+                // End of col check
+                if (r === 5) {
+                    let fire = 0, ice = 0;
+                    for (let i = 0; i < 5; i++) {
+                        if (grid[i][c] === 1) fire++;
+                        else if (grid[i][c] === 2) ice++;
+                    }
+                    if (val === 1) fire++; else ice++;
+                    if (fire !== 3 || ice !== 3) return false;
+                }
+
+                return true;
+            }
+
+            render() {
+                this.wrapper.innerHTML = '';
+                
+                // Render Cells
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        const cellDiv = document.createElement('div');
+                        cellDiv.className = 'cell';
+                        cellDiv.id = `cell-${r}-${c}`;
+                        cellDiv.textContent = this.symbols[this.playerGrid[r][c]];
+                        cellDiv.onclick = () => this.cycleCell(r, c);
+                        this.wrapper.appendChild(cellDiv);
+                    }
+                }
+
+                // Render Constraints
+                this.constraints.forEach(con => {
+                    const marker = document.createElement('div');
+                    marker.className = 'marker';
+                    marker.textContent = con.type;
+
+                    if (con.isVertical) {
+                        // Vertical marker between (r, c) and (r, c+1)
+                        // Positioned at the vertical line between columns
+                        marker.style.left = `${(con.c1 + 1) * 60}px`;
+                        marker.style.top = `${con.r1 * 60 + 30}px`;
+                    } else {
+                        // Horizontal marker between (r, c) and (r+1, c)
+                        // Positioned at the horizontal line between rows
+                        marker.style.left = `${con.c1 * 60 + 30}px`;
+                        marker.style.top = `${(con.r1 + 1) * 60}px`;
+                    }
+                    this.wrapper.appendChild(marker);
+                });
+            }
+
+            cycleCell(r, c) {
+                // 0 -> 1 -> 2 -> 0
+                this.playerGrid[r][c] = (this.playerGrid[r][c] + 1) % 3;
+                const cellDiv = document.getElementById(`cell-${r}-${c}`);
+                cellDiv.textContent = this.symbols[this.playerGrid[r][c]];
+                cellDiv.classList.remove('error');
+                this.statusMsg.textContent = '';
+            }
+
+            check() {
+                // Clear previous errors
+                document.querySelectorAll('.cell').forEach(el => el.classList.remove('error'));
+                this.statusMsg.textContent = '';
+                this.statusMsg.className = '';
+
+                let errors = [];
+                let isComplete = true;
+
+                // 1. Check completeness and basic row/col balance
+                for (let r = 0; r < 6; r++) {
+                    let fire = 0, ice = 0;
+                    for (let c = 0; c < 6; c++) {
+                        const val = this.playerGrid[r][c];
+                        if (val === 0) isComplete = false;
+                        if (val === 1) fire++;
+                        if (val === 2) ice++;
+                    }
+                    if (fire !== 3 || ice !== 3) {
+                        // Mark all cells in this row as error
+                        for (let c = 0; c < 6; c++) errors.push({r, c});
+                    }
+                }
+
+                for (let c = 0; c < 6; c++) {
+                    let fire = 0, ice = 0;
+                    for (let r = 0; r < 6; r++) {
+                        const val = this.playerGrid[r][c];
+                        if (val === 0) isComplete = false;
+                        if (val === 1) fire++;
+                        if (val === 2) ice++;
+                    }
+                    if (fire !== 3 || ice !== 3) {
+                        for (let r = 0; r < 6; r++) errors.push({r, c});
+                    }
+                }
+
+                // 2. Check 3-in-a-row
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const v1 = this.playerGrid[r][c];
+                        const v2 = this.playerGrid[r][c+1];
+                        const v3 = this.playerGrid[r][c+2];
+                        if (v1 !== 0 && v1 === v2 && v2 === v3) {
+                            errors.push({r, c}, {r, c: c+1}, {r, c: c+2});
+                        }
+                    }
+                }
+                for (let c = 0; c < 6; c++) {
+                    for (let r = 0; r < 4; r++) {
+                        const v1 = this.playerGrid[r][c];
+                        const v2 = this.playerGrid[r+1][c];
+                        const v3 = this.playerGrid[r+2][c];
+                        if (v1 !== 0 && v1 === v2 && v2 === v3) {
+                            errors.push({r, c}, {r: r+1, c}, {r: r+2, c});
+                        }
+                    }
+                }
+
+                // 3. Check Constraints
+                this.constraints.forEach(con => {
+                    const v1 = this.playerGrid[con.r1][con.c1];
+                    const v2 = this.playerGrid[con.r2][con.c2];
+                    if (v1 !== 0 && v2 !== 0) {
+                        const match = (v1 === v2);
+                        if ((con.type === '=' && !match) || (con.type === '×' && match)) {
+                            errors.push({r: con.r1, c: con.c1}, {r: con.r2, c: con.c2});
+                        }
+                    }
+                });
+
+                // Apply error highlighting
+                if (errors.length > 0) {
+                    // Remove duplicates
+                    const uniqueErrors = Array.from(new Set(errors.map(e => `${e.r}-${e.c}`)))
+                        .map(s => {
+                            const [r, c] = s.split('-').map(Number);
+                            return {r, c};
+                        });
+                    
+                    uniqueErrors.forEach(e => {
+                        document.getElementById(`cell-${e.r}-${e.c}`).classList.add('error');
+                    });
+                    this.statusMsg.textContent = "There are errors in your solution.";
+                    this.statusMsg.className = 'fail';
+                } else {
+                    if (isComplete) {
+                        this.statusMsg.textContent = "Perfect! You solved it!";
+                        this.statusMsg.className = 'success';
+                    } else {
+                        this.statusMsg.textContent = "Looking good so far! Keep going.";
+                        this.statusMsg.className = 'success';
+                    }
+                }
+            }
+        }
+
+        const game = new TangoGame();
+    </script>
+</body>
+</html>

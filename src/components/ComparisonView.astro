@@ -1,0 +1,798 @@
+---
+import { getAllRuns } from '../utils/evaluerBench';
+
+const allRuns = getAllRuns();
+const safeRunsJson = JSON.stringify(allRuns).replace(/</g, '\\u003c');
+
+function formatDate(isoString: string) {
+	try {
+		const d = new Date(isoString);
+		const month = d.toLocaleString('en-US', { month: 'short' });
+		const day = d.getDate();
+		const hours = d.getHours().toString().padStart(2, '0');
+		const mins = d.getMinutes().toString().padStart(2, '0');
+		return `${month} ${day} ${hours}:${mins}`;
+	} catch {
+		return isoString;
+	}
+}
+
+// Default run IDs
+const defaultRunA = allRuns[0]?.runId || '';
+const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.modelName)?.runId || allRuns[1]?.runId || defaultRunA;
+---
+
+<div class="compare-container">
+	<!-- TOP TOOLBAR & DROPDOWN SELECTORS -->
+	<div class="compare-toolbar">
+		<div class="toolbar-title">
+			<span class="lcars-tag blue">EV-COMPARE</span>
+			<h3>SIDE-BY-SIDE RUN COMPARATOR</h3>
+		</div>
+
+		<form id="compareForm" class="selectors-form" onsubmit="return false;">
+			<div class="select-group group-a">
+				<label for="selectRunA">RUN A (PRIMARY):</label>
+				<select id="selectRunA" class="lcars-select amber">
+					{allRuns.map((r) => (
+						<option value={r.runId} selected={r.runId === defaultRunA}>
+							{r.meta?.modelName} — {formatDate(r.meta?.timestamp)} ({r.summary?.averageTokensPerSecond} t/s)
+						</option>
+					))}
+				</select>
+			</div>
+
+			<div class="vs-divider">VS</div>
+
+			<div class="select-group group-b">
+				<label for="selectRunB">RUN B (BASELINE):</label>
+				<select id="selectRunB" class="lcars-select blue">
+					{allRuns.map((r) => (
+						<option value={r.runId} selected={r.runId === defaultRunB}>
+							{r.meta?.modelName} — {formatDate(r.meta?.timestamp)} ({r.summary?.averageTokensPerSecond} t/s)
+						</option>
+					))}
+				</select>
+			</div>
+
+			<button id="executeCompareBtn" type="button" class="submit-compare-btn">
+				COMPARE ⚡
+			</button>
+		</form>
+	</div>
+
+	<!-- DYNAMIC TELEMETRY COMPARISON STRIP -->
+	<div class="delta-telemetry-bar">
+		<div class="delta-card">
+			<span class="d-label">GENERATION SPEED (AVG)</span>
+			<div class="d-values">
+				<span class="val-a" id="cmpTpsA">-- t/s</span>
+				<span class="vs">vs</span>
+				<span class="val-b" id="cmpTpsB">-- t/s</span>
+			</div>
+			<span class="delta-pill" id="cmpTpsDelta">0 t/s</span>
+		</div>
+
+		<div class="delta-card">
+			<span class="d-label">TIME TO FIRST TOKEN (AVG)</span>
+			<div class="d-values">
+				<span class="val-a" id="cmpTtftA">-- ms</span>
+				<span class="vs">vs</span>
+				<span class="val-b" id="cmpTtftB">-- ms</span>
+			</div>
+			<span class="delta-pill" id="cmpTtftDelta">0 ms</span>
+		</div>
+
+		<div class="delta-card">
+			<span class="d-label">PASS RATE (%)</span>
+			<div class="d-values">
+				<span class="val-a" id="cmpPassA">--%</span>
+				<span class="vs">vs</span>
+				<span class="val-b" id="cmpPassB">--%</span>
+			</div>
+			<span class="delta-pill" id="cmpPassDelta">0%</span>
+		</div>
+	</div>
+
+	<!-- EVAL LISTING COMPARISON TABLE -->
+	<div class="table-card">
+		<div class="table-header">
+			<h4>INDIVIDUAL EVAL BENCHMARK COMPARISONS</h4>
+			<span class="count" id="cmpPairsCount">0 EVALS ALIGNED</span>
+		</div>
+
+		<div class="pairs-list" id="pairsListContainer">
+			<!-- DYNAMICALLY POPULATED BY CLIENT JS -->
+		</div>
+	</div>
+</div>
+<script id="compareRunData" type="application/json" set:html={safeRunsJson}></script>
+<script>
+	(function() {
+		const dataEl = document.getElementById('compareRunData');
+		const runsData = dataEl ? JSON.parse(dataEl.textContent) : [];
+
+		function initComparisonView() {
+			const selectRunA = document.getElementById('selectRunA');
+			const selectRunB = document.getElementById('selectRunB');
+			const executeCompareBtn = document.getElementById('executeCompareBtn');
+
+			const cmpTpsA = document.getElementById('cmpTpsA');
+			const cmpTpsB = document.getElementById('cmpTpsB');
+			const cmpTpsDelta = document.getElementById('cmpTpsDelta');
+
+			const cmpTtftA = document.getElementById('cmpTtftA');
+			const cmpTtftB = document.getElementById('cmpTtftB');
+			const cmpTtftDelta = document.getElementById('cmpTtftDelta');
+
+			const cmpPassA = document.getElementById('cmpPassA');
+			const cmpPassB = document.getElementById('cmpPassB');
+			const cmpPassDelta = document.getElementById('cmpPassDelta');
+
+			const cmpPairsCount = document.getElementById('cmpPairsCount');
+			const pairsListContainer = document.getElementById('pairsListContainer');
+
+			if (!selectRunA || !selectRunB) return;
+
+			// Read URL params if present
+			const params = new URLSearchParams(window.location.search);
+			const urlRunA = params.get('runA');
+			const urlRunB = params.get('runB');
+
+			if (urlRunA && selectRunA.querySelector(`option[value="${urlRunA}"]`)) {
+				selectRunA.value = urlRunA;
+			}
+			if (urlRunB && selectRunB.querySelector(`option[value="${urlRunB}"]`)) {
+				selectRunB.value = urlRunB;
+			}
+
+			function escapeHtml(text) {
+				const div = document.createElement('div');
+				div.textContent = text || '';
+				return div.innerHTML;
+			}
+
+			function renderComparison() {
+				const idA = selectRunA.value;
+				const idB = selectRunB.value;
+
+				const runA = runsData.find((r) => r.runId === idA);
+				const runB = runsData.find((r) => r.runId === idB);
+
+				if (!runA || !runB) return;
+
+				// 1. Update Telemetry Cards
+				const tpsA = runA.summary?.averageTokensPerSecond || 0;
+				const tpsB = runB.summary?.averageTokensPerSecond || 0;
+				const tpsDelta = Math.round((tpsA - tpsB) * 100) / 100;
+
+				const ttftA = runA.summary?.averageTimeToFirstTokenMs || 0;
+				const ttftB = runB.summary?.averageTimeToFirstTokenMs || 0;
+				const ttftDelta = Math.round((ttftA - ttftB) * 100) / 100;
+
+				const passA = runA.summary?.passRatePercentage || 0;
+				const passB = runB.summary?.passRatePercentage || 0;
+				const passDelta = Math.round((passA - passB) * 100) / 100;
+
+				if (cmpTpsA) cmpTpsA.textContent = `${tpsA} t/s`;
+				if (cmpTpsB) cmpTpsB.textContent = `${tpsB} t/s`;
+				if (cmpTpsDelta) {
+					cmpTpsDelta.textContent = `${tpsDelta >= 0 ? '+' : ''}${tpsDelta} t/s`;
+					cmpTpsDelta.className = `delta-pill ${tpsDelta >= 0 ? 'pos' : 'neg'}`;
+				}
+
+				if (cmpTtftA) cmpTtftA.textContent = `${ttftA} ms`;
+				if (cmpTtftB) cmpTtftB.textContent = `${ttftB} ms`;
+				if (cmpTtftDelta) {
+					cmpTtftDelta.textContent = `${ttftDelta <= 0 ? `${ttftDelta} ms (Faster)` : `+${ttftDelta} ms (Slower)`}`;
+					cmpTtftDelta.className = `delta-pill ${ttftDelta <= 0 ? 'pos' : 'neg'}`;
+				}
+
+				if (cmpPassA) cmpPassA.textContent = `${passA}%`;
+				if (cmpPassB) cmpPassB.textContent = `${passB}%`;
+				if (cmpPassDelta) {
+					cmpPassDelta.textContent = `${passDelta >= 0 ? '+' : ''}${passDelta}%`;
+					cmpPassDelta.className = `delta-pill ${passDelta >= 0 ? 'pos' : 'neg'}`;
+				}
+
+				// 2. Gather All Unique Evals
+				const evalMap = new Map();
+				(runA.results || []).forEach((r) => evalMap.set(r.evalId, { name: r.evalName, cat: r.category }));
+				(runB.results || []).forEach((r) => evalMap.set(r.evalId, { name: r.evalName, cat: r.category }));
+
+				const evalList = Array.from(evalMap.entries());
+				if (cmpPairsCount) cmpPairsCount.textContent = `${evalList.length} EVALS ALIGNED`;
+
+				// 3. Render Pair Rows
+				if (!pairsListContainer) return;
+				pairsListContainer.innerHTML = '';
+
+				evalList.forEach(([evalId, meta], index) => {
+					const resA = (runA.results || []).find((r) => r.evalId === evalId);
+					const resB = (runB.results || []).find((r) => r.evalId === evalId);
+
+					const scoreA = resA?.judge?.score;
+					const scoreB = resB?.judge?.score;
+
+					const tpsResA = resA?.metrics?.tokensPerSecond;
+					const tpsResB = resB?.metrics?.tokensPerSecond;
+
+					const tpsResDelta = (tpsResA !== undefined && tpsResB !== undefined)
+						? Math.round((tpsResA - tpsResB) * 100) / 100
+						: undefined;
+
+					const detailsEl = document.createElement('details');
+					detailsEl.className = 'pair-row-accordion';
+					if (index === 0) detailsEl.open = true;
+
+					detailsEl.innerHTML = `
+						<summary class="pair-summary">
+							<div class="pair-title-col">
+								<span class="eval-cat-badge">${meta.cat || 'general'}</span>
+								<span class="eval-title">${meta.name || evalId}</span>
+							</div>
+
+							<div class="pair-run-stat stat-a">
+								<span class="stat-label">RUN A</span>
+								${resA ? `<span class="score-pill ${resA.judge?.passed ? 'pass' : 'fail'}">${scoreA}% (${tpsResA} t/s)</span>` : '<span class="untested-text">N/A</span>'}
+							</div>
+
+							<div class="pair-vs">VS</div>
+
+							<div class="pair-run-stat stat-b">
+								<span class="stat-label">RUN B</span>
+								${resB ? `<span class="score-pill ${resB.judge?.passed ? 'pass' : 'fail'}">${scoreB}% (${tpsResB} t/s)</span>` : '<span class="untested-text">N/A</span>'}
+							</div>
+
+							<div class="pair-delta">
+								${tpsResDelta !== undefined ? `<span class="delta-badge ${tpsResDelta >= 0 ? 'pos' : 'neg'}">${tpsResDelta >= 0 ? '+' : ''}${tpsResDelta} t/s</span>` : ''}
+							</div>
+						</summary>
+
+						<div class="pair-expanded-body">
+							<div class="split-pane">
+								<!-- SIDE A -->
+								<div class="run-side side-a">
+									<div class="side-header">
+										<span class="side-tag amber">RUN A</span>
+										<span class="model-name">${runA.meta?.modelName || 'Run A'}</span>
+									</div>
+									${resA ? `
+										<div class="side-content">
+											<div class="meta-strip">
+												<span>Score: <strong>${resA.judge?.score}%</strong></span>
+												<span>Speed: <strong>${resA.metrics?.tokensPerSecond} t/s</strong></span>
+												<span>TTFT: <strong>${resA.metrics?.timeToFirstTokenMs} ms</strong></span>
+											</div>
+											<div class="section-block">
+												<span class="block-title">JUDGE REASONING</span>
+												<div class="reasoning-text">${escapeHtml(resA.judge?.reasoning)}</div>
+											</div>
+											<div class="section-block">
+												<span class="block-title">RAW OUTPUT / CODE</span>
+												<pre class="code-box"><code>${escapeHtml(resA.rawOutput)}</code></pre>
+											</div>
+											${resA.artifactUrl ? `<a href="${resA.artifactUrl}" target="_blank" class="artifact-link">⚡ VIEW VISUAL DEMO A ↗</a>` : ''}
+										</div>
+									` : '<div class="not-executed">Not executed in Run A.</div>'}
+								</div>
+
+								<!-- SIDE B -->
+								<div class="run-side side-b">
+									<div class="side-header">
+										<span class="side-tag blue">RUN B</span>
+										<span class="model-name">${runB.meta?.modelName || 'Run B'}</span>
+									</div>
+									${resB ? `
+										<div class="side-content">
+											<div class="meta-strip">
+												<span>Score: <strong>${resB.judge?.score}%</strong></span>
+												<span>Speed: <strong>${resB.metrics?.tokensPerSecond} t/s</strong></span>
+												<span>TTFT: <strong>${resB.metrics?.timeToFirstTokenMs} ms</strong></span>
+											</div>
+											<div class="section-block">
+												<span class="block-title">JUDGE REASONING</span>
+												<div class="reasoning-text">${escapeHtml(resB.judge?.reasoning)}</div>
+											</div>
+											<div class="section-block">
+												<span class="block-title">RAW OUTPUT / CODE</span>
+												<pre class="code-box"><code>${escapeHtml(resB.rawOutput)}</code></pre>
+											</div>
+											${resB.artifactUrl ? `<a href="${resB.artifactUrl}" target="_blank" class="artifact-link">⚡ VIEW VISUAL DEMO B ↗</a>` : ''}
+										</div>
+									` : '<div class="not-executed">Not executed in Run B.</div>'}
+								</div>
+							</div>
+						</div>
+					`;
+
+					pairsListContainer.appendChild(detailsEl);
+				});
+			}
+
+			function executeComparison() {
+				const idA = selectRunA.value;
+				const idB = selectRunB.value;
+				const newUrl = `/evals?view=compare&runA=${encodeURIComponent(idA)}&runB=${encodeURIComponent(idB)}`;
+				window.history.pushState(null, '', newUrl);
+				renderComparison();
+			}
+
+			selectRunA.addEventListener('change', executeComparison);
+			selectRunB.addEventListener('change', executeComparison);
+			if (executeCompareBtn) executeCompareBtn.addEventListener('click', executeComparison);
+
+			// Render immediately on load
+			renderComparison();
+		}
+
+		document.addEventListener('astro:page-load', initComparisonView);
+
+		window.addEventListener('popstate', initComparisonView);
+		window.addEventListener('render-comparison', initComparisonView);
+	})();
+</script>
+
+<style is:global>
+	.compare-container {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		width: 100%;
+	}
+
+	.compare-toolbar {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		background: #14181f;
+		padding: 16px 20px;
+		border-radius: 6px;
+		border: 1px solid #21262d;
+	}
+
+	.toolbar-title {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.toolbar-title h3 {
+		font-family: var(--font-mono);
+		font-size: 1.1rem;
+		color: #fff;
+		margin: 0;
+	}
+
+	.lcars-tag {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: bold;
+		padding: 3px 8px;
+		border-radius: 4px;
+	}
+
+	.lcars-tag.blue {
+		background-color: var(--lcars-blue);
+		color: #000;
+	}
+
+	.selectors-form {
+		display: flex;
+		align-items: flex-end;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+
+	.select-group {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex-grow: 1;
+		min-width: 260px;
+	}
+
+	.select-group label {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		font-weight: bold;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.lcars-select {
+		background: #0d1117;
+		color: #fff;
+		border: 1px solid #30363d;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		padding: 8px 12px;
+		border-radius: 4px;
+		width: 100%;
+		cursor: pointer;
+	}
+
+	.lcars-select.amber {
+		border-left: 4px solid var(--lcars-amber);
+	}
+
+	.lcars-select.blue {
+		border-left: 4px solid var(--lcars-blue);
+	}
+
+	.vs-divider {
+		font-family: var(--font-mono);
+		font-weight: 800;
+		font-size: 1rem;
+		color: var(--lcars-tan);
+		padding: 8px 0;
+	}
+
+	.submit-compare-btn {
+		background: var(--lcars-blue);
+		color: #000;
+		border: none;
+		font-family: var(--font-mono);
+		font-weight: bold;
+		font-size: 0.85rem;
+		padding: 10px 20px;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: filter 0.15s, transform 0.1s;
+		height: 38px;
+	}
+
+	.submit-compare-btn:hover {
+		filter: brightness(1.25);
+		transform: scale(1.02);
+	}
+
+	/* DELTA TELEMETRY STRIP */
+	.delta-telemetry-bar {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 16px;
+	}
+
+	.delta-card {
+		background: #14181f;
+		border: 1px solid #21262d;
+		border-top: 3px solid var(--lcars-tan);
+		padding: 16px 20px;
+		border-radius: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.d-label {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.d-values {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-family: var(--font-mono);
+		font-size: 1rem;
+		font-weight: bold;
+	}
+
+	.val-a { color: var(--lcars-amber); }
+	.val-b { color: var(--lcars-blue); }
+	.vs { font-size: 0.75rem; color: var(--text-muted); }
+
+	.delta-pill {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: bold;
+		padding: 3px 8px;
+		border-radius: 4px;
+		align-self: flex-start;
+	}
+
+	.delta-pill.pos {
+		background: rgba(46, 160, 67, 0.15);
+		color: #3fb950;
+		border: 1px solid rgba(46, 160, 67, 0.4);
+	}
+
+	.delta-pill.neg {
+		background: rgba(218, 54, 51, 0.15);
+		color: #f85149;
+		border: 1px solid rgba(218, 54, 51, 0.4);
+	}
+
+	/* TABLE CARD */
+	.table-card {
+		background: #14181f;
+		border: 1px solid #21262d;
+		border-radius: 6px;
+		overflow: hidden;
+	}
+
+	.table-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 14px 20px;
+		background: #0d1117;
+		border-bottom: 1px solid #21262d;
+	}
+
+	.table-header h4 {
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		color: #fff;
+		margin: 0;
+	}
+
+	.count {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		background: #161b22;
+		padding: 2px 8px;
+		border-radius: 10px;
+	}
+
+	.pairs-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.pair-row-accordion {
+		border-bottom: 1px solid #1f242c;
+	}
+
+	.pair-summary {
+		display: flex;
+		align-items: center;
+		padding: 12px 20px;
+		gap: 16px;
+		cursor: pointer;
+		user-select: none;
+		list-style: none;
+		transition: background 0.15s;
+	}
+
+	.pair-summary::-webkit-details-marker { display: none; }
+
+	.pair-summary:hover {
+		background: #1c212b;
+	}
+
+	.pair-title-col {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-grow: 1;
+		min-width: 220px;
+	}
+
+	.eval-cat-badge {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		background: #0b0d10;
+		color: var(--lcars-amber);
+		padding: 2px 6px;
+		border-radius: 3px;
+		text-transform: uppercase;
+		border: 1px solid #21262d;
+	}
+
+	.eval-title {
+		font-family: var(--font-sans);
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.pair-run-stat {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 140px;
+	}
+
+	.stat-label {
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		color: var(--text-muted);
+	}
+
+	.score-pill {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: bold;
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+
+	.score-pill.pass {
+		background: rgba(46, 160, 67, 0.15);
+		color: #3fb950;
+	}
+
+	.score-pill.fail {
+		background: rgba(218, 54, 51, 0.15);
+		color: #f85149;
+	}
+
+	.untested-text {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.pair-vs {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+	}
+
+	.pair-delta {
+		min-width: 90px;
+		text-align: right;
+	}
+
+	.delta-badge {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: bold;
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+
+	.delta-badge.pos { color: #3fb950; background: rgba(46, 160, 67, 0.15); }
+	.delta-badge.neg { color: #f85149; background: rgba(218, 54, 51, 0.15); }
+
+	/* EXPANDED SPLIT PANE */
+	.pair-expanded-body {
+		padding: 16px 20px;
+		background: #0b0d10;
+		border-top: 1px solid #1f242c;
+	}
+
+	.split-pane {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 16px;
+		width: 100%;
+	}
+
+	.run-side {
+		background: #14181f;
+		border: 1px solid #21262d;
+		border-radius: 6px;
+		padding: 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.run-side.side-a { border-top: 3px solid var(--lcars-amber); }
+	.run-side.side-b { border-top: 3px solid var(--lcars-blue); }
+
+	.side-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.side-tag {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: bold;
+		padding: 2px 6px;
+		border-radius: 3px;
+		color: #000;
+	}
+
+	.side-tag.amber { background: var(--lcars-amber); }
+	.side-tag.blue { background: var(--lcars-blue); }
+
+	.model-name {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: bold;
+		color: #fff;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.meta-strip {
+		display: flex;
+		gap: 14px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		background: #0d1117;
+		padding: 8px 12px;
+		border-radius: 4px;
+		flex-wrap: wrap;
+	}
+
+	.section-block {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+	}
+
+	.block-title {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		font-weight: bold;
+		color: var(--text-muted);
+		letter-spacing: 1px;
+	}
+
+	.reasoning-text {
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		color: var(--text-main);
+		background: #0e1218;
+		padding: 12px;
+		border-radius: 4px;
+		line-height: 1.5;
+		border-left: 3px solid #30363d;
+		word-break: break-word;
+	}
+
+	.code-box {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		background: #080a0d;
+		padding: 12px;
+		border-radius: 4px;
+		border: 1px solid #1f242c;
+		max-height: 250px;
+		overflow: auto;
+		color: #e6edf3;
+		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+		max-width: 100%;
+	}
+
+	.artifact-link {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: bold;
+		color: var(--lcars-amber);
+		text-decoration: none;
+		padding: 8px 12px;
+		background: rgba(255, 153, 0, 0.1);
+		border: 1px solid var(--lcars-amber);
+		border-radius: 4px;
+		text-align: center;
+		margin-top: 4px;
+		transition: all 0.2s;
+	}
+
+	.artifact-link:hover {
+		background: var(--lcars-amber);
+		color: #000;
+	}
+
+	.not-executed {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		padding: 20px;
+		text-align: center;
+	}
+
+	@media (max-width: 900px) {
+		.split-pane {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

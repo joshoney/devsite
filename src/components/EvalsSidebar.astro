@@ -1,0 +1,410 @@
+---
+import { getModelGroups } from '../utils/evaluerBench';
+
+interface Props {
+	activeView?: 'matrix' | 'compare' | 'run';
+	activeRunId?: string;
+}
+
+const { activeView = 'matrix', activeRunId } = Astro.props;
+const modelGroups = getModelGroups();
+
+const socialLinks = [
+	{ title: 'GitHub ↗', href: 'https://github.com/joshoney', color: 'var(--lcars-tan)' },
+	{ title: 'LinkedIn ↗', href: 'https://www.linkedin.com/in/joshua-oney-sf', color: 'var(--lcars-red)' },
+];
+
+function formatDate(isoString: string) {
+	try {
+		const d = new Date(isoString);
+		const month = d.toLocaleString('en-US', { month: 'short' });
+		const day = d.getDate();
+		const hours = d.getHours().toString().padStart(2, '0');
+		const mins = d.getMinutes().toString().padStart(2, '0');
+		return `${month} ${day} ${hours}:${mins}`;
+	} catch {
+		return isoString;
+	}
+}
+---
+
+<aside class="lcars-sidebar" style="view-transition-name: sidebar-pane" transition:persist="sidebar">
+	<!-- 1. Header Name Badge -->
+	<div class="sidebar-name">
+		<span class="name-text">EVALUER BENCH</span>
+		<span class="name-sub">SYS // 02</span>
+	</div>
+
+	<!-- 2. Return to Main Portfolio -->
+	<div class="top-nav">
+		<a href="/" class="lcars-btn back-btn" style="--btn-color: var(--lcars-red);">
+			<span class="btn-num">◄</span>
+			<span class="btn-text">MAIN PORTFOLIO</span>
+		</a>
+	</div>
+
+	<!-- 3. Primary Evals Controls -->
+	<div class="stack-label">EVAL SYSTEM VIEWS</div>
+	<nav class="nav-stack">
+		<a 
+			href="/evals?view=matrix" 
+			data-view="matrix"
+			class={`lcars-btn lcars-btn-view ${activeView === 'matrix' ? 'active' : ''}`}
+			style="--btn-color: var(--lcars-amber);"
+		>
+			<span class="btn-num">01</span>
+			<span class="btn-text">GRID VIEW</span>
+		</a>
+
+		<a 
+			href="/evals?view=compare" 
+			data-view="compare"
+			class={`lcars-btn lcars-btn-view ${activeView === 'compare' ? 'active' : ''}`}
+			style="--btn-color: var(--lcars-blue);"
+		>
+			<span class="btn-num">02</span>
+			<span class="btn-text">COMPARE RUNS</span>
+		</a>
+	</nav>
+
+	<!-- 4. Models & Sub-Runs Accordion -->
+	<div class="stack-label margin-top">MODELS & BENCHMARKS</div>
+	<div class="model-accordion-list">
+		{modelGroups.map((group, index) => {
+			const isCurrentModelActive = group.runs.some(r => r.runId === activeRunId);
+			return (
+				<details class="model-accordion" open={isCurrentModelActive || index === 0}>
+					<summary class="model-summary-btn" style={`--btn-color: ${index % 2 === 0 ? 'var(--lcars-tan)' : 'var(--lcars-purple)'}`}>
+						<span class="summary-left">
+							<span class="btn-num">M{index + 1}</span>
+							<span class="model-title">{group.modelName}</span>
+						</span>
+						<span class="badge-pill">{group.runs.length} {group.runs.length === 1 ? 'RUN' : 'RUNS'}</span>
+					</summary>
+
+					<div class="runs-submenu">
+						{group.runs.map((run, rIdx) => {
+							const isActiveRun = run.runId === activeRunId;
+							return (
+								<a 
+									href={`/evals?view=run&runId=${run.runId}`}
+									data-view="run"
+									data-run-id={run.runId}
+									class={`run-sub-btn ${isActiveRun ? 'active-run' : ''}`}
+								>
+									<span class="run-icon">{isActiveRun ? '►' : '•'}</span>
+									<span class="run-date">{formatDate(run.meta?.timestamp)}</span>
+									<span class="run-meta-pill">
+										{run.summary?.averageTokensPerSecond} t/s
+									</span>
+								</a>
+							);
+						})}
+					</div>
+				</details>
+			);
+		})}
+	</div>
+
+	<!-- 5. Flexible Filler -->
+	<div class="sidebar-filler"></div>
+
+	<!-- 6. Social Stack -->
+	<div class="social-stack">
+		<div class="stack-label">CONNECT</div>
+		{socialLinks.map((link, index) => (
+			<a 
+				href={link.href} 
+				target="_blank" 
+				rel="noopener noreferrer" 
+				class="lcars-btn social-btn" 
+				style={`--btn-color: ${link.color};`}
+			>
+				<span class="btn-num">S{index + 1}</span>
+				<span class="btn-text">{link.title}</span>
+			</a>
+		))}
+	</div>
+
+	<!-- 7. Bottom Filler Cap -->
+	<div class="sidebar-filler-bottom"></div>
+</aside>
+
+<style>
+	.lcars-sidebar {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: calc(100vh - 70px);
+		overflow-y: auto;
+		user-select: none;
+		padding-bottom: 20px;
+		background-color: var(--bg-color);
+	}
+
+	.lcars-sidebar::-webkit-scrollbar {
+		display: none;
+	}
+	.lcars-sidebar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.sidebar-name {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-height: 46px;
+		padding: 8px 18px;
+		background-color: var(--lcars-amber);
+		color: #000;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		letter-spacing: 1.5px;
+		border-bottom-left-radius: 20px;
+		margin-bottom: 8px;
+		flex-shrink: 0;
+	}
+
+	.name-text {
+		font-size: 1.05rem;
+	}
+
+	.name-sub {
+		font-size: 0.75rem;
+		opacity: 0.7;
+	}
+
+	.top-nav {
+		padding-bottom: 8px;
+	}
+
+	.back-btn {
+		background-color: #21262d;
+		color: var(--text-muted);
+		border-top-left-radius: 18px;
+		border-bottom-left-radius: 18px;
+	}
+
+	.back-btn:hover {
+		background-color: var(--lcars-red);
+		color: #000;
+	}
+
+	.nav-stack, .social-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		width: 100%;
+		flex-shrink: 0;
+	}
+
+	.stack-label {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		letter-spacing: 2px;
+		padding: 6px 0 4px 14px;
+		text-transform: uppercase;
+	}
+
+	.margin-top {
+		margin-top: 10px;
+	}
+
+	.lcars-btn {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		min-height: 42px;
+		padding: 6px 16px;
+		background: var(--btn-color, var(--lcars-blue));
+		color: #000;
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		font-weight: 700;
+		letter-spacing: 1px;
+		border-top-left-radius: 21px;
+		border-bottom-left-radius: 21px;
+		border-top-right-radius: 4px;
+		border-bottom-right-radius: 4px;
+		transition: filter 0.2s, transform 0.1s;
+		text-decoration: none;
+	}
+
+	.lcars-btn:hover {
+		filter: brightness(1.25);
+		transform: translateX(4px);
+		color: #fff;
+	}
+
+	.lcars-btn.active {
+		box-shadow: inset 0 0 0 2px #fff;
+		filter: brightness(1.3);
+		transform: translateX(4px);
+	}
+
+	.btn-num {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		opacity: 0.85;
+		flex-shrink: 0;
+	}
+
+	.btn-text {
+		text-align: right;
+		line-height: 1.15;
+		margin-left: 8px;
+	}
+
+	/* Model Accordion Styling */
+	.model-accordion-list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.model-accordion {
+		width: 100%;
+	}
+
+	.model-summary-btn {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-height: 40px;
+		padding: 6px 16px;
+		background-color: var(--btn-color);
+		color: #000;
+		font-family: var(--font-sans);
+		font-weight: 700;
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		border-top-left-radius: 20px;
+		border-bottom-left-radius: 20px;
+		border-top-right-radius: 4px;
+		border-bottom-right-radius: 4px;
+		cursor: pointer;
+		list-style: none;
+		transition: filter 0.2s;
+	}
+
+	.model-summary-btn::-webkit-details-marker {
+		display: none;
+	}
+
+	.model-summary-btn:hover {
+		filter: brightness(1.2);
+	}
+
+	.summary-left {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.model-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.badge-pill {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		background: rgba(0, 0, 0, 0.25);
+		padding: 2px 6px;
+		border-radius: 10px;
+		flex-shrink: 0;
+	}
+
+	.runs-submenu {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 6px 0 4px 16px;
+	}
+
+	.run-sub-btn {
+		display: flex;
+		align-items: center;
+		padding: 8px 16px;
+		margin: 3px 0 3px 12px;
+		background: #1c2128;
+		border-radius: 18px 4px 4px 18px;
+		color: var(--text-muted);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		text-decoration: none;
+		transition: filter 0.2s, transform 0.1s;
+	}
+
+	.run-sub-btn:hover {
+		filter: brightness(1.3);
+		transform: translateX(4px);
+		color: #fff;
+	}
+
+	.run-sub-btn.active-run {
+		background: var(--lcars-amber);
+		color: #000;
+		font-weight: 700;
+	}
+
+	.run-icon {
+		margin-right: 6px;
+		font-size: 0.65rem;
+	}
+
+	.run-date {
+		flex-grow: 1;
+	}
+
+	.run-meta-pill {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		background: #0b0d10;
+		padding: 1px 6px;
+		border-radius: 4px;
+	}
+
+	/* Fillers */
+	.sidebar-filler {
+		flex-grow: 1;
+		width: 100%;
+		min-height: 20px;
+		background-color: var(--lcars-blue);
+		border-top-left-radius: 4px;
+		border-bottom-left-radius: 14px;
+		opacity: 0.25;
+		margin: 6px 0;
+	}
+
+	.sidebar-filler-bottom {
+		width: 100%;
+		height: 60px;
+		background-color: var(--lcars-purple);
+		border-top-left-radius: 4px;
+		border-bottom-left-radius: 20px;
+		opacity: 0.25;
+		margin-top: 8px;
+		flex-shrink: 0;
+	}
+
+	@media (max-width: 850px) {
+		.lcars-sidebar {
+			height: auto;
+		}
+		.sidebar-filler, .sidebar-filler-bottom, .stack-label {
+			display: none;
+		}
+	}
+</style>
