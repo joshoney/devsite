@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tango Logic Puzzle</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --grid-border: #333;
+            --cell-bg: #ffffff;
+            --highlight-color: #e8f0fe;
+            --fire-color: #ff4500;
+            --ice-color: #00bfff;
+            --constraint-color: #555;
+            --error-color: #ff0000;
+            --success-color: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #78828d;
+        }
+
+        .status-bar {
+            height: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-bar.error { color: var(--error-color); }
+        .status-bar.success { color: var(--success-color); }
+
+        .puzzle-board {
+            position: relative;
+            width: 360px;
+            height: 360px;
+            background-color: var(--grid-border);
+            border: 2px solid var(--grid-border);
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            background-color: var(--cell-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+
+        .cell:hover {
+            background-color: var(--highlight-color);
+        }
+
+        .cell.fixed {
+            background-color: #f8f9fa;
+            cursor: default;
+        }
+
+        .cell.fixed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #ccc;
+        }
+
+        .cell.error {
+            background-color: #ffe0e0;
+        }
+
+        .constraint {
+            position: absolute;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--constraint-color);
+            z-index: 10;
+        }
+
+        /* Horizontal Constraints */
+        .constraint-h {
+            width: 60px;
+            height: 4px;
+            top: -2px;
+            left: 0;
+            border-radius: 2px;
+        }
+
+        /* Vertical Constraints */
+        .constraint-v {
+            width: 4px;
+            height: 60px;
+            left: -2px;
+            top: 0;
+            border-radius: 2px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-icon {
+            font-size: 1.5rem;
+        }
+
+        .legend-symbol {
+            font-weight: bold;
+        }
+
+        .legend-constraint {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 400px) {
+            .puzzle-board {
+                width: 300px;
+                height: 300px;
+            }
+            .cell {
+                width: 50px;
+                height: 50px;
+                font-size: 2rem;
+            }
+            .constraint-h { width: 50px; }
+            .constraint-v { height: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tango Puzzle</h1>
+    
+    <div class="instructions">
+        <p>Fill the 6×6 grid with Fire (🔥) and Ice (🧊) symbols.</p>
+        <p><strong>Rules:</strong> 1. Each row and column must have exactly 3 of each symbol.<br>
+        2. No three identical symbols in a row (horizontally or vertically).<br>
+        3. Match (=) means adjacent cells are the same. Cross (×) means they are different.</p>
+    </div>
+
+    <div class="game-container">
+        <div class="controls">
+            <button onclick="game.newGame()">New Game</button>
+            <button class="secondary" onclick="game.checkSolution()">Check Solution</button>
+        </div>
+
+        <div class="status-bar" id="statusMessage"></div>
+
+        <div class="puzzle-board" id="board">
+            <!-- Grid generated by JS -->
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-icon">🔥</span>
+                <span class="legend-symbol">Fire</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-icon">🧊</span>
+                <span class="legend-symbol">Ice</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-constraint">=</span>
+                <span>Same</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-constraint">×</span>
+                <span>Different</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TangoGame {
+            constructor() {
+                this.boardSize = 6;
+                this.gridElement = document.getElementById('board');
+                this.statusElement = document.getElementById('statusMessage');
+                this.solutionBoard = [];
+                this.playerBoard = [];
+                this.fixedCells = [];
+                this.constraints = [];
+                this.init();
+            }
+
+            init() {
+                this.newGame();
+            }
+
+            newGame() {
+                this.clearStatus();
+                this.solutionBoard = this.generateSolution();
+                this.placeConstraints();
+                this.setupPlayerBoard();
+                this.renderBoard();
+            }
+
+            clearStatus() {
+                this.statusElement.textContent = '';
+                this.statusElement.className = 'status-bar';
+            }
+
+            setStatus(message, type) {
+                this.statusElement.textContent = message;
+                this.statusElement.className = `status-bar ${type}`;
+            }
+
+            // --- Back-End Logic: Solution Generation ---
+
+            generateSolution() {
+                const grid = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(null));
+                this.fillGrid(grid, 0, 0);
+                return grid;
+            }
+
+            fillGrid(grid, row, col) {
+                if (row === this.boardSize) return true; // Done
+
+                const nextRow = col === this.boardSize - 1 ? row + 1 : row;
+                const nextCol = col === this.boardSize - 1 ? 0 : col + 1;
+
+                const symbols = ['🔥', '🧊'];
+                // Shuffle symbols for randomness
+                symbols.sort(() => Math.random() - 0.5);
+
+                for (let symbol of symbols) {
+                    if (this.isValidPlacement(grid, row, col, symbol)) {
+                        grid[row][col] = symbol;
+                        if (this.fillGrid(grid, nextRow, nextCol)) {
+                            return true;
+                        }
+                        grid[row][col] = null; // Backtrack
+                    }
+                }
+                return false;
+            }
+
+            isValidPlacement(grid, row, col, symbol) {
+                // Rule 1: No three in a row
+                // Check horizontal
+                if (col >= 2 && grid[row][col - 1] === symbol && grid[row][col - 2] === symbol) {
+                    return false;
+                }
+                // Check vertical
+                if (row >= 2 && grid[row - 1][col] === symbol && grid[row - 2][col] === symbol) {
+                    return false;
+                }
+
+                // Rule 2: Row/Column Balance (3 of each)
+                // Check row count so far
+                let rowCount = 0;
+                for (let c = 0; c < col; c++) {
+                    if (grid[row][c] === symbol) rowCount++;
+                }
+                // If we add this, can we still fit 3 total? (3 - rowCount - 1 remaining spots in row must be >= 0)
+                // And we need to leave room for the other symbol
+                if (rowCount >= 3) return false; // Already too many of this symbol in row
+
+                // Check column count so far
+                let colCount = 0;
+                for (let r = 0; r < row; r++) {
+                    if (grid[r][col] === symbol) colCount++;
+                }
+                if (colCount >= 3) return false; // Already too many of this symbol in col
+
+                return true;
+            }
+
+            // --- Constraint Placement ---
+
+            placeConstraints() {
+                this.constraints = [];
+                const possiblePairs = [];
+
+                // Collect all adjacent pairs (right and down)
+                for (let r = 0; r < this.boardSize; r++) {
+                    for (let c = 0; c < this.boardSize; c++) {
+                        if (c < this.boardSize - 1) {
+                            possiblePairs.push({ r1: r, c1: c, r2: r, c2: c + 1, type: 'h' });
+                        }
+                        if (r < this.boardSize - 1) {
+                            possiblePairs.push({ r1: r, c1: c, r2: r + 1, c2: c, type: 'v' });
+                        }
+                    }
+                }
+
+                // Shuffle pairs for randomness
+                possiblePairs.sort(() => Math.random() - 0.5);
+
+                // Select 6 to 8 constraints
+                const numConstraints = Math.floor(Math.random() * 3) + 6; // 6, 7, or 8
+                
+                for (let i = 0; i < numConstraints; i++) {
+                    const pair = possiblePairs[i];
+                    const sym1 = this.solutionBoard[pair.r1][pair.c1];
+                    const sym2 = this.solutionBoard[pair.r2][pair.c2];
+
+                    const constraint = {
+                        r1: pair.r1, c1: pair.c1,
+                        r2: pair.r2, c2: pair.c2,
+                        type: pair.type,
+                        symbol: sym1 === sym2 ? '=' : '×'
+                    };
+                    this.constraints.push(constraint);
+                }
+            }
+
+            // --- Setup Player Board ---
+
+            setupPlayerBoard() {
+                this.playerBoard = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(null));
+                this.fixedCells = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(false));
+
+                // Randomly clear ~70% of cells
+                for (let r = 0; r < this.boardSize; r++) {
+                    for (let c = 0; c < this.boardSize; c++) {
+                        if (Math.random() > 0.7) {
+                            this.playerBoard[r][c] = null; // Empty
+                            this.fixedCells[r][c] = false;
+                        } else {
+                            this.playerBoard[r][c] = this.solutionBoard[r][c];
+                            this.fixedCells[r][c] = true;
+                        }
+                    }
+                }
+            }
+
+            // --- Rendering ---
+
+            renderBoard() {
+                this.gridElement.innerHTML = '';
+                
+                // Create cells
+                for (let r = 0; r < this.boardSize; r++) {
+                    for (let c = 0; c < this.boardSize; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+
+                        if (this.fixedCells[r][c]) {
+                            cell.classList.add('fixed');
+                            cell.textContent = this.playerBoard[r][c];
+                        } else {
+                            if (this.playerBoard[r][c]) {
+                                cell.textContent = this.playerBoard[r][c];
+                            }
+                        }
+
+                        cell.addEventListener('click', () => this.handleCellClick(r, c, cell));
+                        this.gridElement.appendChild(cell);
+                    }
+                }
+
+                // Create constraints
+                this.constraints.forEach(constraint => {
+                    const constEl = document.createElement('div');
+                    constEl.className = `constraint ${constraint.type === 'h' ? 'constraint-h' : 'constraint-v'}`;
+                    constEl.textContent = constraint.symbol;
+
+                    // Positioning logic
+                    // Horizontal constraint sits between (r, c) and (r, c+1)
+                    // Vertical constraint sits between (r, c) and (r+1, c)
+                    
+                    // We use CSS absolute positioning relative to the grid container
+                    // Each cell is 60px (or responsive). 
+                    // For horizontal: top is row * cellSize, left is (col + 1) * cellSize - half constraint width
+                    // For vertical: top is (row + 1) * cellSize - half constraint height, left is col * cellSize
+                    
+                    // To make it responsive, we use percentages
+                    const cellSizePct = 100 / this.boardSize;
+                    
+                    if (constraint.type === 'h') {
+                        // Between col c and c+1 in row r
+                        // Left: (c + 1) * 16.66% = approx 16.66 * (c+1)
+                        // Width: 16.66%
+                        const leftPos = (constraint.c1 + 1) * cellSizePct;
+                        const topPos = constraint.r1 * cellSizePct;
+                        
+                        constEl.style.left = `${leftPos}%`;
+                        constEl.style.top = `${topPos}%`;
+                        constEl.style.width = `${cellSizePct}%`;
+                        constEl.style.height = '4px'; // Fixed height for visual distinction
+                    } else {
+                        // Between row r and r+1 in col c
+                        const leftPos = constraint.c1 * cellSizePct;
+                        const topPos = (constraint.r1 + 1) * cellSizePct;
+                        
+                        constEl.style.left = `${leftPos}%`;
+                        constEl.style.top = `${topPos}%`;
+                        constEl.style.width = '4px';
+                        constEl.style.height = `${cellSizePct}%`;
+                    }
+
+                    this.gridElement.appendChild(constEl);
+                });
+            }
+
+            // --- Interaction ---
+
+            handleCellClick(r, c, cellElement) {
+                if (this.fixedCells[r][c]) return;
+
+                // Cycle: Empty -> Fire -> Ice -> Empty
+                const current = this.playerBoard[r][c];
+                if (current === null) {
+                    this.playerBoard[r][c] = '🔥';
+                    cellElement.textContent = '🔥';
+                } else if (current === '🔥') {
+                    this.playerBoard[r][c] = '🧊';
+                    cellElement.textContent = '🧊';
+                } else {
+                    this.playerBoard[r][c] = null;
+                    cellElement.textContent = '';
+                }
+                
+                // Clear any error styling on this cell
+                cellElement.classList.remove('error');
+            }
+
+            // --- Validation ---
+
+            checkSolution() {
+                let isCorrect = true;
+                let isComplete = true;
+                let errorsFound = false;
+
+                // 1. Check Completeness
+                for (let r = 0; r < this.boardSize; r++) {
+                    for (let c = 0; c < this.boardSize; c++) {
+                        if (this.playerBoard[r][c] === null) {
+                            isComplete = false;
+                        }
+                    }
+                }
+
+                if (!isComplete) {
+                    this.setStatus("Board is not complete yet.", "error");
+                    return;
+                }
+
+                // 2. Check Constraints
+                for (let constraint of this.constraints) {
+                    const sym1 = this.playerBoard[constraint.r1][constraint.c1];
+                    const sym2 = this.playerBoard[constraint.r2][constraint.c2];
+                    
+                    let constraintMet = false;
+                    if (constraint.symbol === '=') {
+                        constraintMet = (sym1 === sym2);
+                    } else {
+                        constraintMet = (sym1 !== sym2);
+                    }
+
+                    if (!constraintMet) {
+                        this.markError(constraint.r1, constraint.c1);
+                        this.markError(constraint.r2, constraint.c2);
+                        errorsFound = true;
+                    }
+                }
+
+                // 3. Check Three-in-a-Row
+                for (let r = 0; r < this.boardSize; r++) {
+                    for (let c = 0; c < this.boardSize; c++) {
+                        const current = this.playerBoard[r][c];
+                        if (current === null) continue;
+
+                        // Horizontal
+                        if (c < this.boardSize - 2) {
+                            if (current === this.playerBoard[r][c+1] && current === this.playerBoard[r][c+2]) {
+                                this.markError(r, c);
+                                this.markError(r, c+1);
+                                this.markError(r, c+2);
+                                errorsFound = true;
+                            }
+                        }
+                        // Vertical
+                        if (r < this.boardSize - 2) {
+                            if (current === this.playerBoard[r+1][c] && current === this.playerBoard[r+2][c]) {
+                                this.markError(r, c);
+                                this.markError(r+1, c);
+                                this.markError(r+2, c);
+                                errorsFound = true;
+                            }
+                        }
+                    }
+                }
+
+                // 4. Check Balance (3 of each per row/col)
+                // Check Rows
+                for (let r = 0; r < this.boardSize; r++) {
+                    let fireCount = 0;
+                    let iceCount = 0;
+                    for (let c = 0; c < this.boardSize; c++) {
+                        if (this.playerBoard[r][c] === '🔥') fireCount++;
+                        if (this.playerBoard[r][c] === '🧊') iceCount++;
+                    }
+                    if (fireCount !== 3 || iceCount !== 3) {
+                        errorsFound = true;
+                        // Highlight entire row for balance error (optional, but helpful)
+                        // For now, we just flag the logic
+                    }
+                }
+
+                // Check Columns
+                for (let c = 0; c < this.boardSize; c++) {
+                    let fireCount = 0;
+                    let iceCount = 0;
+                    for (let r = 0; r < this.boardSize; r++) {
+                        if (this.playerBoard[r][c] === '🔥') fireCount++;
+                        if (this.playerBoard[r][c] === '🧊') iceCount++;
+                    }
+                    if (fireCount !== 3 || iceCount !== 3) {
+                        errorsFound = true;
+                    }
+                }
+
+                if (errorsFound) {
+                    this.setStatus("Errors found! Check the red cells.", "error");
+                } else {
+                    this.setStatus("Congratulations! Solution is correct.", "success");
+                }
+            }
+
+            markError(r, c) {
+                // Find the cell in the DOM
+                const cell = this.gridElement.querySelector(`.cell[data-row='${r}'][data-col='${c}']`);
+                if (cell) {
+                    cell.classList.add('error');
+                }
+            }
+        }
+
+        // Initialize Game
+        const game = new TangoGame();
+
+    </script>
+</body>
+</html>

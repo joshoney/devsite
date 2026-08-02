@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-darker: #16213e;
+            --accent: #f1f1f1;
+            --hover: #3a3b4d;
+            --win: #f9c74f;
+            --text: #e6e6e6;
+            --border: #444467;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background: var(--bg-darker);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .cell {
+            background: var(--bg-dark);
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 3px solid transparent;
+        }
+
+        .cell:hover:not(.taken) {
+            background: var(--hover);
+            transform: scale(1.05);
+        }
+
+        .cell.x::before {
+            content: 'X';
+            color: #f9c74f;
+        }
+
+        .cell.o::after {
+            content: 'O';
+            color: #81e6d9;
+        }
+
+        .cell.x.o::before,
+        .cell.o.x::after {
+            display: none;
+        }
+
+        .cell.win {
+            background: var(--win);
+            animation: pulse 0.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.8; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.05); }
+        }
+
+        .status {
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 1rem 0;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.x-turn {
+            color: #f9c74f;
+        }
+
+        .status.o-turn {
+            color: #81e6d9;
+        }
+
+        .status.win {
+            color: var(--win);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .status.tie {
+            color: #a9a9a9;
+            font-style: italic;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--bg-dark);
+            color: var(--accent);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .turn-indicator {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .turn-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .turn-circle.active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .turn-circle.x-color {
+            background: #f9c74f;
+        }
+
+        .turn-circle.o-color {
+            background: #81e6d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TIC-TAC-TOE</h1>
+
+        <div class="turn-indicator">
+            <span class="turn-circle x-color active" id="x-indicator"></span>
+            <span class="turn-circle o-color" id="o-indicator"></span>
+        </div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="status" id="status">X's turn</div>
+
+        <button id="restart">Restart Game</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const cells = document.querySelectorAll('.cell');
+            const status = document.getElementById('status');
+            const restartButton = document.getElementById('restart');
+            const xIndicator = document.getElementById('x-indicator');
+            const oIndicator = document.getElementById('o-indicator');
+
+            let gameState = Array(9).fill(null);
+            let currentPlayer = 'X';
+            let gameActive = true;
+
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]              // diagonals
+            ];
+
+            const handleCellClick = (e) => {
+                const clickedCell = e.target;
+                const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+                if (gameState[clickedCellIndex] || !gameActive) return;
+
+                gameState[clickedCellIndex] = currentPlayer;
+                clickedCell.classList.add(currentPlayer.toLowerCase());
+                clickedCell.classList.add('taken');
+
+                checkResult();
+            };
+
+            const checkResult = () => {
+                let roundWon = false;
+
+                for (let condition of winningConditions) {
+                    const [a, b, c] = condition;
+                    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                        roundWon = true;
+                        highlightWinningCells(a, b, c);
+                        break;
+                    }
+                }
+
+                if (roundWon) {
+                    status.textContent = `${currentPlayer} wins!`;
+                    status.classList.add('win');
+                    status.classList.remove('x-turn', 'o-turn');
+                    gameActive = false;
+                    return;
+                }
+
+                if (!gameState.includes(null)) {
+                    status.textContent = 'It\'s a tie!';
+                    status.classList.add('tie');
+                    status.classList.remove('x-turn', 'o-turn');
+                    gameActive = false;
+                    return;
+                }
+
+                switchPlayer();
+            };
+
+            const highlightWinningCells = (a, b, c) => {
+                cells[a].classList.add('win');
+                cells[b].classList.add('win');
+                cells[c].classList.add('win');
+            };
+
+            const switchPlayer = () => {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                status.textContent = `${currentPlayer}'s turn`;
+                status.classList.remove('x-turn', 'o-turn');
+                status.classList.add(currentPlayer.toLowerCase() + '-turn');
+
+                xIndicator.classList.toggle('active');
+                oIndicator.classList.toggle('active');
+            };
+
+            const resetGame = () => {
+                gameState = Array(9).fill(null);
+                currentPlayer = 'X';
+                gameActive = true;
+
+                cells.forEach(cell => {
+                    cell.classList.remove('x', 'o', 'taken', 'win');
+                });
+
+                status.textContent = 'X\'s turn';
+                status.classList.remove('win', 'tie', 'x-turn', 'o-turn');
+                status.classList.add('x-turn');
+
+                xIndicator.classList.add('active');
+                oIndicator.classList.remove('active');
+            };
+
+            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+            restartButton.addEventListener('click', resetGame);
+
+            // Initialize
+            xIndicator.classList.add('active');
+            status.classList.add('x-turn');
+        });
+    </script>
+</body>
+</html>

@@ -220,23 +220,26 @@ function formatDate(isoString: string) {
 
 					const badgeHtml = hasJudge 
 						? `<span class="score-badge ${isPass ? 'pass' : 'fail'}">${res.judge?.score || 0}% ${isPass ? '✓' : '✗'}</span>`
-						: `<span class="score-badge unjudged">UNJUDGED</span>`;
+						: (isVisual 
+							? `<span class="score-badge unjudged-demo">UNJUDGED</span>`
+							: `<span class="score-badge timeout">TIMEOUT</span>`
+						);
 
 					cardEl.innerHTML = `
 						<summary class="eval-card-header">
 							<div class="header-left">
-								<span class="cat-pill">${res.category || 'general'}</span>
 								<div class="title-group">
 									<h4 class="eval-title">${escapeHtml(res.evalName)}</h4>
 									<span class="eval-id">${res.evalId}</span>
 								</div>
+								<span class="cat-pill">${res.category || 'general'}</span>
 							</div>
 
 							<div class="header-right">
 								<div class="eval-meta-strip">
-									<span class="meta-tag">${res.metrics?.tokensPerSecond || 0} t/s</span>
-									<span class="meta-tag">${res.metrics?.timeToFirstTokenMs || 0} ms TTFT</span>
-									<span class="meta-tag">${((res.metrics?.totalLatencyMs || 0) / 1000).toFixed(1)}s</span>
+									<span class="meta-tag">${res.metrics?.tokensPerSecond !== undefined ? res.metrics.tokensPerSecond : '--'} t/s</span>
+									<span class="meta-tag">${res.metrics?.timeToFirstTokenMs !== undefined ? res.metrics.timeToFirstTokenMs : '--'} ms TTFT</span>
+									<span class="meta-tag">${res.metrics?.totalLatencyMs !== undefined ? (res.metrics.totalLatencyMs / 1000).toFixed(1) + 's' : '--'}</span>
 								</div>
 
 								${badgeHtml}
@@ -252,9 +255,14 @@ function formatDate(isoString: string) {
 								<div class="m-box"><span class="lbl">FORMAT TYPE</span><span class="val">${res.display_type || 'code'}</span></div>
 								${isVisual && res.artifactUrl ? `
 									<div class="m-box visual-box">
-										<button class="launch-artifact-btn" data-url="${res.artifactUrl}" data-title="${escapeHtml(res.evalName)}" data-model="${escapeHtml(run.meta?.modelName)}">
-											⚡ LAUNCH VISUAL APP
-										</button>
+										<div class="lcars-split-btn">
+											<button class="launch-artifact-btn main-split" data-url="${res.artifactUrl}" data-title="${escapeHtml(res.evalName)}" data-model="${escapeHtml(run.meta?.modelName)}">
+												⚡ LAUNCH VISUAL APP
+											</button>
+											<a href="${res.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">
+												↗ TAB
+											</a>
+										</div>
 									</div>
 								` : ''}
 							</div>
@@ -283,7 +291,7 @@ function formatDate(isoString: string) {
 				});
 
 				// Bind launch visual artifact buttons
-				evalsStackContainer.querySelectorAll('.launch-artifact-btn').forEach((btn) => {
+				evalsStackContainer.querySelectorAll('.launch-artifact-btn.main-split').forEach((btn) => {
 					btn.addEventListener('click', (e) => {
 						e.preventDefault();
 						const url = btn.getAttribute('data-url');
@@ -602,10 +610,16 @@ function formatDate(isoString: string) {
 		border: 1px solid rgba(218, 54, 51, 0.4);
 	}
 
-	.score-badge.unjudged {
-		background: rgba(255, 153, 0, 0.15);
-		color: var(--lcars-amber);
-		border: 1px solid rgba(255, 153, 0, 0.4);
+	.score-badge.timeout {
+		background: rgba(186, 164, 229, 0.15);
+		color: var(--lcars-purple);
+		border: 1px solid rgba(186, 164, 229, 0.4);
+	}
+
+	.score-badge.unjudged-demo {
+		background: rgba(255, 204, 153, 0.15);
+		color: var(--lcars-tan);
+		border: 1px solid rgba(255, 204, 153, 0.4);
 	}
 
 	/* EVAL CARD BODY */
@@ -651,6 +665,12 @@ function formatDate(isoString: string) {
 		justify-content: center;
 	}
 
+	.lcars-split-btn {
+		display: flex;
+		gap: 4px;
+		width: 100%;
+	}
+
 	.launch-artifact-btn {
 		background: var(--lcars-amber);
 		color: #000;
@@ -658,15 +678,30 @@ function formatDate(isoString: string) {
 		font-family: var(--font-mono);
 		font-weight: 800;
 		font-size: 0.78rem;
-		padding: 6px 14px;
-		border-radius: 20px;
 		cursor: pointer;
-		transition: filter 0.15s, transform 0.1s;
+		text-align: center;
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: filter 0.15s;
+	}
+
+	.launch-artifact-btn.main-split {
+		flex: 4;
+		padding: 8px 14px;
+		border-radius: 20px 0 0 20px;
+	}
+
+	.launch-artifact-btn.tab-split {
+		flex: 1;
+		padding: 8px 10px;
+		border-radius: 0 20px 20px 0;
+		font-size: 0.72rem;
 	}
 
 	.launch-artifact-btn:hover {
 		filter: brightness(1.2);
-		transform: scale(1.02);
 	}
 
 	.detail-block {

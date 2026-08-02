@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk System Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #0aff00;
+            --panel-bg: #0a0a0a;
+            --border-width: 2px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--neon-cyan);
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* CRT Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.6;
+        }
+
+        /* Layout Container */
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #080808;
+            border-right: var(--border-width) solid var(--neon-cyan);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            box-shadow: 5px 0 15px rgba(0, 243, 255, 0.2);
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 29px,
+                rgba(0, 243, 255, 0.05) 30px
+            );
+            pointer-events: none;
+        }
+
+        .profile {
+            text-align: center;
+            border-bottom: 1px solid var(--neon-cyan);
+            padding-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-magenta);
+            background: radial-gradient(circle, #1a0a1a 0%, #000 100%);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--neon-magenta);
+        }
+
+        .profile-avatar::after {
+            content: 'CMD';
+            color: var(--neon-magenta);
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .profile-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: var(--neon-magenta);
+            text-shadow: 0 0 5px var(--neon-magenta);
+            letter-spacing: 1px;
+        }
+
+        .profile-role {
+            font-size: 0.9rem;
+            color: var(--neon-green);
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            color: #fff;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .nav-btn.active {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-magenta);
+            color: var(--neon-magenta);
+            box-shadow: 0 0 15px var(--neon-magenta);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 1rem;
+        }
+
+        .dashboard-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        .dashboard-title::before {
+            content: 'SYS_MONITOR_V.9.0';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-size: 0.8rem;
+            color: var(--neon-green);
+            letter-spacing: 2px;
+        }
+
+        .system-status {
+            font-size: 1.2rem;
+            color: var(--neon-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: pulse 2s infinite;
+        }
+
+        /* Grid Layout */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto 1fr;
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: var(--border-width) solid var(--neon-cyan);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta), var(--neon-cyan));
+            background-size: 200% 100%;
+            animation: gradientMove 3s infinite;
+        }
+
+        .panel-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-icon {
+            color: var(--neon-magenta);
+            font-size: 1.2rem;
+        }
+
+        /* Custom Clip-path for inward-curving top corners */
+        .panel-content {
+            position: relative;
+            height: 100%;
+        }
+
+        .panel-content::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: var(--panel-bg);
+            z-index: 2;
+        }
+
+        .panel-content::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 100%;
+            height: 25px;
+            border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+            background: var(--panel-bg);
+            z-index: 1;
+            border-top: var(--border-width) solid var(--neon-cyan);
+        }
+
+        /* CPU/RAM Panel */
+        .cpu-ram-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .metric-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .metric-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .metric-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+
+        .cpu-bar {
+            background: linear-gradient(90deg, var(--neon-cyan), #00aaff);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .ram-bar {
+            background: linear-gradient(90deg, var(--neon-magenta), #aa00aa);
+            box-shadow: 0 0 10px var(--neon-magenta);
+        }
+
+        .circular-gauge {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--neon-green);
+            border-top: 4px solid var(--neon-cyan);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem auto;
+            animation: spin 3s linear infinite;
+        }
+
+        .circular-gauge::before {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px dashed var(--neon-magenta);
+            animation: spinReverse 5s linear infinite;
+        }
+
+        .gauge-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #fff;
+            z-index: 2;
+        }
+
+        .gauge-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--neon-green);
+        }
+
+        /* Terminal Panel */
+        .terminal-window {
+            background-color: #000;
+            border: 1px solid var(--neon-green);
+            padding: 1rem;
+            height: 100%;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--neon-green);
+            overflow-y: auto;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        .terminal-window::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: rgba(10, 255, 0, 0.1);
+        }
+
+        .terminal-line {
+            margin-bottom: 0.5rem;
+            padding-left: 10px;
+            border-left: 2px solid var(--neon-green);
+            opacity: 0.9;
+        }
+
+        .terminal-line::before {
+            content: '>';
+            color: var(--neon-cyan);
+            margin-right: 8px;
+        }
+
+        .log-bypass {
+            color: var(--neon-magenta);
+            font-weight: bold;
+        }
+
+        .log-success {
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .log-error {
+            color: #ff3333;
+            font-weight: bold;
+        }
+
+        /* Network Panel */
+        .network-map {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .node {
+            width: 60px;
+            height: 60px;
+            border: 1px solid var(--neon-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-cyan);
+            font-size: 0.8rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .node.active {
+            background: rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .node.active::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid var(--neon-cyan);
+            animation: ripple 2s infinite;
+        }
+
+        .connections {
+            width: 100%;
+            height: 1px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--neon-cyan),
+                var(--neon-cyan) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+            position: relative;
+        }
+
+        .connections::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--neon-magenta),
+                var(--neon-magenta) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+            animation: connectionMove 2s infinite linear;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 20px var(--neon-green); }
+            100% { opacity: 0.5; transform: scale(1); }
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        @keyframes connectionMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(100px); }
+        }
+
+        /* Glitch Effect */
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: skew(0deg); }
+            10% { text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); transform: skew(5deg); }
+            20% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: skew(-5deg); }
+            30% { text-shadow: 0 0 0 transparent; transform: skew(0deg); }
+            40% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: skew(3deg); }
+            50% { text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); transform: skew(-3deg); }
+            60% { text-shadow: 0 0 0 transparent; transform: skew(0deg); }
+            70% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: skew(2deg); }
+            80% { text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); transform: skew(-2deg); }
+            90% { text-shadow: 0 0 0 transparent; transform: skew(0deg); }
+            100% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: skew(1deg); }
+        }
+
+        .glitch-text {
+            position: relative;
+            animation: glitch 4s infinite;
+        }
+
+        .glitch-text:hover {
+            animation: glitch 0.2s infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 1rem;
+                gap: 1rem;
+                border-right: none;
+                border-bottom: var(--border-width) solid var(--neon-cyan);
+            }
+
+            .profile {
+                flex: 1;
+                text-align: left;
+                padding-bottom: 0;
+                border-bottom: none;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .profile-avatar {
+                width: 50px;
+                height: 50px;
+                margin: 0;
+            }
+
+            .profile-name {
+                font-size: 1.1rem;
+                margin: 0;
+            }
+
+            .profile-role {
+                font-size: 0.8rem;
+                display: none;
+            }
+
+            .nav-buttons {
+                flex: 1;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .nav-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+                flex: 1;
+                min-width: 100px;
+            }
+
+            .data-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile">
+                <div class="profile-avatar"></div>
+                <div class="profile-name">SYSTEM_ADMIN</div>
+                <div class="profile-role">ROOT ACCESS: GRANTED</div>
+            </div>
+            <nav class="nav-buttons">
+                <button class="nav-btn active" onclick="switchTab(this, 'dashboard')">
+                    DASHBOARD
+                </button>
+                <button class="nav-btn" onclick="switchTab(this, 'network')">
+                    NETWORK
+                </button>
+                <button class="nav-btn" onclick="switchTab(this, 'security')">
+                    SECURITY
+                </button>
+                <button class="nav-btn" onclick="switchTab(this, 'logs')">
+                    LOGS
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div style="font-size: 0.8rem; color: var(--neon-green); margin-top: auto;">
+                    SYSTEM STATUS: ONLINE<br>
+                    UPTIME: 99.99%
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1 class="dashboard-title glitch-text">SYSTEM MONITOR</h1>
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <span>CONNECTION SECURE</span>
+                </div>
+            </header>
+
+            <div class="data-grid">
+                <!-- CPU/RAM Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>CPU & RAM LOAD</span>
+                        <span class="panel-icon">⚡</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="cpu-ram-container">
+                            <div class="metric-group">
+                                <div class="metric-label">
+                                    <span>CPU Core 1</span>
+                                    <span id="cpu1">12%</span>
+                                </div>
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar cpu-bar" id="cpu1-bar" style="width: 12%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-group">
+                                <div class="metric-label">
+                                    <span>CPU Core 2</span>
+                                    <span id="cpu2">25%</span>
+                                </div>
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar cpu-bar" id="cpu2-bar" style="width: 25%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-group">
+                                <div class="metric-label">
+                                    <span>RAM USAGE</span>
+                                    <span id="ram">48%</span>
+                                </div>
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar ram-bar" id="ram-bar" style="width: 48%"></div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 2rem;">
+                                <div class="circular-gauge">
+                                    <div class="gauge-value" id="temp">45°C</div>
+                                </div>
+                                <div class="gauge-label">SYSTEM TEMPERATURE</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terminal Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>TERMINAL OUTPUT</span>
+                        <span class="panel-icon">💻</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="terminal-window" id="terminal">
+                            <div class="terminal-line">INITIALIZING SYSTEM MONITOR...</div>
+                            <div class="terminal-line">CONNECTING TO SECURE SERVER... [OK]</div>
+                            <div class="terminal-line">LOADING MODULES: [OK]</div>
+                            <div class="terminal-line">ESTABLISHING SECURE CONNECTION... [OK]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>NETWORK TOPOLOGY</span>
+                        <span class="panel-icon">🌐</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="network-map">
+                            <div class="connections"></div>
+                            <div class="network-grid">
+                                <div class="node active" id="node1">NODE A</div>
+                                <div class="node" id="node2">NODE B</div>
+                                <div class="node" id="node3">NODE C</div>
+                            </div>
+                            <div style="margin-top: 1.5rem; text-align: center;">
+                                <div style="font-size: 1.2rem; color: var(--neon-cyan); margin-bottom: 1rem;">
+                                    TRAFFIC ANALYSIS
+                                </div>
+                                <div style="width: 100%; height: 20px; background: #1a1a1a; border: 1px solid #333; position: relative; overflow: hidden;">
+                                    <div class="metric-bar" style="background: linear-gradient(90deg, var(--neon-green), #00ff00); width: 0%;" id="traffic-bar"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 0.5rem; color: var(--neon-green);" id="traffic-value">0 MB/s</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Info Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>SYSTEM DETAILS</span>
+                        <span class="panel-icon">⚙️</span>
+                    </div>
+                    <div class="panel-content">
+                        <div style="padding: 1rem; font-size: 1rem; line-height: 1.6;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--neon-magenta);">KERNEL VERSION:</span>
+                                <span style="color: #fff;">5.15.0-CYBER</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--neon-magenta);">MEMORY:</span>
+                                <span style="color: #fff;">64 TB (PARALLEL)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--neon-magenta);">SECURITY LEVEL:</span>
+                                <span style="color: var(--neon-green);">MAXIMUM</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--neon-magenta);">NETWORK:</span>
+                                <span style="color: #fff;">QUANTUM-ENCRYPTED</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--neon-magenta);">NEXT MAINTENANCE:</span>
+                                <span style="color: #fff;">00:15:32</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Terminal logs generation
+        const terminal = document.getElementById('terminal');
+        const logMessages = [
+            "0x00FF3C BYPASSING SECURITY LAYERS...",
+            "0x00FF3D FIREWALL DETECTED... ATTEMPTING CRACK...",
+            "0x00FF3E FIREWALL BYPASSED SUCCESSFULLY...",
+            "0x00FF3F ACCESSING MAINFRAME DATA...",
+            "0x00FF40 DATA INTEGRITY CHECK: PASSED...",
+            "0x00FF41 ENCRYPTING TRANSMISSION...",
+            "0x00FF42 TRANSMISSION COMPLETE...",
+            "0x00FF43 SYNCHRONIZING NODES...",
+            "0x00FF44 NODE SYNCHRONIZATION: 78% COMPLETE...",
+            "0x00FF45 NODE SYNCHRONIZATION: COMPLETE...",
+            "0x00FF46 INITIATING SYSTEM DIAGNOSTICS...",
+            "0x00FF47 DIAGNOSTICS: ALL SYSTEMS OPERATIONAL...",
+            "0x00FF48 SCANNING FOR NETWORK THREATS...",
+            "0x00FF49 THREAT DETECTED: NONE...",
+            "0x00FF4A UPDATING SECURITY PROTOCOLS..."
+        ];
+
+        function addLog() {
+            const randomMessage = logMessages[Math.floor(Math.random() * logMessages.length)];
+            const logLine = document.createElement('div');
+            logLine.className = 'terminal-line';
+            
+            // Randomly add some special styling
+            if (randomMessage.includes("BYPASSED") || randomMessage.includes("COMPLETE") || randomMessage.includes("PASSED")) {
+                logLine.classList.add('log-success');
+            } else if (randomMessage.includes("ERROR") || randomMessage.includes("CRACK")) {
+                logLine.classList.add('log-error');
+            } else if (randomMessage.includes("BYPASSING") || randomMessage.includes("ATTEMPTING")) {
+                logLine.classList.add('log-bypass');
+            }
+            
+            logLine.textContent = randomMessage;
+            terminal.appendChild(logLine);
+            
+            // Keep only last 20 lines
+            if (terminal.children.length > 20) {
+                terminal.removeChild(terminal.firstChild);
+            }
+            
+            // Auto scroll to bottom
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Update CPU/RAM values
+        function updateTelemetry() {
+            // CPU Core 1
+            const cpu1Value = Math.floor(Math.random() * 40) + 10; // 10-50%
+            const cpu1Bar = document.getElementById('cpu1-bar');
+            const cpu1Text = document.getElementById('cpu1');
+            cpu1Bar.style.width = cpu1Value + '%';
+            cpu1Text.textContent = cpu1Value + '%';
+            
+            // CPU Core 2
+            const cpu2Value = Math.floor(Math.random() * 50) + 15; // 15-65%
+            const cpu2Bar = document.getElementById('cpu2-bar');
+            const cpu2Text = document.getElementById('cpu2');
+            cpu2Bar.style.width = cpu2Value + '%';
+            cpu2Text.textContent = cpu2Value + '%';
+            
+            // RAM
+            const ramValue = Math.floor(Math.random() * 30) + 40; // 40-70%
+            const ramBar = document.getElementById('ram-bar');
+            const ramText = document.getElementById('ram');
+            ramBar.style.width = ramValue + '%';
+            ramText.textContent = ramValue + '%';
+            
+            // Temperature
+            const tempValue = Math.floor(Math.random() * 15) + 40; // 40-55°C
+            const tempText = document.getElementById('temp');
+            tempText.textContent = tempValue + '°C';
+        }
+
+        // Update network traffic
+        function updateNetwork() {
+            const trafficValue = Math.floor(Math.random() * 800) + 100; // 100-900 MB/s
+            const trafficBar = document.getElementById('traffic-bar');
+            const trafficText = document.getElementById('traffic-value');
+            
+            // Scale for visual bar (max 1000 MB/s for visual purposes)
+            const percentage = Math.min(trafficValue / 10, 100);
+            trafficBar.style.width = percentage + '%';
+            trafficText.textContent = trafficValue + ' MB/s';
+            
+            // Randomly activate nodes
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach(node => {
+                if (Math.random() > 0.7) {
+                    node.classList.toggle('active');
+                }
+            });
+        }
+
+        // Tab switching function
+        function switchTab(btn, tabName) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            // Add active class to clicked button
+            btn.classList.add('active');
+            
+            // Add visual feedback in terminal
+            const logLine = document.createElement('div');
+            logLine.className = 'terminal-line';
+            logLine.textContent = `SWITCHING TO ${tabName.toUpperCase()} MODULE...`;
+            terminal.appendChild(logLine);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start terminal updates
+            setInterval(addLog, 1200);
+            
+            // Start telemetry updates
+            setInterval(updateTelemetry, 800);
+            
+            // Start network updates
+            setInterval(updateNetwork, 1000);
+            
+            // Initial logs
+            addLog();
+            addLog();
+            updateTelemetry();
+            updateNetwork();
+        });
+
+        // Glitch effect on hover for dashboard title
+        const dashboardTitle = document.querySelector('.dashboard-title');
+        dashboardTitle.addEventListener('mouseover', function() {
+            this.style.animationDuration = '0.2s';
+        });
+        dashboardTitle.addEventListener('mouseout', function() {
+            this.style.animationDuration = '4s';
+        });
+    </script>
+</body>
+</html>

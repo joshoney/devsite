@@ -3,23 +3,44 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Josh Oney | Developer Portfolio">
-	<!-- HERO / BIO SECTION -->
 	<section class="hero">
-		<h1>Software Developer & <span class="highlight">Systems Engineer</span></h1>
-		<p class="bio-text">
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut 
-			labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris 
-			nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate 
-			velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
-			sunt in culpa qui officia deserunt mollit anim id est laborum.
-		</p>
+		<h1>Quality Engineer & <span class="highlight">Systems Developer</span></h1>
+		
+		<div class="hero-body">
+			<p class="bio-text">
+				Welcome to my personal portfolio. With over 15 years of experience as a Software Development Engineer in Test (SDET), I specialize in architecting scalable automation frameworks, driving continuous integration, and engineering robust quality solutions from the ground up.
+			</p>
+			<p class="bio-text">
+				This space serves as a live playground for my latest projects—blending my passion for deep technical problem-solving with modern web development.
+			</p>
+		</div>
+
+		<div class="directory-section">
+			<h2>DIRECTORY OVERVIEW</h2>
+			<div class="directory-list">
+				<div class="dir-item c-red">
+					<strong>Navigation</strong> &mdash; You are here. The root of the system providing an overview of my current projects and a directory of available modules.
+				</div>
+				<div class="dir-item c-amber">
+					<strong>Local LLM Evals</strong> &mdash; A live telemetry dashboard built to parse and visualize complex AI evaluation data. View real-time pass/fail rates, reasoning logs, and interactive AI-generated artifacts.
+				</div>
+				<div class="dir-item c-blue">
+					<strong>evaluerBench</strong> &mdash; Detailed architectural notes and reasoning behind the evaluerBench project, focusing on how I track and compare Local LLM inferences.
+				</div>
+				<div class="dir-item c-tan">
+					<strong>&lt; THIS_SITE /&gt;</strong> &mdash; Documentation on the creation of this portfolio site, discussing the Star Trek LCARS aesthetic, responsive CSS techniques, and why I chose Astro.
+				</div>
+				<div class="dir-item c-purple">
+					<strong>Games (Coming Soon)</strong> &mdash; A future module for interactive web-based games and experiments.
+				</div>
+			</div>
+		</div>
 	</section>
 </Layout>
 
 <style>
 	.hero {
-		padding: 20px 0 40px 0;
-		max-width: 900px;
+		padding: 20px 0 60px 0;
 	}
 
 	.hero h1 {
@@ -36,11 +57,51 @@ import Layout from '../layouts/Layout.astro';
 		font-weight: normal;
 	}
 
+	.hero-body {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		margin-bottom: 50px;
+	}
+
 	.bio-text {
-		font-size: 1.2rem;
+		font-size: 1.15rem;
 		color: var(--text-muted);
 		line-height: 1.8;
 	}
+
+	.directory-section h2 {
+		font-family: var(--font-sans);
+		color: #fff;
+		font-size: 2.2rem;
+		font-weight: 800;
+		margin-bottom: 10px;
+		letter-spacing: -0.5px;
+	}
+
+	.directory-list {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.dir-item {
+		font-size: 1.15rem;
+		line-height: 1.6;
+		font-family: var(--font-sans);
+	}
+	
+	.dir-item strong {
+		font-family: var(--font-mono);
+		letter-spacing: 0.5px;
+		font-weight: bold;
+	}
+
+	.dir-item.c-red { color: var(--lcars-red); }
+	.dir-item.c-amber { color: var(--lcars-amber); }
+	.dir-item.c-blue { color: var(--lcars-blue); }
+	.dir-item.c-tan { color: var(--lcars-tan); }
+	.dir-item.c-purple { color: var(--lcars-purple); }
 
 	@media (max-width: 600px) {
 		.hero h1 {

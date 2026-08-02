@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tango — Logic Puzzle</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#242836;--border:#2e3348;
+    --text:#e2e4f0;--text-dim:#7a7f96;--accent:#f59e0b;--accent-glow:rgba(245,158,11,.25);
+    --fire:#ef4444;--ice:#38bdf8;--error:#f87171;--success:#34d399;
+    --cell-size:min(11vw,72px);--gap:4px;
+  }
+  html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;gap:20px}
+
+  h1{font-size:1.8rem;font-weight:700;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+  h1 span{background:linear-gradient(135deg,var(--fire),var(--ice));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+  .subtitle{color:var(--text-dim);font-size:.85rem;text-align:center;max-width:400px;line-height:1.5}
+
+  .rules-bar{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:.78rem;color:var(--text-dim)}
+  .rules-bar div{display:flex;align-items:center;gap:5px;background:var(--surface);padding:5px 12px;border-radius:8px;border:1px solid var(--border)}
+  .rules-bar .sym{font-size:1rem}
+
+  .board-wrapper{position:relative;display:flex;align-items:center;justify-content:center}
+  .board{
+    display:grid;grid-template-columns:repeat(12,var(--cell-size));grid-template-rows:repeat(12,var(--cell-size));
+    gap:var(--gap);background:var(--surface);padding:var(--gap);border-radius:14px;border:1px solid var(--border);
+    box-shadow:0 8px 32px rgba(0,0,0,.4);
+  }
+
+  .cell{
+    display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell-size)*.55);
+    background:var(--surface2);border-radius:8px;cursor:pointer;user-select:none;
+    transition:background .15s,box-shadow .15s,border-color .15s;
+    border:2px solid transparent;position:relative;
+  }
+  .cell:hover{background:#2c3044}
+  .cell.fire{color:var(--fire);text-shadow:0 0 12px rgba(239,68,68,.4)}
+  .cell.ice{color:var(--ice);text-shadow:0 0 12px rgba(56,189,248,.4)}
+  .cell.fixed{cursor:default;opacity:.9}
+  .cell.fixed::after{content:'';position:absolute;inset:0;border-radius:6px;border:2px solid rgba(255,255,255,.06)}
+  .cell.error{border-color:var(--error) !important;box-shadow:0 0 10px rgba(248,113,113,.3)}
+  .cell.correct-flash{border-color:var(--success) !important;box-shadow:0 0 10px rgba(52,211,153,.3)}
+
+  .constraint{
+    display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell-size)*.45);
+    font-weight:700;color:var(--text-dim);border-radius:6px;pointer-events:none;
+    background:transparent;
+  }
+  .constraint.h{color:var(--accent)}
+  .constraint.v{color:var(--accent)}
+  .constraint.empty{visibility:hidden}
+
+  .spacer{visibility:hidden}
+
+  .controls{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  button{
+    padding:10px 24px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
+    color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;
+    display:flex;align-items:center;gap:6px;
+  }
+  button:hover{background:var(--surface2);border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+  button:active{transform:scale(.97)}
+  button.primary{background:var(--accent);color:#000;border-color:var(--accent)}
+  button.primary:hover{background:#d97706}
+
+  .message{
+    min-height:28px;font-size:.85rem;font-weight:600;text-align:center;
+    padding:6px 16px;border-radius:8px;transition:all .2s;
+  }
+  .message.success{color:var(--success);background:rgba(52,211,153,.1)}
+  .message.error{color:var(--error);background:rgba(248,113,113,.1)}
+  .message.info{color:var(--accent);background:rgba(245,158,11,.1)}
+
+  .counter{display:flex;gap:20px;font-size:.82rem;color:var(--text-dim)}
+  .counter span{display:flex;align-items:center;gap:4px}
+  .counter .f{color:var(--fire)}
+  .counter .i{color:var(--ice)}
+
+  @media(max-width:520px){
+    :root{--cell-size:min(14vw,64px)}
+    h1{font-size:1.4rem}
+    .rules-bar{font-size:.7rem;gap:8px}
+    .rules-bar div{padding:4px 8px}
+  }
+</style>
+</head>
+<body>
+
+<h1>🔥 <span>Tango</span> 🧊</h1>
+<p class="subtitle">Fill the 6×6 grid with Fire and Ice. Each row and column must have exactly three of each — no three in a row!</p>
+
+<div class="rules-bar">
+  <div><span class="sym">🔥🔥🔥</span> <span>🧊🧊🧊</span> per row &amp; column</div>
+  <div><span class="sym">🔥🔥🔥</span> no three same adjacent</div>
+  <div><span class="sym">=</span> same &nbsp; <span class="sym">×</span> different</div>
+</div>
+
+<div class="counter">
+  <span class="f">🔥 <b id="fireCount">0</b></span>
+  <span class="i">🧊 <b id="iceCount">0</b></span>
+  <span>Empty <b id="emptyCount">36</b></span>
+</div>
+
+<div class="board-wrapper">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="controls">
+  <button class="primary" onclick="checkSolution()">✓ Check Solution</button>
+  <button onclick="newGame()">⟳ New Game</button>
+  <button onclick="showSolution()">👁 Reveal</button>
+</div>
+
+<div class="message" id="message"></div>
+
+<script>
+const EMPTY=0,FIRE=1,ICE=2;
+const SYMBOLS={0:'',1:'🔥',2:'🧊'};
+const CLASSES={0:'',1:'fire',2:'ice'};
+let solution=[], playerBoard=[], constraints=[], fixedCells=[];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function isValidPlacement(grid,row,col,val){
+  if(col>=2&&grid[row][col-1]===val&&grid[row][col-2]===val)return false;
+  if(row>=2&&grid[row-1][col]===val&&grid[row-2][col]===val)return false;
+  let fc=0,ic=0;
+  for(let c=0;c<6;c++){if(grid[row][c]===FIRE)fc++;else if(grid[row][c]===ICE)ic++}
+  if(val===FIRE&&fc>=3)return false;if(val===ICE&&ic>=3)return false;
+  fc=0;ic=0;
+  for(let r=0;r<6;r++){if(grid[r][col]===FIRE)fc++;else if(grid[r][col]===ICE)ic++}
+  if(val===FIRE&&fc>=3)return false;if(val===ICE&&ic>=3)return false;
+  return true;
+}
+
+function solve(grid,row,col){
+  if(row===6)return true;
+  const nr=col===5?row+1:row,nc=col===5?0:col+1;
+  const vals=[FIRE,ICE];shuffle(vals);
+  for(const v of vals){
+    if(isValidPlacement(grid,row,col,v)){
+      grid[row][col]=v;
+      if(solve(grid,nr,nc))return true;
+      grid[row][col]=EMPTY;
+    }
+  }
+  return false;
+}
+
+function generateSolution(){
+  const g=Array.from({length:6},()=>Array(6).fill(EMPTY));
+  solve(g,0,0);
+  return g;
+}
+
+function generateConstraints(sol){
+  const pairs=[];
+  const hPairs=[];
+  for(let r=0;r<6;r++)for(let c=0;c<5;c++)hPairs.push({r1:r,c1:c,r2:r,c2:c+1});
+  const vPairs=[];
+  for(let r=0;r<5;r++)for(let c=0;c<6;c++)vPairs.push({r1:r,c1:c,r2:r+1,c2:c});
+  const allPairs=[...hPairs.map(p=>({...p,h:true})),...vPairs.map(p=>({...p,h:false}))];
+  shuffle(allPairs);
+  const constraints=[];
+  let count=0;
+  const target=6+Math.floor(Math.random()*3);
+  for(const p of allPairs){
+    if(count>=target)break;
+    if(sol[p.r1][p.c1]===sol[p.r2][p.c2]){
+      constraints.push({r1:p.r1,c1:p.c1,r2:p.r2,c2:p.c2,type:'same'});
+    }else{
+      constraints.push({r1:p.r1,c1:p.c1,r2:p.r2,c2:p.c2,type:'diff'});
+    }
+    count++;
+  }
+  return constraints;
+}
+
+function createPuzzle(sol,constraints){
+  const pb=Array.from({length:6},()=>Array(6).fill(EMPTY));
+  const fixed=[];
+  const cells=[];
+  for(let r=0;r<6;r++)for(let c=0;c<6;c++)cells.push([r,c]);
+  shuffle(cells);
+  const keep=Math.floor(36*0.3);
+  for(let i=0;i<keep;i++){
+    const[r,c]=cells[i];
+    pb[r][c]=sol[r][c];
+    fixed.push(`${r},${c}`);
+  }
+  return{pb,fixed:new Set(fixed)};
+}
+
+function getCellPos(r,c){
+  return{gr:r*2,gc:c*2};
+}
+
+function getConstraintPos(r,c,h){
+  if(h){return{gr:r,gc:(c<5?c*2+1:-1)}}
+  else{return{gr:r*2+1,gc:c}}
+}
+
+function renderBoard(){
+  const board=document.getElementById('board');
+  board.innerHTML='';
+  const cellSize=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+
+  for(let gr=0;gr<12;gr++){
+    for(let gc=0;gc<12;gc++){
+      const el=document.createElement('div');
+      el.className='spacer';
+      el.style.gridRow=gr+1;el.style.gridColumn=gc+1;
+
+      const r=Math.floor(gr/2),c=Math.floor(gc/2);
+      const isCell=(gr%2===0&&gc%2===0);
+      const isHCons=(gr%2===0&&gc%2===1&&c<5);
+      const isVCons=(gr%2===1&&gc%2===0&&r<5);
+
+      if(isCell){
+        el.className='cell';
+        const val=playerBoard[r][c];
+        if(val!==EMPTY){el.classList.add(CLASSES[val]);el.textContent=SYMBOLS[val]}
+        if(fixedCells.has(`${r},${c}`))el.classList.add('fixed');
+        el.dataset.r=r;el.dataset.c=c;
+        el.addEventListener('click',()=>cycleCell(r,c));
+        board.appendChild(el);
+      }else if(isHCons){
+        const cons=constraints.find(x=>x.r1===r&&x.c1===c&&x.h);
+        el.className='constraint h';
+        if(cons){el.textContent=cons.type==='same'?'=':'×'}
+        else{el.className='constraint empty';el.textContent=''}
+        board.appendChild(el);
+      }else if(isVCons){
+        const cons=constraints.find(x=>x.r1===r&&x.c1===c&&!x.h);
+        el.className='constraint v';
+        if(cons){el.textContent=cons.type==='same'?'=':'×'}
+        else{el.className='constraint empty';el.textContent=''}
+        board.appendChild(el);
+      }else{
+        el.className='spacer';
+        board.appendChild(el);
+      }
+    }
+  }
+  updateCounts();
+}
+
+function cycleCell(r,c){
+  if(fixedCells.has(`${r},${c}`))return;
+  playerBoard[r][c]=(playerBoard[r][c]+1)%3;
+  const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+  if(el){
+    el.className='cell';
+    const val=playerBoard[r][c];
+    if(val!==EMPTY){el.classList.add(CLASSES[val]);el.textContent=SYMBOLS[val]}
+    else{el.textContent=''}
+  }
+  clearMessage();
+  updateCounts();
+}
+
+function updateCounts(){
+  let f=0,ic=0,e=0;
+  for(let r=0;r<6;r++)for(let c=0;c<6;c++){
+    if(playerBoard[r][c]===FIRE)f++;
+    else if(playerBoard[r][c]===ICE)ic++;
+    else e++;
+  }
+  document.getElementById('fireCount').textContent=f;
+  document.getElementById('iceCount').textContent=ic;
+  document.getElementById('emptyCount').textContent=e;
+}
+
+function checkSolution(){
+  clearMessage();
+  let errors=[];
+  let allFilled=true;
+
+  for(let r=0;r<6;r++){
+    let fc=0,ic=0;
+    for(let c=0;c<6;c++){
+      if(playerBoard[r][c]===EMPTY){allFilled=false;continue}
+      if(playerBoard[r][c]===FIRE)fc++;else ic++;
+    }
+    if(fc!==3)for(let c=0;c<6;c++)if(playerBoard[r][c]!==EMPTY)errors.push({r,c,msg:'Row '+r+' has '+fc+' fire'});
+    if(ic!==3)for(let c=0;c<6;c++)if(playerBoard[r][c]!==EMPTY)errors.push({r,c,msg:'Row '+r+' has '+ic+' ice'});
+  }
+
+  for(let c=0;c<6;c++){
+    let fc=0,ic=0;
+    for(let r=0;r<6;r++){
+      if(playerBoard[r][c]===EMPTY){allFilled=false;continue}
+      if(playerBoard[r][c]===FIRE)fc++;else ic++;
+    }
+    if(fc!==3)for(let r=0;r<6;r++)if(playerBoard[r][c]!==EMPTY)errors.push({r,c,msg:'Col '+c+' has '+fc+' fire'});
+    if(ic!==3)for(let r=0;r<6;r++)if(playerBoard[r][c]!==EMPTY)errors.push({r,c,msg:'Col '+c+' has '+ic+' ice'});
+  }
+
+  for(let r=0;r<6;r++){
+    for(let c=0;c<5;c++){
+      if(playerBoard[r][c]!==EMPTY&&playerBoard[r][c+1]!==EMPTY){
+        if(playerBoard[r][c]===playerBoard[r][c+1]&&playerBoard[r][c+1]===playerBoard[r][c+2]){
+          errors.push({r:c+1?c:c,c:c+2,msg:'Three same in row'});
+          errors.push({r:r,c:c,msg:'Three same in row'});
+          errors.push({r:r,c:c+1,msg:'Three same in row'});
+        }
+      }
+    }
+  }
+
+  for(let c=0;c<6;c++){
+    for(let r=0;r<5;r++){
+      if(playerBoard[r][c]!==EMPTY&&playerBoard[r+1][c]!==EMPTY){
+        if(playerBoard[r][c]===playerBoard[r+1][c]&&playerBoard[r+1][c]===playerBoard[r+2][c]){
+          errors.push({r:r,c:c,msg:'Three same in col'});
+          errors.push({r:r+1,c:c,msg:'Three same in col'});
+          errors.push({r:r+2,c:c,msg:'Three same in col'});
+        }
+      }
+    }
+  }
+
+  for(const con of constraints){
+    const v1=playerBoard[con.r1][con.c1],v2=playerBoard[con.r2][con.c2];
+    if(v1!==EMPTY&&v2!==EMPTY){
+      if(con.type==='same'&&v1!==v2)errors.push({r:con.r1,c:con.c1,msg:'Constraint mismatch'});
+      if(con.type==='diff'&&v1===v2)errors.push({r:con.r1,c:con.c1,msg:'Constraint mismatch'});
+    }
+  }
+
+  const errorSet=new Set(errors.map(e=>`${e.r},${e.c}`));
+  const uniqueErrors=new Map();
+  for(const e of errors){
+    const key=`${e.r},${e.c}`;
+    if(!uniqueErrors.has(key))uniqueErrors.set(key,e.msg);
+  }
+
+  document.querySelectorAll('.cell').forEach(el=>{
+    el.classList.remove('error','correct-flash');
+    const key=`${el.dataset.r},${el.dataset.c}`;
+    if(errorSet.has(key))el.classList.add('error');
+  });
+
+  if(errors.length===0&&allFilled){
+    showMessage('🎉 Perfect! All rules satisfied!','success');
+    document.querySelectorAll('.cell').forEach(el=>el.classList.add('correct-flash'));
+  }else if(!allFilled){
+    showMessage('⚠️ Fill all cells before checking.','info');
+  }else{
+    showMessage('✗ '+errors.length+' error'+(errors.length>1?'s':'')+' found. Red cells have issues.','error');
+  }
+}
+
+function showSolution(){
+  for(let r=0;r<6;r++)for(let c=0;c<6;c++){
+    playerBoard[r][c]=solution[r][c];
+  }
+  renderBoard();
+  showMessage('Solution revealed.','info');
+}
+
+function showMessage(text,type){
+  const el=document.getElementById('message');
+  el.textContent=text;el.className='message '+type;
+}
+
+function clearMessage(){
+  const el=document.getElementById('message');
+  el.textContent='';el.className='message';
+}
+
+function newGame(){
+  solution=generateSolution();
+  constraints=generateConstraints(solution);
+  const puzzle=createPuzzle(solution,constraints);
+  playerBoard=puzzle.pb;
+  fixedCells=puzzle.fixed;
+  renderBoard();
+  clearMessage();
+}
+
+newGame();
+</script>
+</body>
+</html>

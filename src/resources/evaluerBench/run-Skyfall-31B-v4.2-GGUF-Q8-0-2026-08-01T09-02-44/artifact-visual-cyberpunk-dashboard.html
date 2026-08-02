@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM MONITOR — NEXUS CORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           BASE & RESET
+        ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #050505;
+            color: #a0a0a0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+        }
+
+        /* ============================================================
+           CRT SCANLINE OVERLAY
+        ============================================================ */
+        .scanline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.05) 0%,
+                transparent 1%
+            );
+            background-size: 100% 2px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* ============================================================
+           ANIMATION UTILITIES
+        ============================================================ */
+        @keyframes flicker {
+            0%, 18%, 20%, 22%, 24%, 26%, 30%, 32%, 34%, 36%, 38%, 40%, 42%, 44%, 46%, 48%, 50%, 52%, 54%, 56%, 58%, 60%, 62%, 64%, 66%, 68%, 70%, 72%, 74%, 76%, 78%, 80%, 82%, 84%, 86%, 88%, 90%, 92%, 94%, 96%, 100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            18.5%, 20.5%, 22.5%, 24.5%, 26.5%, 28.5%, 30.5%, 32.5%, 34.5%, 36.5%, 38.5%, 40.5%, 42.5%, 44.5%, 46.5%, 48.5%, 50.5%, 52.5%, 54.5%, 56.5%, 58.5%, 60.5%, 62.5%, 64.5%, 66.5%, 68.5%, 70.5%, 72.5%, 74.5%, 76.5%, 78.5%, 80.5%, 82.5%, 84.5%, 86.5%, 88.5%, 90.5%, 92.5%, 94.5%, 96.5% {
+                opacity: 0.8;
+                transform: translateY(-2px);
+            }
+        }
+
+        @keyframes glitch-text {
+            0% {
+                transform: translate(0);
+                filter: hue-rotate(0deg);
+            }
+            2% {
+                transform: translate(-3px, 2px);
+                filter: hue-rotate(15deg);
+            }
+            4% {
+                transform: translate(3px, -2px);
+                filter: hue-rotate(-10deg);
+            }
+            6% {
+                transform: translate(-3px, 0);
+                filter: hue-rotate(5deg);
+            }
+            8% {
+                transform: translate(2px, 1px);
+                filter: hue-rotate(-8deg);
+            }
+            10% {
+                transform: translate(0);
+                filter: hue-rotate(0deg);
+            }
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes terminal-blink {
+            0%, 49% {
+                opacity: 0.8;
+            }
+            50%, 100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes terminal-cursor {
+            0%, 49% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+            50%, 100% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+        }
+
+        /* ============================================================
+           SIDEBAR — LEFT NAVIGATION
+        ============================================================ */
+        .sidebar {
+            grid-column: 1;
+            height: 100vh;
+            background: linear-gradient(180deg, #0a0a0a 0%, #0e0e0e 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            box-shadow: 4px 0 20px rgba(0, 255, 180, 0.08);
+            animation: flicker 2s infinite;
+        }
+
+        .sidebar__profile {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar__avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00f7ff, #a200ff);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #050505;
+            margin: 0 auto 0.75rem;
+            position: relative;
+            animation: flicker 2s infinite;
+        }
+
+        .sidebar__avatar::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            border: 2px solid #00f7ff;
+            background: transparent;
+            animation: pulse-ring 3s infinite;
+        }
+
+        .sidebar__name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 0 4px rgba(0, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .sidebar__title {
+            font-size: 0.75rem;
+            color: #a0a0a0;
+            text-align: center;
+        }
+
+        .sidebar__nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar__nav-item {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            animation: flicker 2s infinite;
+        }
+
+        .sidebar__nav-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: rgba(0, 255, 255, 0.3);
+            transform: translateX(4px);
+        }
+
+        .sidebar__nav-item.active {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00f7ff;
+            font-weight: 600;
+        }
+
+        .sidebar__nav-icon {
+            font-size: 1.2rem;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* ============================================================
+           MAIN CONTENT — GRID LAYOUT
+        ============================================================ */
+        .main {
+            grid-column: 2;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+            animation: flicker 2s infinite;
+        }
+
+        .main__header {
+            grid-column: 1 / -1;
+            margin-bottom: 1rem;
+        }
+
+        .main__header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            position: relative;
+            display: inline-block;
+            animation: flicker 2s infinite;
+        }
+
+        .main__header-title::after {
+            content: '▓▒░';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #00f7ff;
+            opacity: 0.3;
+            font-size: 1.8rem;
+            animation: glitch-text 4s infinite;
+        }
+
+        .main__header-subtitle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-top: 0.25rem;
+            display: block;
+            animation: flicker 2s infinite;
+        }
+
+        /* ============================================================
+           PANEL — COMPUTER RESOURCES (CPU/RAM)
+        ============================================================ */
+        .panel {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            animation: flicker 2s infinite;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            height: 24px;
+            background: linear-gradient(to right, transparent 50%, rgba(0, 255, 255, 0.1) 50%);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .panel__title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .panel__title-icon {
+            font-size: 1.2rem;
+            color: #00f7ff;
+        }
+
+        /* CPU/RAM Panel */
+        .panel-resources {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .resource-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .resource-label {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .resource-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .progress-container {
+            height: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #00f7ff, #a200ff);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #00f7ff;
+        }
+
+        .progress-value {
+            font-size: 0.7rem;
+            color: #fff;
+            text-align: right;
+            padding-right: 0.5rem;
+        }
+
+        /* ============================================================
+           PANEL — TERMINAL LOG
+        ============================================================ */
+        .panel-terminal {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            margin-bottom: 0.75rem;
+        }
+
+        .terminal-title {
+            font-size: 1.1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-shell {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            height: 220px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            scrollbar-width: thin;
+            scrollbar-color: #00f7ff rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal-shell::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terminal-shell::-webkit-scrollbar-thumb {
+            background: #00f7ff;
+            border-radius: 3px;
+        }
+
+        .terminal-shell .log-entry {
+            margin-bottom: 0.2rem;
+            animation: flicker 2s infinite;
+        }
+
+        .terminal-shell .timestamp {
+            color: #00f7ff;
+            font-size: 0.7rem;
+            margin-right: 0.5rem;
+        }
+
+        .terminal-shell .content {
+            color: #fff;
+        }
+
+        .terminal-shell .highlight {
+            color: #a200ff;
+            font-weight: 600;
+        }
+
+        .terminal-shell .keyword {
+            color: #00ffa0;
+        }
+
+        .terminal-shell .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.4em;
+            background: #00f7ff;
+            margin-left: 4px;
+            animation: terminal-cursor 1s infinite;
+        }
+
+        /* ============================================================
+           PANEL — NETWORK STATUS
+        ============================================================ */
+        .panel-network {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .network-card {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .network-label {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-bottom: 0.5rem;
+        }
+
+        .network-value {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #fff;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .network-unit {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+            text-align: center;
+        }
+
+        /* ============================================================
+           STATUS INDICATORS
+        ============================================================ */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .status-online {
+            background: #00ffa0;
+            box-shadow: 0 0 6px #00ffa0;
+            animation: flicker 2s infinite;
+        }
+
+        .status-offline {
+            background: #ff4040;
+        }
+
+        .status-warning {
+            background: #ffcc00;
+        }
+
+        /* ============================================================
+           RESPONSIVE ADJUSTMENTS
+        ============================================================ */
+        @media (max-width: 1200px) {
+            body {
+                grid-template-columns: 200px 1fr;
+            }
+            .main {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                grid-column: 1;
+                flex-direction: column;
+                padding: 1rem;
+                position: relative;
+            }
+            .main {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+        }
+
+        /* ============================================================
+           FONT ICONS (Pseudo-element based)
+        ============================================================ */
+        .icon-cpu:before { content: '⚡'; }
+        .icon-ram:before { content: '💾'; }
+        .icon-network:before { content: '🌐'; }
+        .icon-terminal:before { content: '💻'; }
+        .icon-dashboard:before { content: '📊'; }
+        .icon-user:before { content: '👤'; }
+        .icon-settings:before { content: '⚙️'; }
+    </style>
+</head>
+<body>
+    <div class="scanline-overlay"></div>
+
+    <aside class="sidebar">
+        <div class="sidebar__profile">
+            <div class="sidebar__avatar">NX</div>
+            <div class="sidebar__name">NEXUS OPERATOR</div>
+            <div class="sidebar__title">SYSTEM ADMIN — LEVEL 9</div>
+        </div>
+
+        <nav class="sidebar__nav">
+            <div class="sidebar__nav-item active" data-tab="dashboard">
+                <span class="sidebar__nav-icon icon-dashboard"></span>
+                <span>DASHBOARD</span>
+            </div>
+            <div class="sidebar__nav-item" data-tab="monitor">
+                <span class="sidebar__nav-icon icon-cpu"></span>
+                <span>SYSTEM MONITOR</span>
+            </div>
+            <div class="sidebar__nav-item" data-tab="network">
+                <span class="sidebar__nav-icon icon-network"></span>
+                <span>NETWORK</span>
+            </div>
+            <div class="sidebar__nav-item" data-tab="logs">
+                <span class="sidebar__nav-icon icon-terminal"></span>
+                <span>TERMINAL LOGS</span>
+            </div>
+            <div class="sidebar__nav-item" data-tab="settings">
+                <span class="sidebar__nav-icon icon-settings"></span>
+                <span>SETTINGS</span>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="main__header">
+            <h1 class="main__header-title">NEXUS CORE — SYSTEM MONITOR</h1>
+            <span class="main__header-subtitle">REAL-TIME TELEMETRY | CYCLE 4471 | STATUS: ONLINE</span>
+        </div>
+
+        <div class="panel panel-resources">
+            <div class="panel__title">
+                <span class="panel__title-icon icon-cpu"></span>
+                <span>COMPUTER RESOURCES</span>
+                <span class="status-indicator status-online"></span>
+            </div>
+
+            <div class="resource-group">
+                <div class="resource-label">
+                    <span>CPU LOAD</span>
+                    <span id="cpu-value">00%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="cpu-bar"></div>
+                    <span class="progress-value" id="cpu-percent">00%</span>
+                </div>
+            </div>
+
+            <div class="resource-group">
+                <div class="resource-label">
+                    <span>RAM USAGE</span>
+                    <span id="ram-value">00%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="ram-bar"></div>
+                    <span class="progress-value" id="ram-percent">00%</span>
+                </div>
+            </div>
+
+            <div class="resource-group">
+                <div class="resource-label">
+                    <span>GPU LOAD</span>
+                    <span id="gpu-value">00%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="gpu-bar"></div>
+                    <span class="progress-value" id="gpu-percent">00%</span>
+                </div>
+            </div>
+
+            <div class="resource-group">
+                <div class="resource-label">
+                    <span>STORAGE</span>
+                    <span id="storage-value">00GB / 00GB</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="storage-bar"></div>
+                    <span class="progress-value" id="storage-percent">00%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-terminal">
+            <div class="terminal-header">
+                <div class="terminal-title">
+                    <span class="panel__title-icon icon-terminal"></span>
+                    <span>SYSTEM TERMINAL</span>
+                </div>
+                <span class="status-indicator status-online"></span>
+            </div>
+
+            <div class="terminal-shell" id="terminal-shell">
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.001]</span>
+                    <span class="content">NEXUS CORE v4.7.2 — INITIALIZED</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.002]</span>
+                    <span class="content">LOADING MODULE: <span class="highlight">CORE.TELEMETRY</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.003]</span>
+                    <span class="content">LOADING MODULE: <span class="highlight">NETWORK.INTERFACE</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.004]</span>
+                    <span class="content">LOADING MODULE: <span class="highlight">SECURITY.AUTH</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.005]</span>
+                    <span class="content">ALL MODULES LOADED — SYSTEM READY</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.006]</span>
+                    <span class="content">WATCHING: <span class="keyword">/var/log/system</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.007]</span>
+                    <span class="content">WATCHING: <span class="keyword">/var/log/security</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.008]</span>
+                    <span class="content">WATCHING: <span class="keyword">/var/log/network</span>...</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.009]</span>
+                    <span class="content">TERMINAL READY — AWAITING INPUT</span>
+                </div>
+                <div class="log-entry">
+                    <span class="timestamp">[0x00FF:4471.010]</span>
+                    <span class="content">> _</span><span class="cursor"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-network">
+            <div class="panel__title">
+                <span class="panel__title-icon icon-network"></span>
+                <span>NETWORK STATUS</span>
+                <span class="status-indicator status-online"></span>
+            </div>
+
+            <div class="network-card">
+                <div class="network-label">UPLOAD BANDWIDTH</div>
+                <div class="network-value" id="upload-value">0.00</div>
+                <div class="network-unit">Mbps</div>
+            </div>
+
+            <div class="network-card">
+                <div class="network-label">DOWNLOAD BANDWIDTH</div>
+                <div class="network-value" id="download-value">0.00</div>
+                <div class="network-unit">Mbps</div>
+            </div>
+
+            <div class="network-card">
+                <div class="network-label">PACKETS/R</div>
+                <div class="network-value" id="packets-value">0</div>
+                <div class="network-unit">pkt/sec</div>
+            </div>
+
+            <div class="network-card">
+                <div class="network-label">LATENCY</div>
+                <div class="network-value" id="latency-value">0</div>
+                <div class="network-unit">ms</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* ============================================================
+           DOM ELEMENTS
+        ============================================================ */
+        const cpuBar = document.getElementById('cpu-bar');
+        const cpuValue = document.getElementById('cpu-value');
+        const cpuPercent = document.getElementById('cpu-percent');
+
+        const ramBar = document.getElementById('ram-bar');
+        const ramValue = document.getElementById('ram-value');
+        const ramPercent = document.getElementById('ram-percent');
+
+        const gpuBar = document.getElementById('gpu-bar');
+        const gpuValue = document.getElementById('gpu-value');
+        const gpuPercent = document.getElementById('gpu-percent');
+
+        const storageBar = document.getElementById('storage-bar');
+        const storageValue = document.getElementById('storage-value');
+        const storagePercent = document.getElementById('storage-percent');
+
+        const uploadValue = document.getElementById('upload-value');
+        const downloadValue = document.getElementById('download-value');
+        const packetsValue = document.getElementById('packets-value');
+        const latencyValue = document.getElementById('latency-value');
+
+        const terminalShell = document.getElementById('terminal-shell');
+
+        /* ============================================================
+           UTILITY FUNCTIONS
+        ============================================================ */
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        const logTemplates = [
+            {
+                pattern: '[0x00FF:4471.{time}] [SYSTEM] BOOTING MODULE: {module}...',
+                module: ['CORE.TELEMETRY', 'NETWORK.INTERFACE', 'SECURITY.AUTH', 'IO.SUBSYSTEM', 'CRYPTO.ENGINE', 'DISPLAY.RENDER']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [NETWORK] INCOMING CONNECTION FROM: {ip}',
+                ip: ['192.168.1.47', '10.0.0.133', '203.0.113.7', '172.16.254.1', '::ffff:192.0.2.12']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [SECURITY] AUTHENTICATION: {status} — USER: {user}',
+                status: ['SUCCESS', 'FAILED', 'RETRY', 'LOCKED'],
+                user: ['NEXUS_OP', 'FIREWALL_SVC', 'LOG_AGENT', 'CRON_JOB']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [TELEMETRY] CPU: {cpu}% | RAM: {ram}% | TEMP: {temp}°C',
+                cpu: [12, 45, 67, 23, 89],
+                ram: [34, 67, 12, 89, 45],
+                temp: [42, 65, 38, 71, 53]
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [CRYPTO] ENCRYPTING SESSION KEY: {key}...',
+                key: ['0xA3F7B2C1', '0xE8D4C9A3', '0xB1E2F4C7', '0xD6C3A1E9', '0xF2A8B4C3']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [IO] WRITE OPERATION: {path} — {size}',
+                path: ['/var/data/blockchain/0x1234', '/opt/nexus/cache/render_4k', '/home/operator/.config/enc_key'],
+                size: ['4.2GB', '1.7GB', '893MB', '2.4TB', '67MB']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [DEBUG] VARIABLE DUMP: {var} = "{value}"',
+                var: ['session_token', 'node_address', 'encryption_mode', 'log_level', 'heartbeat_interval'],
+                value: ['7a2f-4e1c-bb9e', 'node-0x7f3a', 'AES-256-GCM', 'VERBOSE', '1500ms']
+            },
+            {
+                pattern: '[0x00FF:4471.{time}] [ALERT] ⚠️  {alert_type}: {message}',
+                alert_type: ['HIGH CPU', 'DISK CRITICAL', 'NETWORK SPIKE', 'SECURITY BREACH', 'THERMAL WARNING'],
+                message: ['Process "render_worker" exceeded 95% CPU threshold', 'Root partition at 91.2% capacity', 'Upload bandwidth surged to 847 Mbps', 'Unauthorized access attempt from 10.0.0.133', 'Core temperature reached 88°C — consider cooling']
+            }
+        ];
+
+        /* ============================================================
+           ANIMATE TERMINAL TEXT
+        ============================================================ */
+        function animateTerminal() {
+            const entries = terminalShell.querySelectorAll('.log-entry');
+            entries.forEach((entry, index) => {
+                const delay = index * 0.05;
+                entry.style.animationDelay = `${delay}s`;
+            });
+        }
+
+        /* ============================================================
+           UPDATE TELEMETRY DATA
+        ============================================================ */
+        function updateTelemetry() {
+            // CPU
+            const cpu = getRandomInt(15, 85);
+            cpuBar.style.width = `${cpu}%`;
+            cpuValue.textContent = `${cpu}%`;
+            cpuPercent.textContent = `${cpu}%`;
+
+            // RAM
+            const ram = getRandomInt(30, 75);
+            ramBar.style.width = `${ram}%`;
+            ramValue.textContent = `${ram}%`;
+            ramPercent.textContent = `${ram}%`;
+
+            // GPU
+            const gpu = getRandomInt(10, 60);
+            gpuBar.style.width = `${gpu}%`;
+            gpuValue.textContent = `${gpu}%`;
+            gpuPercent.textContent = `${gpu}%`;
+
+            // Storage
+            const storageUsed = getRandomInt(20, 80);
+            const storageTotal = getRandomInt(90, 120);
+            storageBar.style.width = `${storageUsed}%`;
+            storageValue.textContent = `${storageUsed}GB / ${storageTotal}GB`;
+            storagePercent.textContent = `${storageUsed}%`;
+
+            // Network
+            uploadValue.textContent = `${getRandomInt(10, 80).toFixed(2)}`;
+            downloadValue.textContent = `${getRandomInt(50, 200).toFixed(2)}`;
+            packetsValue.textContent = `${getRandomInt(1000, 9000)}`;
+            latencyValue.textContent = `${getRandomInt(1, 45)}`;
+        }
+
+        /* ============================================================
+           GENERATE TERMINAL LOG ENTRIES
+        ============================================================ */
+        let terminalCycle = 0;
+
+        function generateLogEntry() {
+            terminalCycle++;
+            const template = logTemplates[getRandomInt(0, logTemplates.length - 1)];
+            let entry = template.pattern;
+
+            // Replace placeholders
+            for (const key in template) {
+                if (key !== 'pattern' && template[key]) {
+                    const values = template[key];
+                    const value = Array.isArray(values)
+                        ? values[getRandomInt(0, values.length - 1)]
+                        : getRandomInt(0, 100);
+                    entry = entry.replace(`{${key}}`, value);
+                }
+            }
+
+            // Replace time
+            entry = entry.replace('{time}', String(terminalCycle).padStart(3, '0'));
+
+            // Create DOM element
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = entry;
+
+            terminalShell.appendChild(logEntry);
+
+            // Auto-scroll to bottom
+            terminalShell.scrollTop = terminalShell.scrollHeight;
+
+            // Animate the new entry
+            setTimeout(() => {
+                logEntry.style.animation = 'flicker 0.5s ease-in-out';
+                setTimeout(() => {
+                    logEntry.style.animation = '';
+                }, 500);
+            }, 10);
+
+            // Remove oldest entries if too many
+            const entries = terminalShell.querySelectorAll('.log-entry');
+            if (entries.length > 40) {
+                terminalShell.removeChild(entries[0]);
+            }
+        }
+
+        /* ============================================================
+           NAVIGATION TOGGLE
+        ============================================================ */
+        document.querySelectorAll('.sidebar__nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar__nav-item').forEach(i => {
+                    i.classList.remove('active');
+                });
+                item.classList.add('active');
+            });
+        });
+
+        /* ============================================================
+           INITIALIZE DASHBOARD
+        ============================================================ */
+        function initDashboard() {
+            // Initial telemetry
+            updateTelemetry();
+
+            // Glitch animation on header
+            const headerTitle = document.querySelector('.main__header-title');
+            let glitchInterval = setInterval(() => {
+                headerTitle.style.animation = 'glitch-text 0.3s ease-in-out';
+                setTimeout(() => {
+                    headerTitle.style.animation = '';
+                }, 300);
+            }, 15000);
+
+            // Periodic telemetry updates
+            setInterval(updateTelemetry, 800);
+
+            // Periodic terminal log generation
+            setInterval(generateLogEntry, 500);
+
+            // Initial terminal animation
+            animateTerminal();
+        }
+
+        // Start on load
+        window.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS // SYSTEM MONITOR v4.7.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --cyan: #00f0ff;
+  --magenta: #ff00aa;
+  --green: #39ff14;
+  --yellow: #ffe600;
+  --orange: #ff6a00;
+  --bg-dark: #050505;
+  --bg-panel: #0a0a12;
+  --bg-panel-light: #0f0f1a;
+  --border-color: #1a1a2e;
+  --text-dim: #4a4a6a;
+  --text-mid: #7a7a9a;
+  --sidebar-width: 260px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg-dark);
+  color: var(--cyan);
+  display: flex;
+  position: relative;
+}
+
+/* SCANLINE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 240, 255, 0.015) 2px,
+    rgba(0, 240, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  height: 100vh;
+  background: linear-gradient(180deg, #08080f 0%, #0a0a14 50%, #060610 100%);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--cyan), transparent 30%, transparent 70%, var(--magenta));
+  opacity: 0.5;
+}
+
+.profile-section {
+  padding: 24px 20px 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+.profile-section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+
+.avatar-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  animation: avatarPulse 3s ease-in-out infinite;
+}
+
+.avatar-ring::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: var(--magenta);
+  animation: avatarSpin 6s linear infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 8px rgba(0,240,255,0.2); }
+  50% { opacity: 1; box-shadow: 0 0 20px rgba(0,240,255,0.5); }
+}
+
+@keyframes avatarSpin {
+  to { transform: rotate(360deg); }
+}
+
+.avatar-inner {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a1a3a, #0a0a1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--cyan);
+  position: relative;
+  z-index: 2;
+}
+
+.avatar-inner svg {
+  width: 36px;
+  height: 36px;
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.5;
+}
+
+.profile-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.profile-role {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--magenta);
+  text-transform: uppercase;
+}
+
+.profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--green);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: statusBlink 2s ease-in-out infinite;
+}
+
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* NAV */
+.nav-section {
+  padding: 16px 12px;
+  flex: 1;
+}
+
+.nav-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: var(--text-mid);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: left;
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--cyan);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  background: rgba(0, 240, 255, 0.04);
+  color: var(--cyan);
+  border-color: rgba(0, 240, 255, 0.1);
+}
+
+.nav-btn:hover::before, .nav-btn.active::before {
+  opacity: 1;
+}
+
+.nav-btn.active {
+  background: rgba(0, 240, 255, 0.06);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.nav-btn .badge {
+  margin-left: auto;
+  background: rgba(255, 0, 170, 0.15);
+  color: var(--magenta);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 0, 170, 0.3);
+  border-radius: 2px;
+}
+
+/* SIDEBAR FOOTER */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.sidebar-footer .version {
+  color: var(--text-mid);
+  margin-bottom: 4px;
+}
+
+.sidebar-footer .uptime {
+  color: var(--green);
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* HEADER */
+.header {
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, rgba(10,10,20,0.9), transparent);
+  position: relative;
+  min-height: 64px;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan) 20%, var(--cyan) 80%, transparent);
+  opacity: 0.3;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #fff;
+  position: relative;
+  text-transform: uppercase;
+}
+
+.header-title .glitch-text {
+  position: relative;
+  display: inline-block;
+}
+
+.header-title .glitch-text::before,
+.header-title .glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.header-title .glitch-text.glitching::before {
+  animation: glitchBefore 0.3s ease-in-out;
+  color: var(--cyan);
+  opacity: 0.8;
+  clip-path: inset(20% 0 40% 0);
+}
+
+.header-title .glitch-text.glitching::after {
+  animation: glitchAfter 0.3s ease-in-out;
+  color: var(--magenta);
+  opacity: 0.8;
+  clip-path: inset(60% 0 10% 0);
+}
+
+@keyframes glitchBefore {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -1px); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitchAfter {
+  0% { transform: translate(0); }
+  20% { transform: translate(3px, -2px); }
+  40% { transform: translate(-3px, 1px); }
+  60% { transform: translate(2px, -1px); }
+  80% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0); }
+}
+
+.header-subtitle {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header-time {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+}
+
+.header-date {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+/* GRID */
+.grid-container {
+  flex: 1;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* PANEL BASE */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.panel:hover {
+  border-color: rgba(0, 240, 255, 0.2);
+}
+
+/* Inward-cut top corners using clip-path */
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.5;
+}
+
+.panel-header {
+  padding: 14px 18px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.panel-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.panel-title .accent {
+  color: var(--cyan);
+}
+
+.panel-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 1px;
+}
+
+.panel-indicator .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 4px var(--green);
+}
+
+.panel-body {
+  padding: 16px 18px;
+}
+
+/* PANEL 1: CPU/RAM BARS */
+.telemetry-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.telemetry-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.telemetry-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.telemetry-label .name {
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+
+.telemetry-label .value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.telemetry-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.telemetry-bar-fill {
+  height: 100%;
+  position: relative;
+  transition: width 0.6s ease;
+  min-width: 2%;
+}
+
+.telemetry-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.bar-cpu { background: linear-gradient(90deg, var(--cyan), #00a0ff); color: var(--cyan); }
+.bar-ram { background: linear-gradient(90deg, var(--magenta), #ff44cc); color: var(--magenta); }
+.bar-gpu { background: linear-gradient(90deg, var(--green), #00cc44); color: var(--green); }
+.bar-net { background: linear-gradient(90deg, var(--yellow), var(--orange)); color: var(--yellow); }
+
+/* Circular gauges row */
+.gauges-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+
+.gauge-item {
+  text-align: center;
+}
+
+.gauge-svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.04);
+  stroke-width: 4;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.gauge-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.gauge-value-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* PANEL 2: TERMINAL */
+.terminal-panel {
+  grid-column: 1 / 3;
+}
+
+.terminal-body {
+  padding: 14px 18px;
+  height: 260px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.7;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.terminal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.terminal-line {
+  opacity: 0;
+  animation: terminalFadeIn 0.3s ease forwards;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+@keyframes terminalFadeIn {
+  to { opacity: 1; }
+}
+
+.terminal-line .timestamp {
+  color: var(--text-dim);
+  margin-right: 8px;
+}
+
+.terminal-line .prefix {
+  color: var(--magenta);
+  margin-right: 6px;
+}
+
+.terminal-line .hex {
+  color: var(--green);
+}
+
+.terminal-line .msg {
+  color: var(--text-mid);
+}
+
+.terminal-line .warning {
+  color: var(--yellow);
+}
+
+.terminal-line .error {
+  color: var(--magenta);
+}
+
+.terminal-line .success {
+  color: var(--green);
+}
+
+.terminal-line .cyan {
+  color: var(--cyan);
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--cyan);
+  animation: cursorBlink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* PANEL 3: NETWORK */
+.network-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.network-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.01);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.network-stat-row .stat-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.network-stat-row .stat-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.network-stat-row .stat-unit {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+/* Mini waveform */
+.waveform-container {
+  margin-top: 14px;
+  height: 50px;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* PANEL 4: SYSTEM LOGS / NODES */
+.nodes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.node-item {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.01);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-left: 2px solid var(--cyan);
+  transition: all 0.3s;
+}
+
+.node-item:hover {
+  background: rgba(0, 240, 255, 0.03);
+  border-left-color: var(--magenta);
+}
+
+.node-item .node-name {
+  font-size: 10px;
+  color: var(--text-mid);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.node-item .node-status {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.node-item .node-status.online { color: var(--green); }
+.node-item .node-status.warning { color: var(--yellow); }
+.node-item .node-status.critical { color: var(--magenta); }
+
+.node-item .node-ping {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  letter-spacing: 1px;
+}
+
+/* PANEL 5: FULL WIDTH BOTTOM */
+.full-width-panel {
+  grid-column: 1 / -1;
+}
+
+/* Hexagon grid decoration */
+.hex-decoration {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  gap: 4px;
+  opacity: 0.3;
+}
+
+.hex-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--cyan);
+  transform: rotate(45deg);
+}
+
+/* Corner decorations */
+.panel-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+
+.panel-corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.panel-corner.tr { top: -1px; right: -1px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+.panel-corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.panel-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+/* Alert bar */
+.alert-bar {
+  padding: 6px 18px;
+  background: rgba(255, 0, 170, 0.05);
+  border-bottom: 1px solid rgba(255, 0, 170, 0.1);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--magenta);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-bar .alert-icon {
+  animation: alertPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .grid-container {
+    grid-template-columns: 1fr 1fr;
+  }
+  .terminal-panel {
+    grid-column: 1 / -1;
+  }
+  .full-width-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+    min-width: 60px;
+  }
+  .profile-name, .profile-role, .profile-status, .nav-label, .nav-btn span, .nav-btn .badge, .sidebar-footer {
+    display: none;
+  }
+  .nav-btn {
+    justify-content: center;
+    padding: 12px;
+  }
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+  .terminal-panel {
+    grid-column: 1;
+  }
+  .full-width-panel {
+    grid-column: 1;
+  }
+}
+
+/* Subtle background grid pattern */
+.main-content::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image:
+    linear-gradient(rgba(0,240,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Scrollbar for main */
+.grid-container::-webkit-scrollbar {
+  width: 4px;
+}
+.grid-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.grid-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+/* Additional decorative elements */
+.scan-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,240,255,0.08), transparent);
+  z-index: 9997;
+  animation: scanMove 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanMove {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+
+/* Panel data display */
+.data-display {
+  display: flex;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.data-box {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.01);
+  border: 1px solid rgba(255,255,255,0.04);
+  text-align: center;
+}
+
+.data-box .data-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.data-box .data-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.data-box .data-change {
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.data-change.up { color: var(--green); }
+.data-change.down { color: var(--magenta); }
+
+/* Activity bars */
+.activity-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 40px;
+  margin-top: 12px;
+}
+
+.activity-bar {
+  flex: 1;
+  background: var(--cyan);
+  opacity: 0.6;
+  transition: height 0.4s ease;
+  min-width: 4px;
+}
+
+.activity-bar:nth-child(even) {
+  background: var(--magenta);
+}
+
+.activity-bar:nth-child(3n) {
+  background: var(--green);
+}
+</style>
+</head>
+<body>
+
+<div class="scan-line"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="profile-section">
+    <div class="avatar-ring">
+      <div class="avatar-inner">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="profile-name">CMDR. NEXUS</div>
+    <div class="profile-role">System Architect</div>
+    <div class="profile-status">
+      <span class="status-dot"></span>
+      <span>ONLINE — SECTOR 7G</span>
+    </div>
+  </div>
+
+  <nav class="nav-section">
+    <div class="nav-label">Navigation</div>
+    <button class="nav-btn active">
+      <span class="nav-icon">⬡</span>
+      <span>DASHBOARD</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">◈</span>
+      <span>TELEMETRY</span>
+      <span class="badge">LIVE</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">⚡</span>
+      <span>NETWORK</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">◉</span>
+      <span>SECURITY</span>
+      <span class="badge">3</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">⬢</span>
+      <span>QUANTUM LOGS</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">⊡</span>
+      <span>CONFIG</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon">⟐</span>
+      <span>DIAGNOSTICS</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="version">NEXUS OS v4.7.2-build.8841</div>
+    <div class="uptime">UPTIME: <span id="uptimeVal">00:00:00</span></div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div>
+        <div class="header-title">
+          <span class="glitch-text" data-text="SYSTEM MONITOR">SYSTEM MONITOR</span>
+        </div>
+        <div class="header-subtitle">Real-time telemetry dashboard // Quantum Core</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div style="text-align:right">
+        <div class="header-time" id="headerTime">00:00:00</div>
+        <div class="header-date" id="headerDate">2025.01.01</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ALERT BAR -->
+  <div class="alert-bar">
+    <span class="alert-icon">⚠</span>
+    <span>ALERT: UNAUTHORIZED ACCESS ATTEMPT DETECTED — NODE 4X-DELTA — PROTOCOL OMEGA ACTIVE</span>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid-container">
+
+    <!-- PANEL 1: CPU/RAM LOAD -->
+    <div class="panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="panel-header">
+        <span class="panel-title"><span class="accent">■</span> CPU / RAM LOAD</span>
+        <span class="panel-indicator"><span class="dot"></span> LIVE</span>
+      </div>
+      <div class="panel-body">
+        <div class="telemetry-bars">
+          <div class="telemetry-row">
+            <div class="telemetry-label">
+              <span class="name">CPU Core 0-7</span>
+              <span class="value" id="cpuVal" style="color:var(--cyan)">0%</span>
+            </div>
+            <div class="telemetry-bar-track">
+              <div class="telemetry-bar-fill bar-cpu" id="cpuBar" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="telemetry-row">
+            <div class="telemetry-label">
+              <span class="name">RAM Allocation</span>
+              <span class="value" id="ramVal" style="color:var(--magenta)">0%</span>
+            </div>
+            <div class="telemetry-bar-track">
+              <div class="telemetry-bar-fill bar-ram" id="ramBar" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="telemetry-row">
+            <div class="telemetry-label">
+              <span class="name">GPU Compute</span>
+              <span class="value" id="gpuVal" style="color:var(--green)">0%</span>
+            </div>
+            <div class="telemetry-bar-track">
+              <div class="telemetry-bar-fill bar-gpu" id="gpuBar" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="telemetry-row">
+            <div class="telemetry-label">
+              <span class="name">Network I/O</span>
+              <span class="value" id="netVal" style="color:var(--yellow)">0%</span>
+            </div>
+            <div class="telemetry-bar-track">
+              <div class="telemetry-bar-fill bar-net" id="netBar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="gauges-row">
+          <div class="gauge-item">
+            <svg class="gauge-svg" viewBox="0 0 36 36">
+              <circle class="gauge-bg" cx="18" cy="18" r="15.5"/>
+              <circle class="gauge-fill" id="gauge1" cx="18" cy="18" r="15.5"
+                stroke="var(--cyan)" stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+            </svg>
+            <div class="gauge-label">Temp</div>
+            <div class="gauge-value-text" id="gauge1Val" style="color:var(--cyan)">0°C</div>
+          </div>
+          <div class="gauge-item">
+            <svg class="gauge-svg" viewBox="0 0 36 36">
+              <circle class="gauge-bg" cx="18" cy="18" r="15.5"/>
+              <circle class="gauge-fill" id="gauge2" cx="18" cy="18" r="15.5"
+                stroke="var(--magenta)" stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+            </svg>
+            <div class="gauge-label">Voltage</div>
+            <div class="gauge-value-text" id="gauge2Val" style="color:var(--magenta)">0V</div>
+          </div>
+          <div class="gauge-item">
+            <svg class="gauge-svg" viewBox="0 0 36 36">
+              <circle class="gauge-bg" cx="18" cy="18" r="15.5"/>
+              <circle class="gauge-fill" id="gauge3" cx="18" cy="18" r="15.5"
+                stroke="var(--green)" stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+            </svg>
+            <div class="gauge-label">Clock</div>
+            <div class="gauge-value-text" id="gauge3Val" style="color:var(--green)">0GHz</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: TERMINAL -->
+    <div class="panel terminal-panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="panel-header">
+        <span class="panel-title"><span class="accent">■</span> SYSTEM TERMINAL</span>
+        <span class="panel-indicator"><span class="dot"></span> STREAMING</span>
+      </div>
+      <div class="terminal-body" id="terminalBody">
+        <div class="terminal-line">
+          <span class="timestamp">[SYS]</span>
+          <span class="prefix">root@nexus:~$</span>
+          <span class="success">Initializing quantum telemetry interface...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: NETWORK -->
+    <div class="panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="panel-header">
+        <span class="panel-title"><span class="accent">■</span> NETWORK</span>
+        <span class="panel-indicator"><span class="dot"></span> ACTIVE</span>
+      </div>
+      <div class="panel-body">
+        <div class="network-stats">
+          <div class="network-stat-row">
+            <span class="stat-label">Inbound</span>
+            <span class="stat-value" id="netIn" style="color:var(--cyan)">0.00</span>
+            <span class="stat-unit">Gbps</span>
+          </div>
+          <div class="network-stat-row">
+            <span class="stat-label">Outbound</span>
+            <span class="stat-value" id="netOut" style="color:var(--magenta)">0.00</span>
+            <span class="stat-unit">Gbps</span>
+          </div>
+          <div class="network-stat-row">
+            <span class="stat-label">Packet Loss</span>
+            <span class="stat-value" id="pktLoss" style="color:var(--green)">0.00%</span>
+          </div>
+          <div class="network-stat-row">
+            <span class="stat-label">Latency</span>
+            <span class="stat-value" id="latency" style="color:var(--yellow)">0ms</span>
+          </div>
+          <div class="network-stat-row">
+            <span class="stat-label">Active Connections</span>
+            <span class="stat-value" id="conns" style="color:var(--cyan)">0</span>
+          </div>
+        </div>
+        <div class="waveform-container">
+          <canvas class="waveform-canvas" id="waveformCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 4: NODES -->
+    <div class="panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="panel-header">
+        <span class="panel-title"><span class="accent">■</span> ACTIVE NODES</span>
+        <span class="panel-indicator"><span class="dot"></span> 8/8 ONLINE</span>
+      </div>
+      <div class="panel-body">
+        <div class="nodes-grid" id="nodesGrid">
+          <div class="node-item">
+            <div class="node-name">NODE-ALPHA-01</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 2ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-BETA-02</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 4ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-GAMMA-03</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 7ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-DELTA-04</div>
+            <div class="node-status warning">● DEGRADED</div>
+            <div class="node-ping">PING: 45ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-EPSILON-05</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 3ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-ZETA-06</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 5ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-ETA-07</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 1ms</div>
+          </div>
+          <div class="node-item">
+            <div class="node-name">NODE-THETA-08</div>
+            <div class="node-status online">● ONLINE</div>
+            <div class="node-ping">PING: 6ms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 5: SYSTEM OVERVIEW (FULL WIDTH) -->
+    <div class="panel full-width-panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="panel-header">
+        <span class="panel-title"><span class="accent">■</span> SYSTEM OVERVIEW</span>
+        <span class="panel-indicator"><span class="dot"></span> NOMINAL</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-display">
+          <div class="data-box">
+            <div class="data-value" id="totalProcesses" style="color:var(--cyan)">0</div>
+            <div class="data-label">Processes</div>
+            <div class="data-change up">▲ +3 since last check</div>
+          </div>
+          <div class="data-box">
+            <div class="data-value" id="diskUsage" style="color:var(--magenta)">0%</div>
+            <div class="data-label">Disk Usage</div>
+            <div class="data-change down">▼ 2.1GB freed</div>
+          </div>
+          <div class="data-box">
+            <div class="data-value" id="memoryUsed" style="color:var(--green)">0 GB</div>
+            <div class="data-label">Memory Used</div>
+            <div class="data-change up">▲ 1.2GB allocated</div>
+          </div>
+          <div class="data-box">
+            <div class="data-value" id="threatLevel" style="color:var(--yellow)">LOW</div>
+            <div class="data-label">Threat Level</div>
+            <div class="data-change">— STABLE</div>
+          </div>
+          <div class="data-box">
+            <div class="data-value" id="activeFirewall" style="color:var(--cyan)">ACTIVE</div>
+            <div class="data-label">Firewall</div>
+            <div class="data-change up">▲ 247 rules loaded</div>
+          </div>
+        </div>
+        <div class="activity-bars" id="activityBars"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// === CLOCK ===
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('headerTime').textContent = `${h}:${m}:${s}`;
+  const y = now.getFullYear();
+  const mo = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  document.getElementById('headerDate').textContent = `${y}.${mo}.${d}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// === UPTIME ===
+let uptimeSeconds = 0;
+function updateUptime() {
+  uptimeSeconds++;
+  const h = String(Math.floor(uptimeSeconds / 3600)).padStart(2, '0');
+  const m = String(Math.floor((uptimeSeconds % 3600) / 60)).padStart(2, '0');
+  const s = String(uptimeSeconds % 60).padStart(2, '0');
+  document.getElementById('uptimeVal').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateUptime, 1000);
+
+// === GLITCH EFFECT ===
+const glitchText = document.querySelector('.glitch-text');
+function triggerGlitch() {
+  glitchText.classList.add('glitching');
+  setTimeout(() => glitchText.classList.remove('glitching'), 300);
+  // Random next trigger between 3-10 seconds
+  setTimeout(triggerGlitch, 3000 + Math.random() * 7000);
+}
+setTimeout(triggerGlitch, 2000);
+
+// === TELEMETRY BARS ===
+function randomBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function updateTelemetry() {
+  const cpu = randomBetween(25, 95);
+  const ram = randomBetween(40, 88);
+  const gpu = randomBetween(15, 80);
+  const net = randomBetween(10, 70);
+
+  document.getElementById('cpuBar').style.width = cpu + '%';
+  document.getElementById('cpuVal').textContent = cpu + '%';
+
+  document.getElementById('ramBar').style.width = ram + '%';
+  document.getElementById('ramVal').textContent = ram + '%';
+
+  document.getElementById('gpuBar').style.width = gpu + '%';
+  document.getElementById('gpuVal').textContent = gpu + '%';
+
+  document.getElementById('netBar').style.width = net + '%';
+  document.getElementById('netVal').textContent = net + '%';
+
+  // Gauges
+  const circumference = 97.4;
+  const temp = randomBetween(35, 82);
+  const tempOffset = circumference - (temp / 100) * circumference;
+  document.getElementById('gauge1').style.strokeDashoffset = tempOffset;
+  document.getElementById('gauge1Val').textContent = temp + '°C';
+
+  const volt = randomBetween(110, 140);
+  const voltPct = (volt - 100) / 60;
+  const voltOffset = circumference - Math.min(voltPct, 1) * circumference;
+  document.getElementById('gauge2').style.strokeDashoffset = voltOffset;
+  document.getElementById('gauge2Val').textContent = volt + 'V';
+
+  const clock = (randomBetween(30, 55) / 10).toFixed(1);
+  const clockPct = parseFloat(clock) / 6;
+  const clockOffset = circumference - Math.min(clockPct, 1) * circumference;
+  document.getElementById('gauge3').style.strokeDashoffset = clockOffset;
+  document.getElementById('gauge3Val').textContent = clock + 'GHz';
+}
+
+setInterval(updateTelemetry, 800);
+updateTelemetry();
+
+// === TERMINAL ===
+const terminalMessages = [
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Scanning quantum entanglement channels...' },
+  { type: 'warning', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'BYPASSING SECURITY PROTOCOL DELTA-7...' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Handshake verified — node synchronization complete' },
+  { type: 'error', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'ANOMALY DETECTED in sector 0x' + Math.random().toString(16).substr(2, 4).toUpperCase() },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Encrypting data stream with AES-512 quantum cipher' },
+  { type: 'success', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Firewall rule #247 applied — threat neutralized' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Re-routing through proxy cluster 7G-alpha...' },
+  { type: 'warning', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Unidentified signal on port 8443 — monitoring...' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Deep packet inspection: payload size 4096 bytes' },
+  { type: 'error', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'INTRUSION ATTEMPT blocked — source: 192.168.0.' + randomBetween(1,255) },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Quantum key distribution: keys rotated successfully' },
+  { type: 'success', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Backup snapshot created — checksum verified' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'DNS tunneling attempt detected and quarantined' },
+  { type: 'warning', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Certificate expiry warning — 14 days remaining' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Harvesting telemetry data from 8 active nodes' },
+  { type: 'success', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'System integrity check passed — all subsystems nominal' },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Loading neural network weights from cold storage...' },
+  { type: 'error', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Memory leak detected in process PID ' + randomBetween(1000, 9999) },
+  { type: 'info', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Compacting quantum database shards...' },
+  { type: 'warning', hex: '0x' + Math.random().toString(16).substr(2, 8).toUpperCase(), msg: 'Rate limiting activated — 1049 requests/sec threshold' },
+];
+
+const terminalBody = document.getElementById('terminalBody');
+
+function addTerminalLine() {
+  const msg = terminalMessages[randomBetween(0, terminalMessages.length - 1)];
+  const now = new Date();
+  const ts = String(now.getHours()).padStart(2, '0') + ':' +
+             String(now.getMinutes()).padStart(2, '0') + ':' +
+             String(now.getSeconds()).padStart(2, '0');
+
+  const line = document.createElement('div');
+  line.className = 'terminal-line';
+
+  let colorClass = 'msg';
+  if (msg.type === 'warning') colorClass = 'warning';
+  if (msg.type === 'error') colorClass = 'error';
+  if (msg.type === 'success') colorClass = 'success';
+
+  line.innerHTML = `
+    <span class="timestamp">[${ts}]</span>
+    <span class="hex">${msg.hex}</span>
+    <span class="${colorClass}"> ${msg.msg}</span>
+  `;
+
+  terminalBody.appendChild(line);
+
+  // Keep max 50 lines
+  while (terminalBody.children.length > 50) {
+    terminalBody.removeChild(terminalBody.firstChild);
+  }
+
+  terminalBody.scrollTop = terminalBody.scrollHeight;
+}
+
+// Initial lines
+for (let i = 0; i < 5; i++) {
+  setTimeout(() => addTerminalLine(), i * 200);
+}
+setInterval(addTerminalLine, 600 + Math.random() * 400);
+
+// === NETWORK STATS ===
+function updateNetwork() {
+  const netIn = (Math.random() * 4 + 0.5).toFixed(2);
+  const netOut = (Math.random() * 3 + 0.3).toFixed(2);
+  const pktLoss = (Math.random() * 2).toFixed(2);
+  const latency = randomBetween(1, 28);
+  const conns = randomBetween(1200, 4800);
+
+  document.getElementById('netIn').textContent = netIn;
+  document.getElementById('netOut').textContent = netOut;
+  document.getElementById('pktLoss').textContent = pktLoss + '%';
+  document.getElementById('latency').textContent = latency + 'ms';
+  document.getElementById('conns').textContent = conns.toLocaleString();
+}
+setInterval(updateNetwork, 800);
+updateNetwork();
+
+// === WAVEFORM CANVAS ===
+const waveCanvas = document.getElementById('waveformCanvas');
+const waveCtx = waveCanvas.getContext('2d');
+let waveData = [];
+for (let i = 0; i < 100; i++) {
+  waveData.push(Math.random() * 30 + 10);
+}
+
+function resizeWaveCanvas() {
+  const container = waveCanvas.parentElement;
+  waveCanvas.width = container.clientWidth;
+  waveCanvas.height = container.clientHeight;
+}
+resizeWaveCanvas();
+window.addEventListener('resize', resizeWaveCanvas);
+
+function drawWaveform() {
+  const w = waveCanvas.width;
+  const h = waveCanvas.height;
+  waveCtx.clearRect(0, 0, w, h);
+
+  // Shift data
+  waveData.shift();
+  waveData.push(Math.random() * 35 + 5);
+
+  // Draw fill
+  waveCtx.beginPath();
+  waveCtx.moveTo(0, h);
+  for (let i = 0; i < waveData.length; i++) {
+    const x = (i / waveData.length) * w;
+    const y = h - (waveData[i] / 50) * h;
+    if (i === 0) waveCtx.lineTo(x, y);
+    else {
+      const prevX = ((i - 1) / waveData.length) * w;
+      const prevY = h - (waveData[i - 1] / 50) * h;
+      const cpX = (prevX + x) / 2;
+      waveCtx.quadraticCurveTo(prevX, prevY, cpX, (prevY + y) / 2);
+    }
+  }
+  waveCtx.lineTo(w, h);
+  waveCtx.closePath();
+
+  const grad = waveCtx.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, 'rgba(0, 240, 255, 0.15)');
+  grad.addColorStop(0.5, 'rgba(255, 0, 170, 0.1)');
+  grad.addColorStop(1, 'rgba(57, 255, 20, 0.15)');
+  waveCtx.fillStyle = grad;
+  waveCtx.fill();
+
+  // Draw line
+  waveCtx.beginPath();
+  for (let i = 0; i < waveData.length; i++) {
+    const x = (i / waveData.length) * w;
+    const y = h - (waveData[i] / 50) * h;
+    if (i === 0) waveCtx.moveTo(x, y);
+    else {
+      const prevX = ((i - 1) / waveData.length) * w;
+      const prevY = h - (waveData[i - 1] / 50) * h;
+      const cpX = (prevX + x) / 2;
+      waveCtx.quadraticCurveTo(prevX, prevY, cpX, (prevY + y) / 2);
+    }
+  }
+  waveCtx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
+  waveCtx.lineWidth = 1.5;
+  waveCtx.stroke();
+
+  // Grid lines
+  waveCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+  waveCtx.lineWidth = 0.5;
+  for (let i = 1; i < 4; i++) {
+    const y = (h / 4) * i;
+    waveCtx.beginPath();
+    waveCtx.moveTo(0, y);
+    waveCtx.lineTo(w, y);
+    waveCtx.stroke();
+  }
+}
+
+setInterval(drawWaveform, 100);
+
+// === SYSTEM OVERVIEW VALUES ===
+function updateSystemOverview() {
+  const processes = randomBetween(247, 389);
+  const disk = randomBetween(62, 78);
+  const mem = (Math.random() * 8 + 12).toFixed(1);
+
+  document.getElementById('totalProcesses').textContent = processes;
+  document.getElementById('diskUsage').textContent = disk + '%';
+  document.getElementById('memoryUsed').textContent = mem + ' GB';
+}
+setInterval(updateSystemOverview, 2000);
+updateSystemOverview();
+
+// === ACTIVITY BARS ===
+const activityBarsContainer = document.getElementById('activityBars');
+for (let i = 0; i < 40; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'activity-bar';
+  bar.style.height = randomBetween(5, 35) + 'px';
+  activityBarsContainer.appendChild(bar);
+}
+
+function updateActivityBars() {
+  const bars = activityBarsContainer.children;
+  for (let i = 0; i < bars.length; i++) {
+    bars[i].style.height = randomBetween(5, 38) + 'px';
+  }
+}
+setInterval(updateActivityBars, 500);
+
+// === NODE STATUS UPDATES ===
+function updateNodes() {
+  const nodes = document.querySelectorAll('.node-item');
+  const statuses = ['online', 'online', 'online', 'online', 'online', 'online', 'warning', 'online'];
+  const statusTexts = {
+    online: '● ONLINE',
+    warning: '● DEGRADED',
+    critical: '● CRITICAL'
+  };
+
+  nodes.forEach((node, i) => {
+    const statusEl = node.querySelector('.node-status');
+    const pingEl = node.querySelector('.node-ping');
+    const status = statuses[i];
+    statusEl.className = 'node-status ' + status;
+    statusEl.textContent = statusTexts[status];
+    const ping = status === 'online' ? randomBetween(1, 12) : randomBetween(20, 80);
+    pingEl.textContent = 'PING: ' + ping + 'ms';
+  });
+}
+setInterval(updateNodes, 3000);
+
+// === NAV BUTTON INTERACTION ===
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

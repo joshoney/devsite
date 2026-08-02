@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tango Puzzle</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#f0f0f0;margin:0;padding:20px;}
+  h1{font-size:1.6em;margin-bottom:10px;}
+  #game{display:grid;grid-template-columns:repeat(6,80px);grid-template-rows:repeat(6,80px);gap:0;position:relative;margin-bottom:20px;}
+  .cell{border:1px solid #bbb;display:flex;align-items:center;justify-content:center;font-size:2.2em;position:relative;background:#fff;cursor:pointer;}
+  .cell.error{background:#ffdddd;}
+  .marker{position:absolute;font-size:0.8em;color:#555;}
+  .marker.right{right:0;top:50%;transform:translateY(-50%);}
+  .marker.bottom{bottom:0;left:50%;transform:translateX(-50%);}
+  button{padding:10px 20px;font-size:1em;margin-right:10px;}
+</style>
+</head>
+<body>
+<h1>Tango Puzzle</h1>
+<div id="game"></div>
+<button id="checkBtn">Check Solution</button>
+<button id="resetBtn">New Puzzle</button>
+
+<script>
+(() => {
+  const SIZE = 6;
+  const FIRE = 1; // 🔥
+  const ICE = 0;  // 🧊
+
+  let solutionGrid = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+  let playerGrid = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+  let markers = Array.from({length: SIZE}, () => Array(SIZE).fill(null).map(()=>({right:null,bottom:null})));
+
+  const gameDiv = document.getElementById('game');
+  const checkBtn = document.getElementById('checkBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  // Utility: shuffle array
+  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}}  
+
+  // Backtracking solution generator
+  function generateSolution(){
+    const rowCount = Array(SIZE).fill(0);
+    const colCount = Array(SIZE).fill(0);
+
+    function isValid(r,c,val){
+      // Row/col balance
+      if(rowCount[r] + (val===FIRE?1:0) > 3) return false;
+      if(colCount[c] + (val===FIRE?1:0) > 3) return false;
+      // No three in a row horizontally
+      if(c>=2 && solutionGrid[r][c-1]===val && solutionGrid[r][c-2]===val) return false;
+      // No three in a row vertically
+      if(r>=2 && solutionGrid[r-1][c]===val && solutionGrid[r-2][c]===val) return false;
+      return true;
+    }
+
+    function backtrack(idx){
+      if(idx===SIZE*SIZE) return true;
+      const r = Math.floor(idx/SIZE);
+      const c = idx%SIZE;
+      const order = [FIRE,ICE];
+      shuffle(order);
+      for(const val of order){
+        if(isValid(r,c,val)){
+          solutionGrid[r][c]=val;
+          if(val===FIRE) rowCount[r]++; else colCount[c]++; // ICE counts not needed
+          if(backtrack(idx+1)) return true;
+          // backtrack
+          solutionGrid[r][c]=null;
+          if(val===FIRE) rowCount[r]--; else colCount[c]--;
+        }
+      }
+      return false;
+    }
+    backtrack(0);
+  }
+
+  // Place constraints
+  function placeConstraints(){
+    const pairs = [];
+    // horizontal pairs
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE-1;c++){
+        pairs.push({type:'h',r,c});
+      }
+    }
+    // vertical pairs
+    for(let r=0;r<SIZE-1;r++){
+      for(let c=0;c<SIZE;c++){
+        pairs.push({type:'v',r,c});
+      }
+    }
+    shuffle(pairs);
+    const count = 6 + Math.floor(Math.random()*3); // 6-8
+    for(let i=0;i<count;i++){
+      const p = pairs[i];
+      const a = solutionGrid[p.r][p.c];
+      const b = (p.type==='h')?solutionGrid[p.r][p.c+1]:solutionGrid[p.r+1][p.c];
+      const marker = (a===b)?'=':'×';
+      if(p.type==='h'){
+        markers[p.r][p.c].right=marker;
+      }else{
+        markers[p.r][p.c].bottom=marker;
+      }
+    }
+  }
+
+  // Create puzzle by clearing 70% cells
+  function createPuzzle(){
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        if(Math.random()<0.7){
+          playerGrid[r][c]=null;
+        }else{
+          playerGrid[r][c]=solutionGrid[r][c];
+        }
+      }
+    }
+  }
+
+  // Render board
+  function renderBoard(){
+    gameDiv.innerHTML='';
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        const cell = document.createElement('div');
+        cell.className='cell';
+        cell.dataset

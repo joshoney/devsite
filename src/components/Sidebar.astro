@@ -1,14 +1,10 @@
 ---
 const navLinks = [
+	{ title: 'Navigation', href: '/', color: 'var(--lcars-red)' },
 	{ title: 'Local LLM Evals', href: '/evals', color: 'var(--lcars-amber)' },
-	{ title: 'Games', href: '#games', color: 'var(--lcars-purple)' },
-	{ title: 'Action 03', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 04', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 05', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 06', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 07', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 08', href: '#', color: 'var(--lcars-dark)' },
-	{ title: 'Action 09', href: '#', color: 'var(--lcars-dark)' },
+	{ title: 'evaluerBench', href: '/evaluerbench', color: 'var(--lcars-blue)' },
+	{ title: '< THIS_SITE />', href: '/devsite', color: 'var(--lcars-tan)' },
+	{ title: 'Games (Coming Soon)', href: '#games', color: 'var(--lcars-purple)' }
 ];
 
 const socialLinks = [
@@ -21,7 +17,7 @@ const socialLinks = [
 	<!-- 1. Name Badge at the very top (Fuses with the top elbow) -->
 	<div class="sidebar-name">
 		<span class="name-text">JOSH ONEY</span>
-		<span class="name-sub">DEV // 01</span>
+		<span class="name-sub"><span id="glitch-role">DEV</span> // 01</span>
 	</div>
 
 	<!-- 2. Main Navigation Stack -->
@@ -61,6 +57,45 @@ const socialLinks = [
 	<!-- 5. Taller Bottom Cap Block (Provides ~2 buttons of breathing room) -->
 	<div class="sidebar-filler-bottom"></div>
 </aside>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const roles = ['SDET', 'QA', 'SE', 'DEV', 'TEST', 'AUTO'];
+		let currentIndex = 0;
+		const roleEl = document.getElementById('glitch-role');
+		const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+		
+		if (!roleEl) return;
+
+		// Prevent multiple intervals if script runs multiple times
+		if (window._roleGlitchInterval) clearInterval(window._roleGlitchInterval);
+
+		function glitchText(targetText) {
+			let iterations = 0;
+			const maxIterations = 8;
+			const interval = setInterval(() => {
+				let result = '';
+				for (let i = 0; i < targetText.length; i++) {
+					if (iterations >= maxIterations) {
+						result += targetText[i];
+					} else {
+						result += chars[Math.floor(Math.random() * chars.length)];
+					}
+				}
+				roleEl.textContent = result;
+				iterations++;
+				if (iterations > maxIterations) {
+					clearInterval(interval);
+				}
+			}, 50);
+		}
+
+		window._roleGlitchInterval = setInterval(() => {
+			currentIndex = (currentIndex + 1) % roles.length;
+			glitchText(roles[currentIndex]);
+		}, 4000);
+	});
+</script>
 
 <style>
 	.lcars-sidebar {

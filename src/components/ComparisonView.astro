@@ -228,20 +228,20 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 					detailsEl.innerHTML = `
 						<summary class="pair-summary">
 							<div class="pair-title-col">
-								<span class="eval-cat-badge">${meta.cat || 'general'}</span>
 								<span class="eval-title">${meta.name || evalId}</span>
+								<span class="eval-cat-badge">${meta.cat || 'general'}</span>
 							</div>
 
 							<div class="pair-run-stat stat-a">
 								<span class="stat-label">RUN A</span>
-								${resA ? `<span class="score-pill ${resA.judge?.passed ? 'pass' : 'fail'}">${scoreA}% (${tpsResA} t/s)</span>` : '<span class="untested-text">N/A</span>'}
+								${resA ? `<span class="score-pill ${resA.judge?.passed ? 'pass' : 'fail'}">${scoreA}% (${tpsResA !== undefined ? tpsResA : '--'} t/s)</span>` : '<span class="untested-text">N/A</span>'}
 							</div>
 
 							<div class="pair-vs">VS</div>
 
 							<div class="pair-run-stat stat-b">
 								<span class="stat-label">RUN B</span>
-								${resB ? `<span class="score-pill ${resB.judge?.passed ? 'pass' : 'fail'}">${scoreB}% (${tpsResB} t/s)</span>` : '<span class="untested-text">N/A</span>'}
+								${resB ? `<span class="score-pill ${resB.judge?.passed ? 'pass' : 'fail'}">${scoreB}% (${tpsResB !== undefined ? tpsResB : '--'} t/s)</span>` : '<span class="untested-text">N/A</span>'}
 							</div>
 
 							<div class="pair-delta">
@@ -260,9 +260,9 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 									${resA ? `
 										<div class="side-content">
 											<div class="meta-strip">
-												<span>Score: <strong>${resA.judge?.score}%</strong></span>
-												<span>Speed: <strong>${resA.metrics?.tokensPerSecond} t/s</strong></span>
-												<span>TTFT: <strong>${resA.metrics?.timeToFirstTokenMs} ms</strong></span>
+												<span>Score: <strong>${resA.judge?.score !== undefined ? resA.judge.score + '%' : '--'}</strong></span>
+												<span>Speed: <strong>${resA.metrics?.tokensPerSecond !== undefined ? resA.metrics.tokensPerSecond : '--'} t/s</strong></span>
+												<span>TTFT: <strong>${resA.metrics?.timeToFirstTokenMs !== undefined ? resA.metrics.timeToFirstTokenMs : '--'} ms</strong></span>
 											</div>
 											<div class="section-block">
 												<span class="block-title">JUDGE REASONING</span>
@@ -272,7 +272,12 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 												<span class="block-title">RAW OUTPUT / CODE</span>
 												<pre class="code-box"><code>${escapeHtml(resA.rawOutput)}</code></pre>
 											</div>
-											${resA.artifactUrl ? `<a href="${resA.artifactUrl}" target="_blank" class="artifact-link">⚡ VIEW VISUAL DEMO A ↗</a>` : ''}
+											${(resA.display_type === 'html-iframe' || evalId.startsWith('visual-')) && resA.artifactUrl ? `
+												<div class="lcars-split-btn">
+													<button class="launch-artifact-btn main-split" data-url="${resA.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(runA.meta?.modelName)}">⚡ LAUNCH VISUAL APP A</button>
+													<a href="${resA.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">↗ TAB</a>
+												</div>
+											` : ''}
 										</div>
 									` : '<div class="not-executed">Not executed in Run A.</div>'}
 								</div>
@@ -286,9 +291,9 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 									${resB ? `
 										<div class="side-content">
 											<div class="meta-strip">
-												<span>Score: <strong>${resB.judge?.score}%</strong></span>
-												<span>Speed: <strong>${resB.metrics?.tokensPerSecond} t/s</strong></span>
-												<span>TTFT: <strong>${resB.metrics?.timeToFirstTokenMs} ms</strong></span>
+												<span>Score: <strong>${resB.judge?.score !== undefined ? resB.judge.score + '%' : '--'}</strong></span>
+												<span>Speed: <strong>${resB.metrics?.tokensPerSecond !== undefined ? resB.metrics.tokensPerSecond : '--'} t/s</strong></span>
+												<span>TTFT: <strong>${resB.metrics?.timeToFirstTokenMs !== undefined ? resB.metrics.timeToFirstTokenMs : '--'} ms</strong></span>
 											</div>
 											<div class="section-block">
 												<span class="block-title">JUDGE REASONING</span>
@@ -298,7 +303,12 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 												<span class="block-title">RAW OUTPUT / CODE</span>
 												<pre class="code-box"><code>${escapeHtml(resB.rawOutput)}</code></pre>
 											</div>
-											${resB.artifactUrl ? `<a href="${resB.artifactUrl}" target="_blank" class="artifact-link">⚡ VIEW VISUAL DEMO B ↗</a>` : ''}
+											${(resB.display_type === 'html-iframe' || evalId.startsWith('visual-')) && resB.artifactUrl ? `
+												<div class="lcars-split-btn">
+													<button class="launch-artifact-btn main-split" data-url="${resB.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(runB.meta?.modelName)}">⚡ LAUNCH VISUAL APP B</button>
+													<a href="${resB.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">↗ TAB</a>
+												</div>
+											` : ''}
 										</div>
 									` : '<div class="not-executed">Not executed in Run B.</div>'}
 								</div>
@@ -308,6 +318,32 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 
 					pairsListContainer.appendChild(detailsEl);
 				});
+
+				// Bind launch visual artifact buttons
+				if (pairsListContainer) {
+					pairsListContainer.querySelectorAll('.launch-artifact-btn.main-split').forEach((btn) => {
+						btn.addEventListener('click', (e) => {
+							e.preventDefault();
+							const url = btn.getAttribute('data-url');
+							const title = btn.getAttribute('data-title');
+							const model = btn.getAttribute('data-model');
+
+							const overlay = document.getElementById('visualOverlay');
+							const iframe = document.getElementById('artifactIframe');
+							const evalTitle = document.getElementById('overlayEvalTitle');
+							const modelTitle = document.getElementById('overlayModelTitle');
+							const extLink = document.getElementById('overlayExternalLink');
+
+							if (overlay && iframe && url) {
+								if (evalTitle) evalTitle.textContent = title || '';
+								if (modelTitle) modelTitle.textContent = ` (${model || ''})`;
+								if (extLink) extLink.setAttribute('href', url);
+								iframe.src = url;
+								overlay.classList.remove('hidden');
+							}
+						});
+					});
+				}
 			}
 
 			function executeComparison() {
@@ -707,6 +743,12 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 		white-space: nowrap;
 	}
 
+	.side-content {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
 	.meta-strip {
 		display: flex;
 		gap: 14px;
@@ -762,24 +804,43 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 		max-width: 100%;
 	}
 
-	.artifact-link {
-		font-family: var(--font-mono);
-		font-size: 0.78rem;
-		font-weight: bold;
-		color: var(--lcars-amber);
-		text-decoration: none;
-		padding: 8px 12px;
-		background: rgba(255, 153, 0, 0.1);
-		border: 1px solid var(--lcars-amber);
-		border-radius: 4px;
-		text-align: center;
-		margin-top: 4px;
-		transition: all 0.2s;
+	.lcars-split-btn {
+		display: flex;
+		gap: 4px;
+		width: 100%;
 	}
 
-	.artifact-link:hover {
+	.launch-artifact-btn {
 		background: var(--lcars-amber);
 		color: #000;
+		border: none;
+		font-family: var(--font-mono);
+		font-weight: 800;
+		font-size: 0.78rem;
+		cursor: pointer;
+		text-align: center;
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: filter 0.15s;
+	}
+
+	.launch-artifact-btn.main-split {
+		flex: 4;
+		padding: 8px 14px;
+		border-radius: 20px 0 0 20px;
+	}
+
+	.launch-artifact-btn.tab-split {
+		flex: 1;
+		padding: 8px 10px;
+		border-radius: 0 20px 20px 0;
+		font-size: 0.72rem;
+	}
+
+	.launch-artifact-btn:hover {
+		filter: brightness(1.2);
 	}
 
 	.not-executed {

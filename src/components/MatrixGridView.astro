@@ -97,7 +97,19 @@ function formatDate(isoString: string) {
 							const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
 							const isPass = res.judge?.passed;
 							const isVisual = res.display_type === 'html-iframe' || (res.evalId && res.evalId.startsWith('visual-'));
-							const pillClass = hasJudge ? (isPass ? 'pass' : 'fail') : 'unjudged';
+							
+							let pillClass;
+							let pillText;
+							if (hasJudge) {
+								pillClass = isPass ? 'pass' : 'fail';
+								pillText = `${res.judge?.score}%`;
+							} else if (isVisual) {
+								pillClass = 'unjudged-demo';
+								pillText = 'UNJUDGED';
+							} else {
+								pillClass = 'timeout';
+								pillText = 'TIMEOUT';
+							}
 
 							return (
 								<td class="eval-cell">
@@ -121,7 +133,7 @@ function formatDate(isoString: string) {
 										data-artifact-url={res.artifactUrl || ''}
 									>
 										<div class="pill-top">
-											<span class="score">{hasJudge ? `${res.judge?.score}%` : 'UNJUDGED'}</span>
+											<span class="score">{pillText}</span>
 											<span class="status-icon">{hasJudge ? (isPass ? '✓' : '✗') : '–'}</span>
 										</div>
 										<div class="pill-bottom">
@@ -145,8 +157,8 @@ function formatDate(isoString: string) {
 		<!-- MODAL HEADER -->
 		<div class="modal-header">
 			<div class="modal-title-group">
-				<span class="modal-lcars-tag" id="modalCategoryTag">EVAL DETAILS</span>
 				<h3 id="modalEvalName">Eval Name</h3>
+				<span class="modal-lcars-tag" id="modalCategoryTag">EVAL DETAILS</span>
 				<span class="modal-sub" id="modalModelRun">Model / Run</span>
 			</div>
 			<button id="closeModalBtn" class="modal-close-btn">✕ CLOSE</button>
@@ -175,9 +187,14 @@ function formatDate(isoString: string) {
 				<span class="m-val" id="modalTokens">46 in / 368 out</span>
 			</div>
 			<div id="visualLaunchWrapper" class="metric-item action-item hidden">
-				<button id="launchVisualBtn" class="launch-demo-btn">
-					⚡ LAUNCH VISUAL APP
-				</button>
+				<div class="lcars-split-btn">
+					<button id="launchVisualBtn" class="launch-demo-btn main-split">
+						⚡ LAUNCH VISUAL APP
+					</button>
+					<a id="launchVisualTabBtn" href="#" target="_blank" class="launch-demo-btn tab-split" title="Open in new tab">
+						↗ TAB
+					</a>
+				</div>
 			</div>
 		</div>
 
@@ -225,6 +242,7 @@ function formatDate(isoString: string) {
 		const modalOutputText = document.getElementById('modalOutputText');
 		const visualLaunchWrapper = document.getElementById('visualLaunchWrapper');
 		const launchVisualBtn = document.getElementById('launchVisualBtn');
+		const launchVisualTabBtn = document.getElementById('launchVisualTabBtn');
 
 		// Visual Overlay Elements
 		const visualOverlay = document.getElementById('visualOverlay');
@@ -257,18 +275,22 @@ function formatDate(isoString: string) {
 
 				if (modalEvalName) modalEvalName.textContent = evalName || evalId || 'Eval';
 				if (modalModelRun) modalModelRun.textContent = `${modelName}`;
-				if (modalScore) modalScore.textContent = `${score}%`;
-				if (modalTps) modalTps.textContent = `${tps} t/s`;
-				if (modalTtft) modalTtft.textContent = `${ttft} ms`;
-				if (modalLatency) modalLatency.textContent = `${(Number(latency) / 1000).toFixed(1)}s`;
-				if (modalTokens) modalTokens.textContent = `${inputTok} in / ${outputTok} out`;
+				if (modalScore) modalScore.textContent = `${score !== 'undefined' && score !== null ? score : '--'}%`;
+				if (modalTps) modalTps.textContent = `${tps !== 'undefined' && tps !== null ? tps : '--'} t/s`;
+				if (modalTtft) modalTtft.textContent = `${ttft !== 'undefined' && ttft !== null ? ttft : '--'} ms`;
+				if (modalLatency) modalLatency.textContent = latency !== 'undefined' && latency !== null ? `${(Number(latency) / 1000).toFixed(1)}s` : '--';
+				if (modalTokens) modalTokens.textContent = `${inputTok !== 'undefined' && inputTok !== null ? inputTok : '--'} in / ${outputTok !== 'undefined' && outputTok !== null ? outputTok : '--'} out`;
 
 				if (modalReasoningText) modalReasoningText.textContent = reasoning || 'No judge reasoning available.';
 				if (modalPromptText) modalPromptText.textContent = prompt || '';
 				if (modalOutputText) modalOutputText.textContent = rawOutput || '';
 
+				const displayType = btn.getAttribute('data-display-type');
+				const isVisual = displayType === 'html-iframe' || (evalId && evalId.startsWith('visual-'));
+
 				// Show/hide launch button for visual artifacts
-				if (artifactUrl && visualLaunchWrapper) {
+				if (isVisual && artifactUrl && visualLaunchWrapper) {
+					if (launchVisualTabBtn) launchVisualTabBtn.href = artifactUrl;
 					visualLaunchWrapper.classList.remove('hidden');
 				} else if (visualLaunchWrapper) {
 					visualLaunchWrapper.classList.add('hidden');
@@ -601,17 +623,30 @@ function formatDate(isoString: string) {
 		box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
 	}
 
-	.eval-pill-btn.unjudged {
-		background-color: rgba(163, 113, 247, 0.12);
-		border-color: rgba(163, 113, 247, 0.4);
+	.eval-pill-btn.timeout {
+		background-color: rgba(186, 164, 229, 0.12);
+		border-color: rgba(186, 164, 229, 0.4);
 		color: var(--lcars-purple);
 	}
 
-	.eval-pill-btn.unjudged:hover {
-		background-color: rgba(163, 113, 247, 0.25);
+	.eval-pill-btn.timeout:hover {
+		background-color: rgba(186, 164, 229, 0.25);
 		border-color: var(--lcars-purple);
 		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(163, 113, 247, 0.2);
+		box-shadow: 0 4px 12px rgba(186, 164, 229, 0.2);
+	}
+
+	.eval-pill-btn.unjudged-demo {
+		background-color: rgba(255, 204, 153, 0.12);
+		border-color: rgba(255, 204, 153, 0.4);
+		color: var(--lcars-tan);
+	}
+
+	.eval-pill-btn.unjudged-demo:hover {
+		background-color: rgba(255, 204, 153, 0.25);
+		border-color: var(--lcars-tan);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(255, 204, 153, 0.2);
 	}
 
 	.eval-pill-btn.fail {
@@ -729,13 +764,21 @@ function formatDate(isoString: string) {
 		font-weight: bold;
 		padding: 2px 6px;
 		border-radius: 3px;
+		align-self: flex-start;
 	}
 
 	.modal-title-group h3 {
 		font-family: var(--font-sans);
 		font-size: 1.3rem;
 		color: #fff;
-		margin: 6px 0 2px 0;
+		margin: 0;
+	}
+
+	.modal-title-group {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
 	}
 
 	.modal-sub {
@@ -797,6 +840,12 @@ function formatDate(isoString: string) {
 		justify-content: center;
 	}
 
+	.lcars-split-btn {
+		display: flex;
+		gap: 4px;
+		width: 100%;
+	}
+
 	.launch-demo-btn {
 		background: var(--lcars-amber);
 		color: #000;
@@ -804,16 +853,31 @@ function formatDate(isoString: string) {
 		font-family: var(--font-mono);
 		font-weight: 800;
 		font-size: 0.82rem;
-		padding: 8px 16px;
-		border-radius: 20px;
 		cursor: pointer;
-		transition: transform 0.15s, filter 0.15s;
+		text-align: center;
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: filter 0.15s;
 		box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3);
+	}
+
+	.launch-demo-btn.main-split {
+		flex: 4;
+		padding: 8px 16px;
+		border-radius: 20px 0 0 20px;
+	}
+
+	.launch-demo-btn.tab-split {
+		flex: 1;
+		padding: 8px 10px;
+		border-radius: 0 20px 20px 0;
+		font-size: 0.72rem;
 	}
 
 	.launch-demo-btn:hover {
 		filter: brightness(1.2);
-		transform: scale(1.03);
 	}
 
 	.modal-tabs {
