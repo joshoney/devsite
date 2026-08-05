@@ -25,8 +25,12 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 		<div class="lcars-frame">
 			<!-- ROW 1: FULL WIDTH SWOOP & CORNER ELBOW -->
 			<div class="lcars-elbow-top"></div>
-			<header class="lcars-swoop-ext">
-				<span class="status-text">{isEvalsPage ? 'EVALUER BENCH // TELEMETRY ACCESS' : 'ONLINE // ACCESS GRANTED'}</span>
+			<header class="lcars-swoop-ext-container">
+				<div class="swoop-segment swoop-left"></div>
+				<div class="swoop-segment swoop-mid"></div>
+				<div class="swoop-segment swoop-right">
+					<span class="status-text">{isEvalsPage ? 'EVALUER BENCH // TELEMETRY ACCESS' : 'ONLINE // ACCESS GRANTED'}</span>
+				</div>
 			</header>
 
 			<!-- ROW 2: LOCKED SIDEBAR & SCROLLABLE MAIN CONTENT -->
@@ -51,13 +55,28 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 		--card-bg: #14181f;
 		--text-main: #f0f4f8;
 		--text-muted: #8b949e;
-		
-		/* Readable LCARS Palette */
-		--lcars-amber: #ff9900;
-		--lcars-blue: #6699cc;
-		--lcars-purple: #baa4e5;
-		--lcars-red: #cc4444;
-		--lcars-tan: #ffcc99;
+		/* Comprehensive LCARS Palette */
+		--lcars-african-violet: #baa4e5;
+		--lcars-almond: #d29b7f;
+		--lcars-almond-creme: #fcc19f;
+		--lcars-barley: #edb378;
+		--lcars-bluey: #8899ff;
+		--lcars-brown: #895129;
+		--lcars-butterscotch: #ea9c72;
+		--lcars-dirty-mauve: #7a506d;
+		--lcars-dusty-mauve: #9d698a;
+		--lcars-lilac: #8a72a7;
+		--lcars-mars: #ff2200;
+		--lcars-orange: #eb943a;
+		--lcars-red: #cf4f4f;
+		--lcars-subdued-sienna: #c47d69;
+		--lcars-true-mauve: #c082a9;
+
+		/* Mapped existing variables to match the new palette */
+		--lcars-amber: var(--lcars-orange);
+		--lcars-blue: var(--lcars-bluey);
+		--lcars-purple: var(--lcars-african-violet);
+		--lcars-tan: var(--lcars-almond-creme);
 		--lcars-dark: #1a1e24;
 
 		--font-mono: 'Courier New', Courier, monospace;
@@ -99,25 +118,46 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 	.lcars-elbow-top {
 		width: 100%;
 		height: 100%;
-		background-color: var(--lcars-amber);
+		background-color: var(--lcars-butterscotch);
 		border-top-left-radius: 35px;
 	}
 
-	.lcars-swoop-ext {
-		position: relative;
+	.lcars-swoop-ext-container {
+		display: flex;
 		width: 100%;
 		height: 40px; /* Leaves a 30px step down to match the 70px top row */
 		align-self: start;
-		background-color: var(--lcars-amber);
-		border-bottom-right-radius: 20px;
+		gap: 6px;
+	}
+
+	.swoop-segment {
+		height: 100%;
+	}
+
+	.swoop-left {
+		flex: 1;
+		position: relative;
+		background-color: var(--lcars-butterscotch);
+	}
+
+	.swoop-mid {
+		flex: 2;
+		background-color: var(--lcars-dusty-mauve);
+	}
+
+	.swoop-right {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		padding-right: 35px;
+		padding: 0 35px 0 25px;
+		background-color: var(--lcars-lilac);
+		border-bottom-right-radius: 20px;
+		width: 380px;
+		flex-shrink: 0;
 	}
 
 	/* LCARS Smooth Inner Concave Curve (Fillet) */
-	.lcars-swoop-ext::after {
+	.swoop-left::after {
 		content: "";
 		position: absolute;
 		left: 0;
@@ -125,7 +165,7 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 		width: 30px;
 		height: 30px;
 		/* Carves an inward arc using a transparent circle centered at bottom-right */
-		background: radial-gradient(circle at 100% 100%, transparent 29.5px, var(--lcars-amber) 30px);
+		background: radial-gradient(circle at 100% 100%, transparent 29.5px, var(--lcars-butterscotch) 30px);
 		pointer-events: none;
 	}
 
@@ -140,7 +180,7 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 
 	/* Content Area - Independent Scrolling Viewport */
 	.content-viewport {
-		padding: 30px 6% 40px 45px;
+		padding: 30px 6% 40px 85px;
 		height: calc(100vh - 70px);
 		overflow-y: auto;
 		display: flex;
@@ -190,7 +230,7 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 			grid-template-rows: auto;
 			height: auto;
 		}
-		.lcars-elbow-top, .lcars-swoop-ext {
+		.lcars-elbow-top, .lcars-swoop-ext-container {
 			display: none;
 		}
 		.content-viewport {

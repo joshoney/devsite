@@ -1,15 +1,15 @@
 ---
 const navLinks = [
-	{ title: 'Navigation', href: '/', color: 'var(--lcars-red)' },
-	{ title: 'Local LLM Evals', href: '/evals', color: 'var(--lcars-amber)' },
-	{ title: 'evaluerBench', href: '/evaluerbench', color: 'var(--lcars-blue)' },
-	{ title: '< THIS_SITE />', href: '/devsite', color: 'var(--lcars-tan)' },
-	{ title: 'Games (Coming Soon)', href: '#games', color: 'var(--lcars-purple)' }
+	{ title: 'Navigation', href: '/', color: 'var(--lcars-almond-creme)', heightMult: 3 },
+	{ title: 'Local LLM Evals', href: '/evals', color: 'var(--lcars-amber)', heightMult: 2 },
+	{ title: 'evaluerBench', href: '/evaluerbench', color: 'var(--lcars-blue)', github: 'https://github.com/joshoney/evaluerBench' },
+	{ title: '< THIS_SITE />', href: '/devsite', color: 'var(--lcars-tan)', github: 'https://github.com/joshoney/devsite' },
+	{ title: 'Games (Coming Soon)', href: '#games', color: 'var(--lcars-purple)', heightMult: 7 }
 ];
 
 const socialLinks = [
 	{ title: 'GitHub ↗', href: 'https://github.com/joshoney', color: 'var(--lcars-tan)' },
-	{ title: 'LinkedIn ↗', href: 'https://www.linkedin.com/in/joshua-oney-sf', color: 'var(--lcars-red)' },
+	{ title: 'LinkedIn ↗', href: 'https://www.linkedin.com/in/joshua-oney-sf', color: 'var(--lcars-almond)' },
 ];
 ---
 
@@ -23,14 +23,28 @@ const socialLinks = [
 	<!-- 2. Main Navigation Stack -->
 	<nav class="nav-stack">
 		{navLinks.map((link, index) => (
-			<a 
-				href={link.href} 
-				class="lcars-btn" 
-				style={`--btn-color: ${link.color};`}
-			>
-				<span class="btn-num">0{index + 1}</span>
-				<span class="btn-text">{link.title}</span>
-			</a>
+			<div class="nav-btn-wrapper">
+				<a 
+					href={link.href} 
+					class={`lcars-btn ${link.heightMult ? 'lcars-btn-tall' : ''}`} 
+					style={`--btn-color: ${link.color}; ${link.heightMult ? `--height-mult: ${link.heightMult};` : ''}`}
+				>
+					<span class="btn-num">0{index + 1}</span>
+					<span class="btn-text">{link.title}</span>
+				</a>
+				{link.github && (
+					<a 
+						href={link.github}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="github-jut"
+						style={`--btn-color: ${link.color};`}
+						title="View on GitHub"
+					>
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+					</a>
+				)}
+			</div>
 		))}
 	</nav>
 
@@ -103,7 +117,9 @@ const socialLinks = [
 		flex-direction: column;
 		width: 100%;
 		height: calc(100vh - 70px);
-		overflow-y: auto;
+		overflow: visible;
+		position: relative;
+		z-index: 10;
 		user-select: none;
 		padding-bottom: 20px; /* Extra bottom breathing room */
 		background-color: var(--bg-color);
@@ -126,12 +142,12 @@ const socialLinks = [
 		width: 100%;
 		min-height: 46px;
 		padding: 8px 18px;
-		background-color: var(--lcars-amber);
+		background-color: var(--lcars-butterscotch);
 		color: #000;
 		font-family: var(--font-mono);
 		font-weight: 800;
 		letter-spacing: 1.5px;
-		border-bottom-left-radius: 20px;
+		border-radius: 0;
 		margin-bottom: 8px; /* Classic LCARS segmentation line below the name */
 		flex-shrink: 0;
 	}
@@ -149,7 +165,7 @@ const socialLinks = [
 	.nav-stack, .social-stack {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 3px;
 		width: 100%;
 		flex-shrink: 0;
 	}
@@ -177,11 +193,14 @@ const socialLinks = [
 		font-size: 0.85rem;
 		text-transform: uppercase;
 		letter-spacing: 1px;
-		border-top-left-radius: 22px;
-		border-bottom-left-radius: 22px;
-		border-top-right-radius: 4px;
-		border-bottom-right-radius: 4px;
-		transition: filter 0.2s, transform 0.1s;
+		border-radius: 0;
+		transition: filter 0.2s;
+		flex-grow: 1;
+	}
+
+	.lcars-btn-tall {
+		min-height: calc(47px * var(--height-mult) - 3px);
+		align-items: flex-end;
 	}
 
 	.lcars-btn[style*="--lcars-dark"] {
@@ -190,8 +209,6 @@ const socialLinks = [
 
 	.lcars-btn:hover {
 		filter: brightness(1.2);
-		transform: translateX(4px);
-		color: #fff;
 	}
 
 	.btn-num {
@@ -207,14 +224,40 @@ const socialLinks = [
 		margin-left: 10px;
 	}
 
+	.nav-btn-wrapper {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		position: relative;
+	}
+
+	.github-jut {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--btn-color);
+		color: #000;
+		height: 44px; /* match min-height of lcars-btn */
+		width: 36px;
+		margin-left: 4px;
+		border-radius: 0 22px 22px 0;
+		transition: filter 0.2s;
+		flex-shrink: 0;
+		position: absolute;
+		left: calc(100% + 4px); /* Pushes exactly outside the sidebar */
+	}
+
+	.github-jut:hover {
+		filter: brightness(1.2);
+	}
+
 	/* Expanding Vertical Filler */
 	.sidebar-filler {
 		flex-grow: 1;
 		width: 100%;
 		min-height: 30px;
 		background-color: var(--lcars-blue);
-		border-top-left-radius: 4px;
-		border-bottom-left-radius: 18px;
+		border-radius: 0;
 		opacity: 0.25;
 		margin: 6px 0;
 	}
@@ -224,8 +267,7 @@ const socialLinks = [
 		width: 100%;
 		height: 92px;
 		background-color: var(--lcars-purple);
-		border-top-left-radius: 4px;
-		border-bottom-left-radius: 24px;
+		border-radius: 0;
 		opacity: 0.25;
 		margin-top: 8px;
 		flex-shrink: 0;
@@ -244,6 +286,10 @@ const socialLinks = [
 			border-radius: 20px;
 			justify-content: center;
 			gap: 8px;
+		}
+		.lcars-btn-tall {
+			min-height: 44px;
+			align-items: center;
 		}
 		.sidebar-filler, .sidebar-filler-bottom, .stack-label {
 			display: none;
