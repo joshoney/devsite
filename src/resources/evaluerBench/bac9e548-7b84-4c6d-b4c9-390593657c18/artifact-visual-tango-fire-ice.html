@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tango Puzzle</title>
+<style>
+  body { margin:0; font-family:Arial, sans-serif; background:#f5f5f5; }
+  .grid {
+    display:grid;
+    grid-template-columns:repeat(6,100px);
+    gap:1px;
+    background:#fff;
+    padding:10px;
+    box-sizing:border-box;
+  }
+  .cell {
+    width:100px; height:100px; border:1px solid #999; display:flex; align-items:center; justify-content:center;
+    user-select:none; cursor:pointer;
+    font-size:1.5rem;
+  }
+  .constraint {
+    position:absolute; pointer-events:none; background:rgba(255,255,255,0.2);
+  }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<button id="checkBtn">Check Solution</button>
+
+<script>
+const symbols = ['🔥', '🧊', '']; // fire, ice, empty
+const markerSymbols = ['=', '×'];
+let solvedBoard = null;
+let playerBoard = null;
+let markers = {}; // cellIndex => markerSymbol
+
+function generateRandomBoard() {
+  const board = Array.from({length:36}, () => '');
+  for (let i=0;i<36;i++) {
+    const s = symbols[Math.floor(Math.random()*3)];
+    board[i] = s;
+  }
+  return board;
+}
+
+function placeConstraints(board) {
+  const pairs = [];
+  let attempts = 0;
+  const totalPairs = 6 + Math.floor(Math.random()*8); // 6-14
+  while (pairs.length < totalPairs && attempts < 10000) {
+    attempts++;
+    const pairs = [];
+    for (let i=0;i<totalPairs;i++) {
+      const row = Math.floor(Math.random()*6);
+      const col = Math.floor(Math.random()*6);
+      const right = (col+1)%6;
+      const down = (row+1)%6;
+      if (Math.random()<0.5) {
+        const type = symbols[Math.floor(Math.random()*2)];
+        pairs.push({cell: row*6+col, type});
+      } else {
+        const type = symbols[Math.floor(Math.random()*2)];
+        pairs.push({cell: row*6+col, type});
+      }
+    }
+    // ensure we have distinct pairs
+    if (pairs.length >= totalPairs) break;
+  }
+  return pairs;
+}
+
+function clearCells(board) {
+  for (let i=0;i<36;i++) board[i] = '';
+}
+
+function randomizeStartBoard(board) {
+  const keep = Math.floor(0.3*36) + 1; // 2-3 symbols
+  const indices = Array.from({length:36}, (_,i) => i);
+  shuffle(indices);
+  for (let i=0;i<keep;i++) {
+    const idx = indices[Math.floor(Math.random()*indices.length)];
+    board[idx] = symbols[Math.floor(Math.random()*2)];
+  }
+  return keep;
+}
+
+function shuffle(arr) {
+  for (let i=arr.length-1;i>=0;i--) {
+    const j = Math.floor(Math.random()*i+1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function validateBoard(board) {
+  const errors=[];
+
+  // rows
+  for (let r=0;r<6;r++) {
+    let cntFire=0,cntIce=0;
+    for (let c=0;c<6;c++) {
+      const cell = board[r*6+c];
+      if (cell==='🔥') cntFire++;
+      else if (cell==='🧊') cntIce++;
+    }
+    if (cntFire!=3 || cntIce!=3) errors.push(`Row ${r+1}: not 3 fire/ice`);
+    // no three in a row horizontally
+    for (let c=0;c<5;c++) {
+      const a = board[r*6+c];
+      const b = board[r*6+c+1];
+      const c2 = board[r*6+c+2];
+      if (a && a===b && b===c2) errors.push(`Row ${r+1}, col ${c+1}: three in a row`);
+    }
+  }
+
+  // columns
+  for (let c=0;c<6;c++) {
+    let cntFire=0,cntIce=0;
+    for (let r=0;r<6;r++) {
+      const cell = board[r*6+c];
+      if (cell==='🔥') cntFire++;
+      else if (cell==='🧊') cntIce++;
+    }
+    if (cntFire!=3 || cntIce!=3) errors.push(`Col ${c+1}: not 3 fire/ice`);
+    // no three in a row vertically
+    for (let r=0;r<5;r++) {
+      const a = board[r*6+c];
+      const b = board[r+1*6+c];
+      const c2 = board[r+2*6+c];
+      if (a && a===b && b===c2) errors.push(`Col ${c+1}, row ${r+1}: three in a row`);
+    }
+  }
+
+  // constraint markers
+  for (const [cellIdx,type] of Object.entries(markers)) {
+    const r = Math.floor(cellIdx/6), c = cellIdx%6;
+    const left = c*100;
+    const top = r*100;
+    if (type === '=') {
+      if (board[r*6+c] && board[(r*6)+(c+1)] && board[r*6+c] !== board[(r*6)+(c+1)]) {
+        errors.push(`Marker on right edge of ${r+1}-${c+1}: same symbol required`);
+      }
+    } else { // '×'
+      if (board[r*6+c] && board[(r*6)+(c+1)] && board[r*6+c] === board[(r*6)+(c+1)]) {
+        errors.push(`Marker on right edge of ${r+1}-${c+1}: opposite symbols required`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML='';
+
+  for (let r=0;r<6;r++) {
+    for (let c=0;c<6;c++) {
+      const cellIdx = r*6+c;
+      const cell = solvedBoard[cellIdx];
+      let cellStr = '';
+      if (cell==='') cellStr = '';
+      else cellStr = cell;
+
+      const cellDiv = document.createElement('div');
+      cellDiv.className='cell';
+      cellDiv.textContent = cellStr;
+      cellDiv.dataset.index = cellIdx;
+      grid.appendChild(cellDiv);
+
+      // add constraint marker if present
+      if (markers[cellIdx]) {
+        const marker = document.createElement('span');
+        marker.className='constraint';
+        marker.dataset.marker = markers[cellIdx];
+        marker.style.left = `${c*100}px`;
+        marker.style.top = `${r*100}px`;
+        grid.appendChild(marker);
+      }
+    }
+  }
+}
+
+function toggleSymbol(cellIdx) {
+  const cellDivs = document.querySelectorAll('.cell');
+  cellDivs.forEach(div=>{
+    if (div.dataset.index===cellIdx) {
+      div.textContent = symbols[Math.floor(Math.random()*2)];
+      return;
+    }
+  });
+}
+
+function placeConstraintsOnSolution() {
+  const pairs = placeConstraints(solvedBoard);
+  pairs.forEach(p=>{
+    const left = p.cell;
+    const right = (p.cell+1)%6;
+    const type = symbols[Math.floor(Math.random()*2)];
+    const markerDiv = document.createElement('span');
+    markerDiv.className='constraint';
+    markerDiv.dataset.marker = type;
+    markerDiv.style.left = `${right*100}px`;
+    markerDiv.style.top = `${left/6*100}px`;
+    grid.appendChild(markerDiv);
+    markers[p.cell] = type;
+  });
+}
+
+function checkSolution() {
+  const errors = validateBoard(playerBoard);
+  if (errors.length) {
+    document.body.style.backgroundColor = '#ffcccc';
+    errors.forEach(e=> console.log(e));
+  } else {
+    document.body.style.backgroundColor = '#fff';
+  }
+  document.getElementById('checkBtn').textContent = errors.length ? 'Errors' : 'Check Solution';
+}
+
+function startGame() {
+  solvedBoard = generateRandomBoard();
+  randomizeStartBoard(solvedBoard);
+  playerBoard = randomizeStartBoard(solvedBoard);
+  placeConstraintsOnSolution();
+  clearCells(playerBoard);
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', startGame);
+document.getElementById('checkBtn').addEventListener('click', checkSolution);
+</script>
+</body>
+</html>
