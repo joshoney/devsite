@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tic‑Tac‑Toe</title>
+<style>
+body { margin:0; background:#1a1a2e; color:#e0e0e0; font-family:'Segoe UI',sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+.centered { position:relative; width:350px; text-align:center; }
+.board { display:grid; grid-template-columns:repeat(3,100px); gap:8px; margin:20px auto; border:2px solid #444; border-radius:8px; }
+.cell { width:100px; height:100px; display:flex; justify-content:center; align-items:center; font-size:2rem; font-weight:bold; transition:transform .2s; }
+.cell:not(.empty){ background:#444; }
+.cell:odd { background:#555; }
+.cell:even { background:#777; }
+button { padding:8px 16px; font-size:1rem; cursor:pointer; border:none; border-radius:4px; transition:opacity .2s; }
+button:active { opacity:0.8; }
+button:disabled { opacity:0.5; cursor:not-allowed; }
+#result { margin-bottom:20px; font-size:1.5rem; }
+#restart { margin-left:10px; padding:8px 16px; cursor:pointer; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+const board = document.querySelector('.board');
+const cells = Array.from(document.querySelectorAll('.cell'));
+const result = document.getElementById('result');
+const restart = document.getElementById('restart');
+
+let x, o;
+let turn = 'x';
+let gameActive = true;
+let interval;
+
+function init() {
+cells.forEach(cell=>{cell.classList.remove('empty');});
+function winLines() {
+const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const winner = cells.find(i=>cells[i].value && cells[i].value===cells[i+1].value && cells[i+2].value);
+return winner;
+}
+function checkWin() {
+const winner = winLines();
+if (winner){
+const cell = cells.findIndex(el=>el.textContent===winner);
+board.classList.add('winner');
+result.textContent=`Winner: ${winner}`; gameActive=false;
+clearInterval(interval);
+}
+}
+function reset(){
+x=o=null; turn='x'; board.classList.remove('winner'); result.textContent=''; restart.disabled=false;
+interval=setInterval(play,300);
+}
+function play(){
+const cell = cells[turn];
+cell.classList.add('empty');
+cell.textContent=turn;
+const winner = winLines();
+if (winner){
+result.textContent=`Winner: ${winner}`; gameActive=false;
+clearInterval(interval);
+}
+else if (cells.every(c=>c.classList.contains('empty'))){
+result.textContent='It\'s a tie!';
+gameActive=false;
+clearInterval(interval);
+}
+else {
+turn='o' if turn==='x' else 'x';
+cell.textContent='';
+const btn = document.querySelector('.controls button');
+btn.disabled=false;
+}
+interval=setInterval(play,300);
+reset();
+}
+reset();
+</script>
+<div class="centered">
+<h2>Tic‑Tac‑Toe</h2>
+<div class="controls">
+<button id='xBtn'>X</button>
+<button id='oBtn'>O</button>
+<button id='restart'>Restart</button>
+</div>
+<div class='board'>
+</div>
+<div id='result'></div>
+</div>
+</body>
+</html>
+>

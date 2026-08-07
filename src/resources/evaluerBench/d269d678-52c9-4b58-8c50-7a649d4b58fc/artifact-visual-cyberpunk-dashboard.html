@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyberpunk System Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin:0;
+            font-family: 'Share Tech Mono', sans-serif;
+            background:#050505;
+            color:#fff;
+            overflow-x:hidden;
+        }
+        .scanline {
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(255,255,255,.1);
+            z-index:1;
+        }
+        .sidebar {
+            position:fixed;
+            left:0;
+            width:250px;
+            height:100vh;
+            background:#050505;
+            color:#00f3ff;
+            display:flex;
+            flex-direction:column;
+            padding:15px;
+            box-sizing:border-box;
+            border-right:1px solid #444;
+        }
+        .nav-btn {
+            background:#fff;
+            border:none;
+            color:#050505;
+            padding:8px 12px;
+            margin:5px;
+            cursor:pointer;
+            border-radius:4px;
+            font-size:13px;
+        }
+        .header {
+            position:fixed;
+            top:0;
+            left:0;
+            width:250px;
+            height:60px;
+            background:rgba(0,0,0,.5);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:14px;
+            font-weight:700;
+        }
+        .grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+            gap:15px;
+            margin-top:20px;
+            padding:0 10px;
+        }
+        .panel {
+            background:#050505;
+            border:1px solid #444;
+            padding:15px;
+            border-radius:8px;
+            position:relative;
+            box-shadow:0 2px 5px rgba(0,0,0,.2);
+        }
+        .panel:nth-child(2) {
+            grid-column: span 2;
+        }
+        .panel:nth-child(3) {
+            grid-column: span 1;
+        }
+        .progress {
+            width:100%;
+            height:30px;
+            background:#222;
+            border-radius:4px;
+            overflow:hidden;
+            margin-bottom:10px;
+            font-family:Share Tech Mono;
+        }
+        .value {
+            width:60%;
+            text-align:right;
+            color:#00f3ff;
+            font-size:12px;
+        }
+        .terminal {
+            max-width:100%;
+            height:200px;
+            overflow-y:auto;
+            background:#050505;
+            color:#00f3ff;
+            padding:10px;
+            font-family:Share Tech Mono;
+            line-height:1.2;
+        }
+        @keyframes glitch {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px) scale(1.1); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="sidebar">
+        <button class="nav-btn" onclick="toggleTheme()">Dark</button>
+        <button class="nav-btn" onclick="toggleTheme()">Light</button>
+        <button class="nav-btn" onclick="resetTheme()">Reset</button>
+    </div>
+    <div class="header">
+        System Monitor
+    </div>
+    <div class="grid">
+        <div class="panel">
+            <h3>CPU</h3>
+            <div class="progress">
+                <div class="bar" id="cpuBar"></div>
+                <div class="value" id="cpuPercent">45%</div>
+            </div>
+        </div>
+        <div class="panel">
+            <h3>Memory</h3>
+            <div class="progress">
+                <div class="bar" id="memBar"></div>
+                <div class="value" id="memPercent">62%</div>
+            </div>
+        </div>
+        <div class="panel">
+            <h3>Network</h3>
+            <div class="progress">
+                <div class="bar" id="netBar"></div>
+                <div class="value" id="netPercent">78%</div>
+            </div>
+        </div>
+    </div>
+    <div class="terminal">
+        0x00FF... BYPASSING SECURITY... <br>
+        0x7FFE... BYPASSING SECURITY... <br>
+        0x01C3... BYPASSING SECURITY... <br>
+        0x9A5F... BYPASSING SECURITY... <br>
+        0x33D2... BYPASSING SECURITY...
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+        }
+        function resetTheme() {
+            document.body.classList.remove('dark');
+        }
+        let cpu = 45 + Math.random() * 20;
+        let mem = 62 + Math.random() * 40;
+        setInterval(() => {
+            cpu = Math.round(cpu);
+            mem = Math.round(mem);
+            document.getElementById('cpuPercent').textContent = cpu + '%';
+            document.getElementById('memPercent').textContent = mem + '%';
+            requestAnimationFrame(() => {
+                document.getElementById('cpuBar').style.transform = `scaleX(${cpu/100})`;
+                document.getElementById('netBar').style.transform = `scaleX(${mem/100})`;
+            });
+        }, 800);
+        const log = [
+            "0x00FF... BYPASSING SECURITY...",
+            "0x7FFE... BYPASSING SECURITY...",
+            "0x01C3... BYPASSING SECURITY...",
+            "0x9A5F... BYPASSING SECURITY...",
+            "0x33D2... BYPASSING SECURITY..."
+        ];
+        function updateTerminal() {
+            const line = log[Math.floor(Math.random() * log.length)];
+            const element = document.querySelector('.terminal .value');
+            element.textContent = line + ' ';
+            element.scrollTop = document.querySelector('.terminal').scrollHeight;
+        }
+        setInterval(updateTerminal, 800);
+    </script>
+</body>
+</html>
