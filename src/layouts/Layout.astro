@@ -39,7 +39,7 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 			) : (
 				<Sidebar />
 			)}
-			<main class="content-viewport" style="view-transition-name: main-pane">
+			<main class={`content-viewport ${isEvalsPage ? 'evals-viewport' : ''}`} style="view-transition-name: main-pane">
 				<slot />
 				<footer>
 					<p>&copy; 2026 Josh Oney.</p>
@@ -183,10 +183,18 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 	.content-viewport {
 		padding: 30px 6% 40px 85px;
 		height: calc(100vh - 70px);
-		overflow-y: auto;
+		overflow: auto;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
+	}
+
+	.content-viewport.evals-viewport {
+		padding: 0 0 40px 0;
+	}
+
+	.content-viewport.evals-viewport footer {
+		display: none;
 	}
 
 	/* Footer */

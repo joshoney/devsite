@@ -19,21 +19,23 @@ function formatDate(isoString: string) {
 
 <div class="matrix-container">
 	<!-- CONTROL TOOLBAR -->
-	<div class="matrix-toolbar">
-		<div class="toolbar-title">
-			<span class="lcars-tag amber">EV-MATRIX</span>
-			<h3>MODEL BENCHMARK HEATMAP</h3>
+		<div class="matrix-toolbar-wrapper">
+			<header class="matrix-toolbar">
+				<div class="toolbar-title">
+					<h3>MODEL BENCHMARK HEATMAP</h3>
+					<span class="lcars-tag amber">SYS-MTRX</span>
+				</div>
+				<div class="toolbar-legend">
+					<div class="legend-item"><span class="dot pass"></span> PASS</div>
+					<div class="legend-item"><span class="dot fail"></span> FAIL</div>
+					<div class="legend-item"><span class="dot untested"></span> UNTESTED</div>
+				</div>
+			</header>
 		</div>
-		<div class="toolbar-legend">
-			<span class="legend-item"><span class="dot pass"></span> 100% Passed</span>
-			<span class="legend-item"><span class="dot fail"></span> Failed</span>
-			<span class="legend-item"><span class="dot untested"></span> Untested / N/A</span>
-		</div>
-	</div>
 
 	<!-- MATRIX TABLE SCROLL CONTAINER -->
 	<div class="table-wrapper">
-		<table class="matrix-table">
+		<table class="matrix-table" id="matrixTable">
 			<thead>
 				<!-- ROW 1: CATEGORY HEADERS -->
 				<tr class="category-header-row">
@@ -42,8 +44,15 @@ function formatDate(isoString: string) {
 						<th 
 							colspan={catGroup.columns.length} 
 							class="category-group-header"
+							data-category={catGroup.category}
+							data-orig-colspan={catGroup.columns.length}
 						>
-							<span class="cat-label">{catGroup.category.toUpperCase()}</span>
+							<div class="cat-header-content">
+								<span class="cat-label">{catGroup.category.toUpperCase()}</span>
+								<button class="cat-toggle-btn" aria-label="Toggle Category">
+									<svg class="chevron-icon" width="12" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" preserveAspectRatio="none"><path d="M15 18l-6-6 6-6" /></svg>
+								</button>
+							</div>
 						</th>
 					))}
 				</tr>
@@ -53,13 +62,18 @@ function formatDate(isoString: string) {
 					<th class="sticky-col sub-corner-header">
 						<span class="count-pill">{matrixData.rows.length} RUNS</span>
 					</th>
-					{matrixData.allColumns.map((col) => (
-						<th class="eval-column-header">
-							<div class="eval-col-title" title={col.evalName}>
-								{col.evalName}
-							</div>
-							<div class="eval-col-id">{col.evalId}</div>
-						</th>
+					{matrixData.categories.map((catGroup) => (
+						<>
+							{catGroup.columns.map((col) => (
+								<th class="eval-column-header" data-category={catGroup.category}>
+									<div class="eval-col-title" title={col.evalName}>
+										{col.evalName}
+									</div>
+									<div class="eval-col-id">{col.evalId}</div>
+								</th>
+							))}
+							<th class="eval-column-header cat-col-placeholder hidden" data-placeholder-category={catGroup.category}></th>
+						</>
 					))}
 				</tr>
 			</thead>
@@ -80,70 +94,77 @@ function formatDate(isoString: string) {
 						</td>
 
 						<!-- EVAL RESULTS CELLS -->
-						{matrixData.allColumns.map((col) => {
-							const cell = row.cells[col.evalId];
-							if (!cell || !cell.tested || !cell.result) {
-								return (
-									<td class="eval-cell untested">
-										<div class="untested-box" title="Eval not executed in this run">
-											<span class="dash">—</span>
-											<span class="na-text">N/A</span>
-										</div>
-									</td>
-								);
-							}
+						{matrixData.categories.map((catGroup) => (
+							<>
+								{catGroup.columns.map((col) => {
+									const cell = row.cells[col.evalId];
+									if (!cell || !cell.tested || !cell.result) {
+										return (
+											<td class="eval-cell untested" data-category={catGroup.category}>
+												<div class="untested-box" title="Eval not executed in this run">
+													<span class="dash">—</span>
+													<span class="na-text">N/A</span>
+												</div>
+											</td>
+										);
+									}
 
-							const res = cell.result;
-							const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
-							const isPass = res.judge?.passed;
-							const isVisual = res.display_type === 'html-iframe' || (res.evalId && res.evalId.startsWith('visual-'));
-							
-							let pillClass;
-							let pillText;
-							if (hasJudge) {
-								pillClass = isPass ? 'pass' : 'fail';
-								pillText = `${res.judge?.score}%`;
-							} else if (isVisual) {
-								pillClass = 'unjudged-demo';
-								pillText = 'UNJUDGED';
-							} else {
-								pillClass = 'timeout';
-								pillText = 'TIMEOUT';
-							}
+									const res = cell.result;
+									const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
+									const isPass = res.judge?.passed;
+									const isVisual = res.display_type === 'html-iframe' || (res.evalId && res.evalId.startsWith('visual-'));
+									
+									let pillClass;
+									let pillText;
+									if (hasJudge) {
+										pillClass = isPass ? 'pass' : 'fail';
+										pillText = `${res.judge?.score}%`;
+									} else if (isVisual) {
+										pillClass = 'unjudged-demo';
+										pillText = 'UNJUDGED';
+									} else {
+										pillClass = 'timeout';
+										pillText = 'TIMEOUT';
+									}
 
-							return (
-								<td class="eval-cell">
-									<button 
-										class={`eval-pill-btn ${pillClass}`}
-										data-eval-id={res.evalId}
-										data-run-id={row.runId}
-										data-eval-name={res.evalName}
-										data-model-name={row.modelName}
-										data-has-judge={hasJudge ? 'true' : 'false'}
-										data-score={res.judge?.score}
-										data-tps={res.metrics?.tokensPerSecond}
-										data-ttft={res.metrics?.timeToFirstTokenMs}
-										data-latency={res.metrics?.totalLatencyMs}
-										data-input-tok={res.metrics?.inputTokens}
-										data-output-tok={res.metrics?.outputTokens}
-										data-reasoning={encodeURIComponent(res.judge?.reasoning || '')}
-										data-prompt={encodeURIComponent(res.prompt || '')}
-										data-raw-output={encodeURIComponent(res.rawOutput || '')}
-										data-display-type={res.display_type}
-										data-artifact-url={res.artifactUrl || ''}
-									>
-										<div class="pill-top">
-											<span class="score">{pillText}</span>
-											<span class="status-icon">{hasJudge ? (isPass ? '✓' : '✗') : '–'}</span>
-										</div>
-										<div class="pill-bottom">
-											<span class="tps">{res.metrics?.tokensPerSecond !== undefined ? res.metrics.tokensPerSecond : '--'} t/s</span>
-											{isVisual && <span class="visual-badge" title="Has interactive visual demo">DEMO ⚡</span>}
-										</div>
-									</button>
+									return (
+										<td class="eval-cell" data-category={catGroup.category}>
+											<button 
+												class={`eval-pill-btn ${pillClass}`}
+												data-eval-id={res.evalId}
+												data-run-id={row.runId}
+												data-eval-name={res.evalName}
+												data-model-name={row.modelName}
+												data-has-judge={hasJudge ? 'true' : 'false'}
+												data-score={res.judge?.score}
+												data-tps={res.metrics?.tokensPerSecond}
+												data-ttft={res.metrics?.timeToFirstTokenMs}
+												data-latency={res.metrics?.totalLatencyMs}
+												data-input-tok={res.metrics?.inputTokens}
+												data-output-tok={res.metrics?.outputTokens}
+												data-reasoning={encodeURIComponent(res.judge?.reasoning || '')}
+												data-prompt={encodeURIComponent(res.prompt || '')}
+												data-raw-output={encodeURIComponent(res.rawOutput || '')}
+												data-display-type={res.display_type}
+												data-artifact-url={res.artifactUrl || ''}
+											>
+												<div class="pill-top">
+													<span class="score">{pillText}</span>
+													<span class="status-icon">{hasJudge ? (isPass ? '✓' : '✗') : '–'}</span>
+												</div>
+												<div class="pill-bottom">
+													<span class="tps">{res.metrics?.tokensPerSecond !== undefined ? res.metrics.tokensPerSecond : '--'} t/s</span>
+													{isVisual && <span class="visual-badge" title="Has interactive visual demo">DEMO ⚡</span>}
+												</div>
+											</button>
+										</td>
+									);
+								})}
+								<td class="eval-cell cat-col-placeholder hidden" data-placeholder-category={catGroup.category}>
+									<div class="placeholder-vertical-bar"></div>
 								</td>
-							);
-						})}
+							</>
+						))}
 					</tr>
 				))}
 			</tbody>
@@ -366,22 +387,84 @@ function formatDate(isoString: string) {
 	});
 </script>
 
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const matrixTable = document.getElementById('matrixTable');
+		if (matrixTable) {
+			const catHeaders = matrixTable.querySelectorAll('.category-group-header');
+			catHeaders.forEach(th => {
+				const btn = th.querySelector('.cat-toggle-btn');
+				if (btn) {
+					btn.addEventListener('click', () => {
+						const cat = th.getAttribute('data-category');
+						const isCollapsed = th.classList.contains('collapsed');
+						
+						// The columns to hide/show
+						const colsToToggle = matrixTable.querySelectorAll(`[data-category="${cat}"]:not(.category-group-header)`);
+						// The placeholders to show/hide
+						const placeholders = matrixTable.querySelectorAll(`[data-placeholder-category="${cat}"]`);
+						
+						if (isCollapsed) {
+							// Expand
+							th.classList.remove('collapsed');
+							th.setAttribute('colspan', th.getAttribute('data-orig-colspan'));
+							
+							colsToToggle.forEach(el => el.classList.remove('hidden'));
+							placeholders.forEach(el => el.classList.add('hidden'));
+						} else {
+							// Collapse
+							th.classList.add('collapsed');
+							th.setAttribute('colspan', '1');
+							
+							colsToToggle.forEach(el => el.classList.add('hidden'));
+							placeholders.forEach(el => el.classList.remove('hidden'));
+						}
+					});
+				}
+			});
+		}
+	});
+</script>
+
 <style>
+	.hidden {
+		display: none !important;
+	}
+
 	.matrix-container {
 		display: flex;
 		flex-direction: column;
-		gap: 15px;
 		width: 100%;
+	}
+
+	.matrix-toolbar-wrapper {
+		position: relative;
+		z-index: 45;
+		background: var(--bg-color);
+		padding: 10px 20px 15px 50px;
+		width: 100%;
+	}
+
+	.matrix-toolbar-wrapper::after {
+		content: '';
+		position: absolute;
+		left: 100%;
+		top: 0;
+		width: 9000px;
+		height: 100%;
+		background: inherit;
 	}
 
 	.matrix-toolbar {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		overflow: hidden;
 		gap: 12px;
 		background: #14181f;
-		padding: 12px 18px;
+		height: 64px;
+		padding: 0 18px;
 		border-radius: 6px;
 		border: 1px solid #21262d;
 	}
@@ -440,11 +523,10 @@ function formatDate(isoString: string) {
 	/* TABLE & SCROLL CONTAINER */
 	.table-wrapper {
 		width: 100%;
-		max-height: calc(100vh - 220px);
-		overflow: auto;
-		border: 1px solid #21262d;
 		border-radius: 6px;
 		background: var(--bg-color);
+		padding-left: 50px;
+		padding-right: 20px;
 	}
 
 	.matrix-table {
@@ -458,7 +540,7 @@ function formatDate(isoString: string) {
 	.matrix-table th {
 		position: sticky;
 		top: 0;
-		z-index: 10;
+		z-index: 40;
 		background: #161b22;
 		border-bottom: 1px solid #30363d;
 		border-right: 1px solid #21262d;
@@ -467,32 +549,48 @@ function formatDate(isoString: string) {
 
 	.category-header-row th {
 		top: 0;
-		z-index: 11;
+		z-index: 41;
 		background: #0d1117;
 		border-bottom: 2px solid var(--lcars-amber);
+		height: 48px !important;
+		padding: 0 16px !important;
+		box-sizing: border-box;
 	}
 
 	.eval-header-row th {
-		top: 38px; /* Height of category row */
-		z-index: 10;
+		top: 48px;
+		z-index: 40;
+		height: 60px !important;
+		box-sizing: border-box;
 	}
 
 	.category-group-header {
-		text-align: center;
-		background: #141922 !important;
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		text-align: left;
+		height: 48px;
+		padding: 0 16px;
+		background-color: #141922;
+		color: var(--lcars-amber);
+		border-bottom: 2px solid #30363d;
+		position: relative;
 	}
 
 	.cat-label {
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
 		font-weight: 800;
-		color: var(--lcars-amber);
 		letter-spacing: 1.5px;
 	}
 
 	.eval-column-header {
-		min-width: 160px;
-		max-width: 200px;
+		width: 180px;
+		min-width: 180px;
+		max-width: 180px;
+	}
+
+	.eval-cell {
+		width: 180px;
+		min-width: 180px;
+		max-width: 180px;
 	}
 
 	.eval-col-title {
@@ -515,12 +613,13 @@ function formatDate(isoString: string) {
 	/* STICKY LEFT MODEL COLUMN */
 	.sticky-col {
 		position: sticky;
-		left: 0;
+		left: 50px;
 		z-index: 12 !important;
 		background: #12161f !important;
 		border-right: 2px solid #30363d !important;
 		min-width: 240px;
 		max-width: 280px;
+		box-shadow: -50px 0 0 0 var(--bg-color);
 	}
 
 	.corner-header {
@@ -599,6 +698,8 @@ function formatDate(isoString: string) {
 
 	.eval-pill-btn {
 		width: 100%;
+		height: 100%;
+		min-height: 56px;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
@@ -614,6 +715,7 @@ function formatDate(isoString: string) {
 		background-color: rgba(46, 160, 67, 0.12);
 		border-color: rgba(46, 160, 67, 0.4);
 		color: #3fb950;
+		box-shadow: inset 0 0 10px rgba(46, 160, 67, 0.5);
 	}
 
 	.eval-pill-btn.pass:hover {
@@ -627,6 +729,7 @@ function formatDate(isoString: string) {
 		background-color: rgba(186, 164, 229, 0.12);
 		border-color: rgba(186, 164, 229, 0.4);
 		color: var(--lcars-purple);
+		box-shadow: inset 0 0 10px rgba(186, 164, 229, 0.6);
 	}
 
 	.eval-pill-btn.timeout:hover {
@@ -640,6 +743,7 @@ function formatDate(isoString: string) {
 		background-color: rgba(255, 204, 153, 0.12);
 		border-color: rgba(255, 204, 153, 0.4);
 		color: var(--lcars-tan);
+		box-shadow: inset 0 0 10px rgba(255, 204, 153, 0.6);
 	}
 
 	.eval-pill-btn.unjudged-demo:hover {
@@ -653,6 +757,7 @@ function formatDate(isoString: string) {
 		background-color: rgba(218, 54, 51, 0.12);
 		border-color: rgba(218, 54, 51, 0.4);
 		color: #f85149;
+		box-shadow: inset 0 0 10px rgba(218, 54, 51, 0.6);
 	}
 
 	.eval-pill-btn.fail:hover {
@@ -702,6 +807,9 @@ function formatDate(isoString: string) {
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		width: 100%;
+		height: 100%;
+		min-height: 56px;
 		padding: 10px;
 		background: #0d1117;
 		border: 1px dashed #21262d;
@@ -754,6 +862,48 @@ function formatDate(isoString: string) {
 		padding: 18px 24px;
 		border-bottom: 1px solid #21262d;
 		background: #0d1117;
+	}
+
+	.cat-header-content {
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.cat-toggle-btn {
+		background: transparent;
+		border: none;
+		color: inherit;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px;
+		transition: transform 0.2s;
+	}
+	.category-group-header.collapsed .cat-toggle-btn {
+		transform: rotate(180deg);
+	}
+
+	.placeholder-vertical-bar {
+		width: 100%;
+		height: 100%;
+		min-height: 40px;
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(255, 204, 153, 0.1),
+			rgba(255, 204, 153, 0.1) 10px,
+			transparent 10px,
+			transparent 20px
+		);
+		border-radius: 4px;
+	}
+
+	.cat-col-placeholder {
+		width: 40px;
+		min-width: 40px;
+		padding: 4px;
 	}
 
 	.modal-lcars-tag {

@@ -280,6 +280,15 @@ export function getMatrixData(): MatrixData {
 		})
 	);
 
+	// Sort categories to put visual-demo and coding-complex at the end
+	categories.sort((a, b) => {
+		const order: Record<string, number> = { 'coding-complex': 1, 'visual-demo': 2 };
+		const aOrder = order[a.category] || 0;
+		const bOrder = order[b.category] || 0;
+		if (aOrder !== bOrder) return aOrder - bOrder;
+		return a.category.localeCompare(b.category);
+	});
+
 	// 2. Build rows
 	const latestRunPerModel = new Set<string>();
 	const modelGroups = getModelGroups();

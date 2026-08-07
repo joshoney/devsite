@@ -167,7 +167,27 @@ const modelGroups = getModelGroups();
 	.telemetry-strip {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		gap: 10px;
+		position: relative;
+		z-index: 50;
+		background: var(--bg-color);
+		height: 60px;
+		margin-top: 30px;
+		padding-left: 50px;
+		padding-right: 20px;
+		border-bottom: 1px solid #21262d;
+	}
+
+	.telemetry-strip::after {
+		content: '';
+		position: absolute;
+		left: 100%;
+		top: 0;
+		width: 9000px;
+		height: 100%;
+		background: inherit;
+		border-bottom: inherit;
 	}
 
 	.telemetry-pill {
@@ -214,6 +234,11 @@ const modelGroups = getModelGroups();
 
 	.view-section.hidden {
 		display: none !important;
+	}
+
+	#view-compare, #view-run {
+		padding-left: 50px;
+		padding-right: 20px;
 	}
 </style>
 

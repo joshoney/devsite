@@ -3,8 +3,10 @@ const navLinks = [
 	{ title: 'Navigation', href: '/', color: 'var(--lcars-almond-creme)', heightMult: 3 },
 	{ title: 'Local LLM Evals', href: '/evals', color: 'var(--lcars-amber)', heightMult: 2 },
 	{ title: 'evaluerBench', href: '/evaluerbench', color: 'var(--lcars-blue)', github: 'https://github.com/joshoney/evaluerBench' },
+	{ title: 'Crucible', href: '/crucible', color: 'var(--lcars-true-mauve)', github: 'https://github.com/joshoney/Crucible' },
+	{ title: 'ResumeBuilder', href: '/resumebuilder', color: 'var(--lcars-subdued-sienna)', github: 'https://github.com/joshoney/resumeBuilder' },
 	{ title: '< THIS_SITE />', href: '/devsite', color: 'var(--lcars-tan)', github: 'https://github.com/joshoney/devsite' },
-	{ title: 'Games (Coming Soon)', href: '#games', color: 'var(--lcars-purple)', heightMult: 7 }
+	{ title: 'Games (Coming Soon)', href: '#games', color: 'var(--lcars-purple)', heightMult: 2 }
 ];
 
 const socialLinks = [
@@ -121,7 +123,6 @@ const socialLinks = [
 		position: relative;
 		z-index: 10;
 		user-select: none;
-		padding-bottom: 20px; /* Extra bottom breathing room */
 		background-color: var(--bg-color);
 	}
 
@@ -211,6 +212,12 @@ const socialLinks = [
 		filter: brightness(1.2);
 	}
 
+	.social-btn {
+		min-height: 32px;
+		padding: 4px 18px;
+		font-size: 0.75rem;
+	}
+
 	.btn-num {
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
@@ -262,10 +269,10 @@ const socialLinks = [
 		margin: 6px 0;
 	}
 
-	/* Bottom Cap Block - Expanded to 92px (~2 button heights) */
+	/* Bottom Cap Block - 15px tall segment */
 	.sidebar-filler-bottom {
 		width: 100%;
-		height: 92px;
+		height: 15px;
 		background-color: var(--lcars-purple);
 		border-radius: 0;
 		opacity: 0.25;

@@ -50,7 +50,7 @@ function formatDate(isoString: string) {
 			href="/evals?view=matrix" 
 			data-view="matrix"
 			class={`lcars-btn lcars-btn-view lcars-btn-tall ${activeView === 'matrix' ? 'active' : ''}`}
-			style="--btn-color: var(--lcars-amber); --height-mult: 2;"
+			style="--btn-color: var(--lcars-amber); --height-mult: 1.5;"
 		>
 			<span class="btn-num">01</span>
 			<span class="btn-text">GRID VIEW</span>
@@ -60,7 +60,7 @@ function formatDate(isoString: string) {
 			href="/evals?view=compare" 
 			data-view="compare"
 			class={`lcars-btn lcars-btn-view lcars-btn-tall ${activeView === 'compare' ? 'active' : ''}`}
-			style="--btn-color: var(--lcars-blue); --height-mult: 2;"
+			style="--btn-color: var(--lcars-blue); --height-mult: 1.5;"
 		>
 			<span class="btn-num">02</span>
 			<span class="btn-text">COMPARE RUNS</span>
@@ -140,7 +140,6 @@ function formatDate(isoString: string) {
 		position: relative;
 		z-index: 10;
 		user-select: none;
-		padding-bottom: 20px;
 		background-color: var(--bg-color);
 	}
 
@@ -231,6 +230,12 @@ function formatDate(isoString: string) {
 		filter: brightness(1.25);
 	}
 
+	.social-btn {
+		min-height: 32px;
+		padding: 4px 18px;
+		font-size: 0.75rem;
+	}
+
 	.lcars-btn.active {
 		box-shadow: inset 0 0 0 2px #fff;
 		filter: brightness(1.3);
@@ -254,6 +259,26 @@ function formatDate(isoString: string) {
 		display: flex;
 		flex-direction: column;
 		gap: 3px;
+		max-height: 38vh;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding-right: 4px; /* Space for the custom scrollbar */
+	}
+
+	/* Sub-scrollbar for the model list */
+	.model-accordion-list::-webkit-scrollbar {
+		width: 6px;
+	}
+	.model-accordion-list::-webkit-scrollbar-track {
+		background: #0d1117;
+		border-left: 1px solid #21262d;
+	}
+	.model-accordion-list::-webkit-scrollbar-thumb {
+		background: var(--lcars-amber);
+		border-radius: 4px;
+	}
+	.model-accordion-list::-webkit-scrollbar-thumb:hover {
+		background: var(--lcars-tan);
 	}
 
 	.model-accordion {
@@ -374,7 +399,7 @@ function formatDate(isoString: string) {
 
 	.sidebar-filler-bottom {
 		width: 100%;
-		height: 92px;
+		height: 15px;
 		background-color: var(--lcars-purple);
 		border-radius: 0;
 		opacity: 0.25;
