@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cyberpunk System Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/otf/Share_Tech_Mono/Regular?font=italic&display=swap" rel="stylesheet">
+<style>
+/* Base styles */
+body {
+    margin: 0;
+    background: #050505;
+    color: #e0e0e0;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+}
+/* Scanline overlay */
+.scanline {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,0.02);
+    pointer-events: none;
+    z-index: -1;
+}
+/* Header */
+header {
+    height: 60px;
+    background: #010100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+header .glitch-text {
+    font-size: 1.2rem;
+    animation: glitch 0.5s infinite alternate;
+}
+@keyframes glitch {
+    0%, 100% {color: #00FFFF;}
+    50% {color: #FF0000;}
+}
+.header-title {
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    background: #030a15;
+    color: #a0a0c0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: hidden;
+}
+.sidebar nav {
+    background: #080a0e;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    flex: 1;
+}
+.sidebar nav button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #ff00ff;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+/* Main content grid */
+.main-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+.panel {
+    background: #040a12;
+    border-radius: 15px 8px 8px 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.panel1 {grid-column: span 2;}
+.panel2 {grid-column: span 1;}
+.panel3 {grid-column: span 1;}
+/* Terminal panel */
+#terminal {
+    background: #0a0a1a;
+    color: #00ffcc;
+    padding: 10px;
+    white-space: pre;
+    font-family: 'Share Tech Mono', monospace;
+    height: 300px;
+    overflow-y: auto;
+}
+#terminal::-webkit-scrollbar {display: none;}
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .sidebar {flex-direction: column;}
+}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="sidebar">
+    <button class="glitch-text">System Monitor</button>
+    <button>Dashboard</button>
+    <button>Analytics</button>
+    <button>Security</button>
+    <button>Logs</button>
+</div>
+<header>
+    <div class="glitch-text">System Monitor</div>
+</header>
+<main class="main-grid">
+    <div class="panel">
+        <h2>CPU Metrics</h2>
+        <p>Load: <span id="cpuVal">0%</span> / Memory: <span id="memVal">0%</span></p>
+    </div>
+    <div class="panel">
+        <h2>Network Status</h2>
+        <p>Ping: 12ms / Jitter: 3ms</p>
+    </div>
+    <div class="panel">
+        <h2>System Clock</h2>
+        <p id="time">00:00:00</p>
+    </div>
+    <div class="panel terminal-panel">
+        <h2>Terminal</h2>
+        <pre id="log">0x00FF... BYPASSING SECURITY...</pre>
+    </div>
+</main>
+<script>
+// Glitch effect toggle
+function toggleGlitch() {
+    document.querySelector('.glitch-text').classList.toggle('active');
+}
+setInterval(toggleGlitch, 1500);
+// CPU/RAM load update
+function updateMetrics() {
+    const cpu = (Math.random() * 100).toFixed(0) + '%';
+    const mem = (Math.random() * 100).toFixed(0) + '%';
+    document.getElementById('cpuVal').textContent = cpu;
+    document.getElementById('memVal').textContent = mem;
+    // circular progress animation
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#00FFFF';
+    const radius = Math.min(100, Math.random() * 150);
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius, 0, Math.PI * 2 * (Math.random() * 0.5 + 0.5));
+    ctx.fill();
+}
+setInterval(updateMetrics, 800);
+// Simulate matrix logs
+const logLines = [
+    "0x00FF... BYPASSING SECURITY...",
+    "ACCESS GRANTED: CORE_IDENTITY_VERIFIED",
+    "ERROR: NEUROMANCER DETECTED",
+    "SYSTEM BOOTING...",
+    "WARNING: MALWARE SIGNATURE DETECTED",
+    "INFO: BACKUP SYNC COMPLETE"
+];
+let lineIndex = 0;
+function scrollLogs() {
+    const el = document.getElementById('log');
+    el.scrollTop = el.scrollHeight;
+    setTimeout(() => scrollLogs(), 100);
+}
+setInterval(scrollLogs, 100);
+</script>
+</body>
+</html>
