@@ -10,6 +10,10 @@ import Layout from '../layouts/Layout.astro';
 		</div>
 		
 		<div class="content-grid">
+			<div class="disclaimer-note">
+				<strong>NOTE:</strong> The current evals are intended to be simple, not truly informative, while the evaluation tooling is being worked on.
+			</div>
+			
 			<div class="text-block">
 				<h2>What it is</h2>
 				<p>An automated, local-first LLM evaluation and benchmarking pipeline powered by <strong>LangGraph</strong> and <strong>LangChain</strong>.</p>
@@ -76,6 +80,24 @@ import Layout from '../layouts/Layout.astro';
 		display: flex;
 		flex-direction: column;
 		gap: 30px;
+	}
+
+	.disclaimer-note {
+		background: rgba(235, 148, 58, 0.1);
+		border-left: 4px solid var(--lcars-amber);
+		padding: 15px 20px;
+		color: var(--text-main);
+		font-family: var(--font-sans);
+		font-size: 1.05rem;
+		border-radius: 0 4px 4px 0;
+	}
+	
+	.disclaimer-note strong {
+		color: var(--lcars-amber);
+		font-family: var(--font-mono);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-right: 8px;
 	}
 
 	.text-block h2 {
