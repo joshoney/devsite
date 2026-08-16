@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tango Puzzle</title>
+<style>
+  body { margin:0; font-family:Arial, sans-serif; background:#f0f4f8; }
+  #game { display:flex; flex-direction:column; align-items:center; }
+  .grid, .markers { position:relative; width:100%; height:100%; }
+  .cell { width:100px; height:100px; display:flex; align-items:center; justify-content:center; border:1px solid #ccc; }
+  .empty { background:#fff; }
+  .symbol { font-size:1.5rem; }
+  .error { background:#ffcccc; }
+  #checkBtn { margin-top:10px; padding:5px 10px; cursor:pointer; }
+  button { background:#007bff; color:#fff; border:none; padding:5px 10px; border-radius:4px; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="checkBtn" onclick="checkSolution()">Check Solution</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="markers" id="markers"></div>
+
+<script>
+const ROWS = 6, COLS = 6, CELL_SIZE = 100;
+const symbols = [1,2]; // 1 heat, 2 ice
+
+let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+
+function canPlace(r, c, sym) {
+    // row count
+    let rowCnt = board[r].filter(x => x === sym).length;
+    if (rowCnt === 3) return false;
+    // column count
+    let colCnt = board.slice(r).filter(row => row[c] === sym).length;
+    if (colCnt === 3) return false;
+    // three in a row horizontally
+    let leftCnt = 0;
+    for (let i = c-2; i >= 0; i--) {
+        if (board[r][i] === sym) leftCnt++;
+        else break;
+    }
+    if (leftCnt === 2) return false;
+    // three in a row vertically
+    let topCnt = 0;
+    for (let i = r-2; i >= 0; i--) {
+        if (board[i][c] === sym) topCnt++;
+        else break;
+    }
+    if (topCnt === 2) return false;
+    return true;
+}
+
+function dfs(r, c) {
+    if (r === ROWS) return true;
+    let nc = c + 1;
+    if (nc >= COLS) {
+        r++;
+        nc = 0;
+    }
+    // try heat
+    if (canPlace(r, c, 1) && board[r][c] === 0) {
+        board[r][c] = 1;
+        if (dfs(r, nc)) return true;
+        board[r][c] = 0;
+    }
+    // try ice
+    if (canPlace(r, c, 2) && board[r][c] === 0) {
+        board[r][c] = 2;
+        if (dfs(r, nc)) return true;
+        board[r][c] = 0;
+    }
+    return false;
+}
+
+function initSolution() {
+    dfs(0, 0);
+}
+
+// generate solution board
+initSolution();
+
+// place constraints
+const allAdjs = [];
+for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+        if (c + 1 < COLS) allAdjs.push({r, c, 'right'});
+    }
+    if (r + 1 < ROWS) allAdjs.push({r, c, 'down'});
+}
+const constraints = [];
+let rnd = Math.random;
+function pick() {
+    if (constraints.length < 6 || constraints.length > 8) return false;
+    return rnd() < 0.2;
+}
+while (constraints.length < 6) {
+    if (pick()) constraints.push({r: Math.floor(rnd()*ROWS), c: Math.floor(rnd()*COLS, 2), dir: rnd() ? 'right' : 'down'});
+}
+
+function placeConstraints() {
+    const overlay = document.getElementById('markers');
+    overlay.innerHTML = '';
+    for (const adj of constraints) {
+        const {r, c, dir} = adj;
+        const symbol = board[r][c] === 1 ? '🔥' : board[r][c] === 2 ? '🧊' : '';
+        const marker = document.createElement('span');
+        marker.className = 'marker';
+        marker.textContent = symbol;
+        const left = c * CELL_SIZE + CELL_SIZE/2 + CELL_SIZE/2 - (symbol.length*8);
+        const top = r * CELL_SIZE + CELL_SIZE/2;
+        overlay.appendChild(marker);
+    }
+}
+
+// clear cells
+function clearCells() {
+    const total = ROWS * COLS;
+    const cellsToClear = Math.ceil(total * 0.7);
+    const cleared = new Set();
+    while (cleared.size < cellsToClear) {
+        let r = rnd() % ROWS;
+        let c = rnd() % COLS;
+        cleared.add(r * COLS + c);
+    }
+    for (let i = 0; i < total; i++) {
+        if (!cleared.has(i)) {
+            board[i / COLS][i % COLS] = 0;
+        }
+    }
+}
+
+function renderBoard() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cell = board[r][c];
+            const cellEl = document.createElement('div');
+            cellEl.className = 'cell';
+            if (cell !== 0) {
+                cellEl.textContent = symbols[cell];
+                cellEl.classList.add('symbol');
+            }
+            grid.appendChild(cellEl);
+        }
+    }
+}
+
+function validateBoard() {
+    const errors = [];
+    // row/col balance
+    for (let r = 0; r < ROWS; r++) {
+        let heat = 0, ice = 0;
+        for (let c = 0; c < COLS; c++) {
+            if (board[r][c] === 1) heat++;
+            else if (board[r][c] === 2) ice++;
+        }
+        if (heat !== 3 || ice !== 3) errors.push(`Row ${r+1}`);
+    }
+    for (let c = 0; c < COLS; c++) {
+        let heat = 0, ice = 0;
+        for (let r = 0; r < ROWS; r++) {
+            if (board[r][c] === 1) heat++;
+            else if (board[r][c] === 2) ice++;
+        }
+        if (heat !== 3 || ice !== 3) errors.push(`Column ${c+1}`);
+    }
+    // three in a row
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 2; c++) {
+            let same = 0;
+            for (let k = 0; k < 3; k++) {
+                if (board[r][c+k] === 1) same++;
+                else if (board[r][c+k] === 2) same++;
+            }
+            if (same >= 3) errors.push(`Row ${r+1} col ${c+1}`);
+        }
+        for (let k = 0; k < ROWS - 2; k++) {
+            let same = 0;
+            for (let l = 0; l < 3; l++) {
+                if (board[r+l][c] === 1) same++;
+                else if (board[r+l][c] === 2) same++;
+            }
+            if (same >= 3) errors.push(`Column ${c+1} row ${r+1}`);
+        }
+    }
+    // constraint markers
+    for (const adj of constraints) {
+        const {r, c, dir} = adj;
+        const left = c * CELL_SIZE + CELL_SIZE/2 + CELL_SIZE/2 - (symbols[board[r][c]]?.length*8);
+        const top = r * CELL_SIZE + CELL_SIZE/2;
+        const marker = document.querySelector(`.marker:nth-of-type(${adj.r*COLS + adj.c})`);
+        if (marker) {
+            if ((board[r][c] === 1 && board[r][c+1] === 1) || (board[r][c] === 2 && board[r][c+1] === 2)) {
+                marker.classList.add('error');
+            } else if ((board[r][c] !== 1 && board[r][c+1] !== 1)) {
+                marker.classList.add('error');
+            }
+        }
+    }
+    return errors;
+}
+
+function checkSolution() {
+    const errs = validateBoard();
+    if (errs.length) {
+        errs.forEach(e => {
+            const el = document.querySelector(`.error:nth-of-type(${errs.length})`);
+            if (!el) el = document.createElement('span');
+            el.className = 'error';
+            el.textContent = e;
+            document.body.appendChild(el);
+        });
+    } else {
+        document.body.innerHTML = `<p style="color:green;">All checks passed!</p>`;
+    }
+}
+
+document.getElementById('checkBtn').addEventListener('click', checkSolution);
+</script>
+</body>
+</html>
