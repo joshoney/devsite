@@ -34,6 +34,7 @@ export interface RunMeta {
 	executionMode: string;
 	totalTests: number;
 	errorCount: number;
+	traceUrl?: string;
 }
 
 export interface RunSummary {
@@ -48,6 +49,7 @@ export interface BenchmarkRun {
 	summary: RunSummary;
 	results: EvalItem[];
 	systemErrors?: any[];
+	traceUrl?: string;
 }
 
 export interface ModelGroup {
@@ -80,6 +82,7 @@ export interface MatrixRow {
 	isLatest: boolean;
 	summary: RunSummary;
 	cells: Record<string, MatrixCell>;
+	traceUrl?: string;
 }
 
 export interface MatrixCategoryGroup {
@@ -327,7 +330,8 @@ export function getMatrixData(): MatrixData {
 				averageTimeToFirstTokenMs: 0,
 				passRatePercentage: 0
 			},
-			cells
+			cells,
+			traceUrl: run.meta?.traceUrl || run.traceUrl
 		};
 	});
 

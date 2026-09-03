@@ -87,6 +87,11 @@ function formatDate(isoString: string) {
 								<span class="model-title-text">{row.modelName}</span>
 								{row.isLatest && <span class="latest-tag">LATEST</span>}
 							</div>
+							{row.traceUrl && (
+								<div class="model-trace-row">
+									<a href={row.traceUrl} target="_blank" class="trace-link" title="View LangSmith Trace">↗ VIEW TRACE</a>
+								</div>
+							)}
 							<div class="model-sub-info">
 								<span class="run-date">{formatDate(row.timestamp)}</span>
 								<span class="speed-badge">{row.summary.averageTokensPerSecond} t/s</span>
@@ -133,6 +138,7 @@ function formatDate(isoString: string) {
 												class={`eval-pill-btn ${pillClass}`}
 												data-eval-id={res.evalId}
 												data-run-id={row.runId}
+												data-trace-url={row.traceUrl || ''}
 												data-eval-name={res.evalName}
 												data-model-name={row.modelName}
 												data-has-judge={hasJudge ? 'true' : 'false'}
@@ -182,7 +188,10 @@ function formatDate(isoString: string) {
 				<span class="modal-lcars-tag" id="modalCategoryTag">EVAL DETAILS</span>
 				<span class="modal-sub" id="modalModelRun">Model / Run</span>
 			</div>
-			<button id="closeModalBtn" class="modal-close-btn">✕ CLOSE</button>
+			<div class="modal-actions" style="display: flex; gap: 10px; align-items: center;">
+				<a id="modalTraceBtn" href="#" target="_blank" class="modal-trace-btn hidden">VIEW TRACE</a>
+				<button id="closeModalBtn" class="modal-close-btn">✕ CLOSE</button>
+			</div>
 		</div>
 
 		<!-- METRICS STRIP -->
@@ -291,6 +300,7 @@ function formatDate(isoString: string) {
 				const prompt = decodeURIComponent(btn.getAttribute('data-prompt') || '');
 				const rawOutput = decodeURIComponent(btn.getAttribute('data-raw-output') || '');
 				const artifactUrl = btn.getAttribute('data-artifact-url') || '';
+				const traceUrl = btn.getAttribute('data-trace-url') || '';
 
 				currentArtifactUrl = artifactUrl;
 
@@ -305,6 +315,17 @@ function formatDate(isoString: string) {
 				if (modalReasoningText) modalReasoningText.textContent = reasoning || 'No judge reasoning available.';
 				if (modalPromptText) modalPromptText.textContent = prompt || '';
 				if (modalOutputText) modalOutputText.textContent = rawOutput || '';
+
+				const modalTraceBtn = document.getElementById('modalTraceBtn');
+				if (modalTraceBtn) {
+					if (traceUrl) {
+						modalTraceBtn.href = traceUrl;
+						modalTraceBtn.classList.remove('hidden');
+					} else {
+						modalTraceBtn.removeAttribute('href');
+						modalTraceBtn.classList.add('hidden');
+					}
+				}
 
 				const displayType = btn.getAttribute('data-display-type');
 				const isVisual = displayType === 'html-iframe' || (evalId && evalId.startsWith('visual-'));
@@ -647,7 +668,7 @@ function formatDate(isoString: string) {
 
 	/* MODEL CELL IN ROW */
 	.model-cell {
-		padding: 12px 14px !important;
+		padding: 8px 14px !important;
 	}
 
 	.model-row-header {
@@ -1098,5 +1119,46 @@ function formatDate(isoString: string) {
 	}
 	.action-item.hidden {
 		display: none;
+	}
+
+	.modal-trace-btn {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 800;
+		padding: 5px 12px;
+		background: #0d1117;
+		color: #00F5FF;
+		border: 1px solid #00F5FF;
+		border-radius: 4px;
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.15s ease;
+	}
+
+	.modal-trace-btn:hover {
+		background: rgba(0, 245, 255, 0.15);
+		box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+	}
+
+	.model-trace-row {
+		margin: 4px 0;
+	}
+
+	.trace-link {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: bold;
+		color: #00F5FF;
+		text-decoration: none;
+		border: 1px solid rgba(0, 245, 255, 0.3);
+		padding: 2px 6px;
+		border-radius: 3px;
+		background: rgba(0, 245, 255, 0.05);
+		transition: all 0.15s ease;
+	}
+
+	.trace-link:hover {
+		background: rgba(0, 245, 255, 0.2);
+		border-color: #00F5FF;
 	}
 </style>

@@ -32,7 +32,10 @@ function formatDate(isoString: string) {
 	<div class="run-header-card">
 		<div class="header-top">
 			<div class="header-title-group">
-				<span class="lcars-tag amber">RUN TELEMETRY</span>
+				<div class="tag-row" style="display: flex; gap: 10px; align-items: center;">
+					<span class="lcars-tag amber">RUN TELEMETRY</span>
+					<a id="runTraceBtn" class="trace-action-btn disabled" target="_blank" title="No trace available for this legacy run">VIEW TRACE</a>
+				</div>
 				<h2 id="runModelName">{defaultRun?.meta?.modelName || 'Unknown Model'}</h2>
 				<span class="run-id-sub" id="runIdDisplay">{defaultRun?.runId}</span>
 			</div>
@@ -139,6 +142,7 @@ function formatDate(isoString: string) {
 			const runTimestamp = document.getElementById('runTimestamp');
 			const runExecutionMode = document.getElementById('runExecutionMode');
 			const runErrorCount = document.getElementById('runErrorCount');
+			const runTraceBtn = document.getElementById('runTraceBtn');
 
 			const runPassRate = document.getElementById('runPassRate');
 			const runPassCount = document.getElementById('runPassCount');
@@ -161,6 +165,19 @@ function formatDate(isoString: string) {
 				if (runTimestamp) runTimestamp.textContent = formatDate(run.meta?.timestamp);
 				if (runExecutionMode) runExecutionMode.textContent = run.meta?.executionMode || 'sequential-loop';
 				if (runErrorCount) runErrorCount.textContent = `${run.meta?.errorCount || 0}`;
+
+				if (runTraceBtn) {
+					const traceUrl = run.meta?.traceUrl || run.traceUrl;
+					if (traceUrl) {
+						runTraceBtn.href = traceUrl;
+						runTraceBtn.classList.remove('disabled');
+						runTraceBtn.title = 'View LangSmith Trace';
+					} else {
+						runTraceBtn.removeAttribute('href');
+						runTraceBtn.classList.add('disabled');
+						runTraceBtn.title = 'No trace available for this legacy run';
+					}
+				}
 
 				const results = run.results || [];
 				const judgedResults = results.filter((r) => r.hasJudge || (r.judge && r.judge.score !== undefined));
@@ -368,6 +385,32 @@ function formatDate(isoString: string) {
 		font-size: 1.6rem;
 		color: #fff;
 		margin: 6px 0 2px 0;
+	}
+
+	.trace-action-btn {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 800;
+		padding: 3px 10px;
+		border-radius: 4px;
+		background: #0d1117;
+		color: #00F5FF;
+		border: 1px solid #00F5FF;
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.15s ease;
+	}
+
+	.trace-action-btn:hover:not(.disabled) {
+		background: rgba(0, 245, 255, 0.15);
+		box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+	}
+
+	.trace-action-btn.disabled {
+		color: #4b5563;
+		border-color: #374151;
+		cursor: not-allowed;
+		background: transparent;
 	}
 
 	.run-id-sub {
