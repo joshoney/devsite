@@ -1,0 +1,126 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="GCP Agent Harness | Josh Oney">
+	<section class="project-view">
+		<div class="project-header">
+			<h1>GCP Agent Harness</h1>
+			<a href="https://github.com/joshoney/gcp-agent-harness" target="_blank" class="github-btn">View on GitHub ↗</a>
+		</div>
+		
+		<div class="content-grid">
+			<div class="text-block">
+				<h2>What it is</h2>
+				<p>A cloud-native harness for AI agents demonstrating infrastructure-as-code, automated CI/CD, and serverless observability on Google Cloud Platform.</p>
+				<p>Because AI workloads can have unpredictable latency, multi-step execution flows, and variable token costs, this harness provides a production-grade foundation for hosting agent endpoints backed by managed relational persistence and centralized telemetry.</p>
+				
+				<h2>How it works</h2>
+				<p>The system is built around declarative cloud infrastructure and serverless container execution:</p>
+				<ul>
+					<li><strong>Cloud Run API:</strong> Containerized Node.js and TypeScript service hosting agent harness endpoints, scaling dynamically to zero or under load.</li>
+					<li><strong>Terraform IaC:</strong> Fully defines and provisions all required cloud infrastructure including Cloud SQL (PostgreSQL), Secret Manager, and IAM permissions.</li>
+					<li><strong>Cloud Build CI/CD:</strong> Automated pipeline triggered on GitHub pushes to run Prisma database migrations and deploy new container revisions seamlessly.</li>
+					<li><strong>Operations &amp; Telemetry:</strong> Collects structured logging and execution metrics in Google Cloud Operations for deep real-time observability across agent invocations.</li>
+				</ul>
+
+				<h2>Tech Stack</h2>
+				<ul>
+					<li><strong>Compute:</strong> Google Cloud Run (Serverless Containers)</li>
+					<li><strong>Database:</strong> Google Cloud SQL (PostgreSQL) with Prisma ORM</li>
+					<li><strong>Infrastructure as Code:</strong> Terraform</li>
+					<li><strong>CI/CD:</strong> Google Cloud Build &amp; GitHub</li>
+					<li><strong>Runtime:</strong> Node.js, TypeScript, Express</li>
+					<li><strong>Observability:</strong> Google Cloud Operations (Structured Logging &amp; Dashboards)</li>
+				</ul>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<style>
+	.project-view {
+		max-width: 900px;
+		padding: 20px 0;
+	}
+
+	.project-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 3px solid var(--lcars-butterscotch);
+		padding-bottom: 20px;
+		margin-bottom: 30px;
+	}
+
+	.project-header h1 {
+		font-size: 2.8rem;
+		margin: 0;
+		color: #fff;
+		font-family: var(--font-sans);
+		font-weight: 800;
+	}
+
+	.github-btn {
+		background: var(--lcars-butterscotch);
+		color: #000;
+		padding: 10px 20px;
+		font-family: var(--font-mono);
+		font-weight: bold;
+		border-radius: 4px;
+		transition: filter 0.15s, transform 0.1s;
+		text-decoration: none;
+	}
+
+	.github-btn:hover {
+		filter: brightness(1.2);
+		transform: scale(1.02);
+	}
+
+	.content-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+	}
+
+	.text-block h2 {
+		color: var(--lcars-butterscotch);
+		font-family: var(--font-mono);
+		font-size: 1.4rem;
+		margin-bottom: 12px;
+		letter-spacing: 1px;
+	}
+
+	.text-block p {
+		font-size: 1.1rem;
+		color: var(--text-main);
+		margin-bottom: 25px;
+		line-height: 1.7;
+	}
+
+	.text-block ul {
+		padding-left: 20px;
+		color: var(--text-muted);
+		font-size: 1.1rem;
+		line-height: 1.8;
+		margin-bottom: 25px;
+	}
+
+	.text-block li {
+		margin-bottom: 10px;
+	}
+
+	.text-block li strong {
+		color: #fff;
+		font-family: var(--font-sans);
+	}
+
+	.text-block code {
+		background: #1a1f26;
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-family: var(--font-mono);
+		font-size: 0.9em;
+		color: var(--lcars-butterscotch);
+	}
+</style>
