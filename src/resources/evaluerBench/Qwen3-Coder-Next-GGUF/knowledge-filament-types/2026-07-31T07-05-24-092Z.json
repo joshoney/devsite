@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-filament-types",
+  "evalName": "3D Printing Filament Characteristics",
+  "category": "knowledge",
+  "tags": [
+    "3d-printing",
+    "materials",
+    "fabrication"
+  ],
+  "modelName": "Qwen3-Coder-Next-GGUF",
+  "prompt": "Compare PLA, ABS, and PETG filaments used in FDM 3D printing. Specifically, contrast their temperature requirements and bed adhesion characteristics.\n",
+  "rawOutput": "Here's a detailed comparison of **PLA**, **ABS**, and **PETG** filaments for FDM 3D printing, focusing on **nozzle temperature**, **bed temperature**, and **bed adhesion characteristics**:\n\n| Property              | PLA (Polylactic Acid)                     | ABS (Acrylonitrile Butadiene Styrene)      | PETG (Polyethylene Terephthalate Glycol)   |\n|-----------------------|-------------------------------------------|--------------------------------------------|---------------------------------------------|\n| **Nozzle Temp Range** | **180\u2013220\u00b0C** (typically 190\u2013210\u00b0C)       | **220\u2013250\u00b0C** (typically 230\u2013240\u00b0C)        | **220\u2013250\u00b0C** (typically 230\u2013245\u00b0C)         |\n| **Bed Temp Range**    | **40\u201360\u00b0C** (often 50\u201360\u00b0C for large prints) | **90\u2013110\u00b0C** (typically 100\u2013110\u00b0C)         | **70\u201385\u00b0C** (typically 75\u201380\u00b0C)             |\n| **Bed Adhesion**      | \u2705 **Excellent** on bare glass, PEI, blue tape<br>\u2022 Low warping tendency<br>\u2022 Easy to remove when cool | \u26a0\ufe0f **Moderate to Poor**<br>\u2022 Prone to warping/cracking without heated chamber<br>\u2022 Requires high bed temp + adhesion aids (glue stick, ABS slurry, PEI) | \u2705 **Very Good**<br>\u2022 Strong adhesion to PEI, glass, BuildTak<br>\u2022 Can be *too* sticky\u2014may damage bed surface on removal<br>\u2022 Moderate warping risk (less than ABS) |\n| **Cooling Needs**     | \u2757 **High** (part cooling fan essential, 100% for overhangs) | \u274c **Low to None** (fan often off or minimal to prevent cracking) | \u2705 **Moderate** (fan ~20\u201350% for bridging/overhangs; avoid full blast to prevent layer separation) |\n| **Key Adhesion Tips** | \u2022 Works well on cold or warm beds<br>\u2022 Minimal warping due to low shrinkage<br>\u2022 Can use blue painter\u2019s tape or glue stick if needed | \u2022 Heated chamber strongly recommended<br>\u2022 Use ABS slurry (acetone + ABS scraps) or PVP-based adhesives<br>\u2022 PEI sheet must be *very* clean | \u2022 Avoid excessive bed temp (>85\u00b0C) to prevent \"elephant\u2019s foot\" and bed damage<br>\u2022 PEI or glass preferred; BuildTak may wear faster |\n\n### Summary of Key Contrasts:\n- **Temperature**:  \n  - PLA: **Lowest** nozzle & bed temps \u2014 easiest on printers & safest for beginners.  \n  - ABS: **Highest** bed temp (critical for warpage control); nozzle temp higher than PLA.  \n  - PETG: Mid-to-high nozzle temp; bed temp higher than PLA but lower than ABS.\n\n- **Bed Adhesion**:  \n  - PLA: **Most forgiving** \u2014 reliable adhesion with minimal setup.  \n  - ABS: **Most challenging** \u2014 prone to warping; requires aggressive adhesion strategies and enclosure.  \n  - PETG: **Strong but finicky** \u2014 excellent adhesion, but can be *over*-adherent (risk of peeling bed surface or damaging print on removal).\n\n\ud83d\udca1 **Pro Tip**:  \n- For **PLA**, use a *cold or warm* bed (\u226460\u00b0C) \u2014 overheating can cause \"ghosting\" or poor first-layer control.  \n- For **ABS**, an **enclosed printer** is highly recommended to minimize thermal gradients and warping.  \n- For **PETG**, ensure your extruder is *direct drive* (bowden may struggle with stringing/under-extrusion) and dry the filament (hygroscopic \u2192 bubbles/weak prints if wet).\n\nLet me know if you'd like a comparison of mechanical properties, environmental resistance, or post-processing!",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 283.33,
+    "tokensPerSecond": 46.96,
+    "totalLatencyMs": 19152.04,
+    "inputTokens": 39,
+    "outputTokens": 886,
+    "timestamp": "2026-07-31T07:05:24.092Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output perfectly satisfies all explicit requirements in the grading rubric. It clearly states that PLA requires the lowest temperatures and offers the most forgiving/easiest bed adhesion. It accurately notes that ABS requires the highest bed temperatures and strongly recommends an enclosure to prevent warping. It correctly identifies PETG as a thermal middle ground while explicitly warning that it can adhere *too* well (over-adherent), risking bed surface damage or print removal issues. The temperature ranges and adhesion characteristics provided are factually accurate and align with industry standards. The response is exceptionally thorough, well-structured (using a clear comparison table and concise summary), and adds highly relevant practical tips without straying from the prompt's focus. No factual inaccuracies or omissions were detected."
+  },
+  "runTimestamp": "2026-07-31T07:05:24.092Z",
+  "executionMode": "sequential-loop"
+}

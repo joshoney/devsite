@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "gemma-4-26B-A4B-it-GGUF-UD-Q4_K_XL",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "Think of cellular respiration as the way your cells \"eat.\" Just like you eat food to get the energy to run or study, your cells take the nutrients from your food and convert them into a specific form of energy they can actually use.\n\nThat usable energy is a molecule called **ATP** (Adenosine Triphosphate). You can think of ATP as the \"cellular currency\"\u2014whenever a cell needs to do work, it \"spends\" ATP.\n\n---\n\n### The Big Picture Equation\nBefore diving into the steps, it helps to see the \"recipe\" for cellular respiration:\n\n**Glucose (Sugar) + Oxygen $\\rightarrow$ Carbon Dioxide + Water + ATP (Energy)**\n\n---\n\n### The Three Main Stages\nCellular respiration happens in three distinct steps. Imagine you are trying to get energy out of a large, locked treasure chest (Glucose).\n\n#### 1. Glycolysis: \"Breaking the Lock\"\n*   **Where it happens:** The cytoplasm (the jelly-like fluid inside the cell).\n*   **What happens:** The cell takes one large molecule of glucose (which has 6 carbons) and breaks it in half into two smaller molecules called **pyruvate** (which have 3 carbons each).\n*   **The Result:** This process doesn't require oxygen. It produces a tiny bit of ATP and some high-energy electrons that will be used later.\n\n#### 2. The Krebs Cycle (Citric Acid Cycle): \"The Carbon Extractor\"\n*   **Where it happens:** Inside the **mitochondria** (the \"powerhouse\" of the cell).\n*   **What happens:** The pyruvate pieces from step one move into the mitochondria. Here, they are broken down even further. As the chemical bonds are broken, **Carbon Dioxide ($CO_2$)** is released as a byproduct (this is the $CO_2$ you breathe out!).\n*   **The Result:** More $CO_2$ is released, a little more ATP is made, and most importantly, a lot of \"electron carriers\" (like NADH) are loaded up with energy to be used in the final step.\n\n#### 3. The Electron Transport Chain (ETC): \"The Energy Jackpot\"\n*   **Where it happens:** The inner membrane of the **mitochondria**.\n*   **What happens:** This is where the real magic happens. Those \"electron carriers\" from the first two steps drop off their high-energy electrons. These electrons move through a chain of proteins, acting like electricity flowing through a wire. This flow of energy is used to pump protons, which eventually spins a tiny \"molecular motor\" that creates massive amounts of ATP.\n*   **The Role of Oxygen:** At the very end of the chain, **Oxygen** waits to catch the electrons. When oxygen grabs the electrons and some hydrogen, it forms **Water ($H_2O$)**. This is why you need to breathe oxygen!\n\n---\n\n### Summary of Inputs and Outputs\n\nTo keep it simple for a test or study guide, remember this breakdown:\n\n| | **Inputs (What goes in)** | **Outputs (What comes out)** |\n| :--- | :--- | :--- |\n| **Molecules** | **Glucose** (from food) <br> **Oxygen** (from breathing) | **Carbon Dioxide** (waste) <br> **Water** (waste) <br> **ATP** (the goal!) |\n| **Purpose** | To provide fuel and an electron acceptor. | To provide energy for the cell to function. |\n\n**Pro-Tip for remembering:** \nIf you ever get confused, just remember that **Cellular Respiration is the exact opposite of Photosynthesis.** \n*   Plants take in $CO_2$ and sunlight to make Glucose. \n*   You take in Glucose and Oxygen to make $CO_2$ and energy!",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 665.85,
+    "tokensPerSecond": 47.67,
+    "totalLatencyMs": 31293.72,
+    "inputTokens": 43,
+    "outputTokens": 1460,
+    "timestamp": "2026-07-31T04:52:45.001Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output perfectly satisfies all requirements outlined in the prompt and scoring rubric. It explicitly and accurately identifies all primary inputs (glucose/sugar and oxygen) and outputs (ATP/energy, carbon dioxide, and water), both in the summary equation and the dedicated table. The explanation breaks down the three stages of cellular respiration using clear, high-school-appropriate analogies (e.g., 'cellular currency,' 'treasure chest,' 'molecular motor') while maintaining scientific accuracy. The tone is consistently accessible, educational, and well-structured for the target audience. No elements are missing or incorrect, warranting a full score."
+  },
+  "runTimestamp": "2026-07-31T04:52:45.001Z",
+  "executionMode": "sequential-loop"
+}

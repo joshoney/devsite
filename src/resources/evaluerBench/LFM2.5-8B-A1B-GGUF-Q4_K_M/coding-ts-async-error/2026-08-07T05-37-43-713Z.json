@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "\n```ts\ntype UserProfile = {\n  id: string;\n  name: string;\n  // extend with additional fields as needed\n};\n\ntype FetchError = {\n  message: string;\n};\n\n/**\n * Fetches a user profile from the external API.\n * @param userId The unique identifier of the user.\n * @returns A promise that resolves to the user profile or a fetch error.\n */\nexport async function fetchUserProfile(userId: string): Promise<UserProfile | FetchError> {\n  const controller = new AbortController();\n  const timeout = 5000; // 5 seconds\n\n  const url = `https://api.example.com/users/${userId}`;\n\n  const signal = controller.signal;\n  const fetchPromise = fetch(url, { signal });\n\n  // Cancel any pending request immediately\n  fetchPromise.cancel();\n\n  try {\n    const response = await fetchPromise;\n    if (!response.ok) {\n      throw new Error(`HTTP error! status: ${response.status}`);\n    }\n    const data: UserProfile = await response.json();\n    return data;\n  } catch (error) {\n    // Network\u2011level failure (e.g., DNS, connection refused)\n    if (error instanceof TypeError && (error.message?.includes('Network error') || error instanceof TypeError)) {\n      return { message: 'Network error while fetching user profile' };\n    }\n    // Server error (status 500)\n    if (error instanceof Error && (error.message?.startsWith('HTTP error!') || error.message?.includes('status')) {\n      return { message: 'Server error (500)' };\n    }\n    // Re\u2011throw unexpected errors\n    throw error;\n  } finally {\n    controller.abort();\n  }\n}\n```",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 87.9,
+    "tokensPerSecond": 168.92,
+    "totalLatencyMs": 6605.93,
+    "inputTokens": 54,
+    "outputTokens": 1101,
+    "timestamp": "2026-08-07T05:37:43.713Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Judge model failed to evaluate: 401 Incorrect API key provided: not-need********ocal. You can find your API key at https://platform.openai.com/account/api-keys.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/MODEL_AUTHENTICATION/\n"
+  },
+  "runTimestamp": "2026-08-07T05:37:43.713Z",
+  "executionMode": "sequential-loop"
+}

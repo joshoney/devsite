@@ -1,0 +1,26 @@
+{
+  "evalId": "visual-tictactoe-game",
+  "evalName": "Standalone Tic-Tac-Toe Web App",
+  "category": "visual-demo",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "game",
+    "interactive"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "You are an automated HTML rendering engine. Output a complete, beautifully styled Tic-Tac-Toe game in a SINGLE standalone HTML document.\n\nRequirements:\n- All CSS and JavaScript must be embedded directly inside <style> and <script> tags within the HTML.\n- Use a modern, dark-mode visual aesthetic with clean typography and smooth hover transitions.\n- Include win/tie state detection and a \"Restart Game\" button.\n- STRICT FORMATTING: Do NOT return JSON, do NOT escape newline characters, and do NOT wrap your response in markdown code fences (```html). Your very first character must be '<' from <!DOCTYPE html> and your very last character must be '>'.\n",
+  "rawOutput": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Tic Tac Toe</title>\n<style>\n  body {\n    margin: 0;\n    background: #121212;\n    color: #e0e0e0;\n    font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Ubuntu, \"Helvetica Neue\", Arial, sans-serif;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    min-height: 100vh;\n  }\n  h1 {\n    margin-bottom: 20px;\n    font-size: 2rem;\n  }\n  .board {\n    display: grid;\n    grid-template-columns: repeat(3, 100px);\n    gap: 5px;\n  }\n  .cell {\n    width: 100px;\n    height: 100px;\n    background: #1e1e1e;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 3rem;\n    cursor: pointer;\n    transition: background 0.3s, transform 0.2s;\n  }\n  .cell:hover:not(.disabled) {\n    background: #2a2a2a;\n    transform: scale(1.05);\n  }\n  .cell.disabled {\n    cursor: default;\n  }\n  .message {\n    margin: 20px 0;\n    font-size: 1.5rem;\n    min-height: 1.5em;\n  }\n  .restart {\n    padding: 10px 20px;\n    background: #3a3a3a;\n    border: none;\n    color: #e0e0e0;\n    font-size: 1rem;\n    cursor: pointer;\n    transition: background 0.3s;\n  }\n  .restart:hover {\n    background: #4a4a4a;\n  }\n</style>\n</head>\n<body>\n<h1>Tic Tac Toe</h1>\n<div class=\"board\" id=\"board\">\n  <div class=\"cell\" data-index=\"0\"></div>\n  <div class=\"cell\" data-index=\"1\"></div>\n  <div class=\"cell\" data-index=\"2\"></div>\n  <div class=\"cell\" data-index=\"3\"></div>\n  <div class=\"cell\" data-index=\"4\"></div>\n  <div class=\"cell\" data-index=\"5\"></div>\n  <div class=\"cell\" data-index=\"6\"></div>\n  <div class=\"cell\" data-index=\"7\"></div>\n  <div class=\"cell\" data-index=\"8\"></div>\n</div>\n<div class=\"message\" id=\"message\"></div>\n<button class=\"restart\" id=\"restart\">Restart Game</button>\n<script>\n  const boardEl = document.getElementById('board');\n  const messageEl = document.getElementById('message');\n  const restartBtn = document.getElementById('restart');\n  let board = Array(9).fill(null);\n  let currentPlayer = 'X';\n  let gameActive = true;\n\n  const winCombos = [\n    [0,1,2],[3,4,5],[6,7,8], // rows\n    [0,3,6],[1,4,7],[2,5,8], // columns\n    [0,4,8],[2,4,6]          // diagonals\n  ];\n\n  function handleCellClick(e) {\n    const cell = e.target;\n    const idx = parseInt(cell.dataset.index);\n    if (!gameActive || board[idx]) return;\n    board[idx] = currentPlayer;\n    cell.textContent = currentPlayer;\n    cell.classList.add('disabled');\n    if (checkWin()) {\n      messageEl.textContent = currentPlayer + ' wins!';\n      gameActive = false;\n    } else if (board.every(v => v)) {\n      messageEl.textContent = 'It\\'s a tie!';\n      gameActive = false;\n    } else {\n      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';\n    }\n  }\n\n  function checkWin() {\n    return winCombos.some(combo => {\n      const [a,b,c] = combo;\n      return board[a] && board[a] === board[b] && board[a] === board[c];\n    });\n  }\n\n  function restartGame() {\n    board = Array(9).fill(null);\n    currentPlayer = 'X';\n    gameActive = true;\n    messageEl.textContent = '';\n    document.querySelectorAll('.cell').forEach(cell => {\n      cell.textContent = '';\n      cell.classList.remove('disabled');\n    });\n  }\n\n  boardEl.addEventListener('click', handleCellClick);\n  restartBtn.addEventListener('click', restartGame);\n</script>\n</body>\n</html>",
+  "display_type": "html-iframe",
+  "metrics": {
+    "timeToFirstTokenMs": 247.35,
+    "tokensPerSecond": 73.3,
+    "totalLatencyMs": 19224.91,
+    "inputTokens": 204,
+    "outputTokens": 1391,
+    "timestamp": "2026-07-31T07:56:51.329Z"
+  },
+  "runTimestamp": "2026-07-31T07:56:51.329Z",
+  "executionMode": "sequential-loop"
+}

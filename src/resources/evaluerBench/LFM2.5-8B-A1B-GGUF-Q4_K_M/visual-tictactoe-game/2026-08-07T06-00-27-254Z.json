@@ -1,0 +1,26 @@
+{
+  "evalId": "visual-tictactoe-game",
+  "evalName": "Standalone Tic-Tac-Toe Web App",
+  "category": "visual-demo",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "game",
+    "interactive"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "You are an automated HTML rendering engine. Output a complete, beautifully styled Tic-Tac-Toe game in a SINGLE standalone HTML document.\n\nRequirements:\n- All CSS and JavaScript must be embedded directly inside <style> and <script> tags within the HTML.\n- Use a modern, dark-mode visual aesthetic with clean typography and smooth hover transitions.\n- Include win/tie state detection and a \"Restart Game\" button.\n- STRICT FORMATTING: Do NOT return JSON, do NOT escape newline characters, and do NOT wrap your response in markdown code fences (```html). Your very first character must be '<' from <!DOCTYPE html> and your very last character must be '>'.\n",
+  "rawOutput": "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Tic-Tac-Toe</title>\n<style>\n/* Modern dark theme */\nbody {\n    background: #1e1e2e;\n    color: #e0e0f2;\n    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    height: 100vh;\n    margin: 0;\n}\n.container {\n    text-align: center;\n}\nh1 {\n    margin: 20px 0;\n    font-size: 2.5rem;\n}\n.board {\n    display: grid;\n    grid-template-columns: repeat(3, 100px);\n    gap: 5px;\n}\n.cell {\n    width: 100px;\n    height: 100px;\n    background: #444;\n    border: 2px solid #666;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 2rem;\n    cursor: pointer;\n    transition: background 0.2s, border 0.2s;\n}\n.cell:hover {\n    background: #666;\n    border-color: #a0a0ff;\n}\n.ai-cell {\n    background: #555;\n}\n.winner {\n    margin-top: 30px;\n    font-size: 1.5rem;\n    font-weight: bold;\n}\n.tie {\n    margin-top: 10px;\n    font-size: 1.2rem;\n}\nbutton {\n    padding: 10px 20px;\n    font-size: 1rem;\n    cursor: pointer;\n    border: none;\n    border-radius: 5px;\n    background: #4caf50;\n    color: #fff;\n    transition: background 0.2s;\n}\n.restart {\n    margin-top: 20px;\n    padding: 10px 20px;\n    background: #ff9800;\n    color: #fff;\n    border: none;\n    cursor: pointer;\n}\n</style>\n<script>\ndocument.addEventListener('DOMContentLoaded', () => {\n    const board = document.querySelector('.board');\n    const cells = board.querySelectorAll('.cell');\n    let xPlayer = 'X';\n    let oPlayer = 'O';\n    let gameActive = true;\n\n    function resetGame() {\n        cells.forEach(cell => {\n            cell.classList.remove('ai-cell');\n            cell.classList.remove('winner');\n            cell.classList.remove('tie');\n            cell.textContent = '';\n        });\n        xPlayer = 'X';\n        oPlayer = 'O';\n        cells.forEach(cell => cell.focus());\n    }\n\n    function checkWinner() {\n        const winPatterns = [\n            [0,1,2], [3,4,5], [6,7,8],\n            [0,3,6], [1,4,7], [2,5,8],\n            [0,4,8], [2,4,6]\n        ];\n        cells.forEach((cell, i) => {\n            const id = cell.dataset.idx;\n            if (cells[i].textContent === xPlayer || cells[i].textContent === oPlayer) continue;\n            const a = board.cells[i];\n            const b = board.cells[i+3];\n            const c = board.cells[i+6];\n            if (a && b && a.textContent === b && b.textContent === c) {\n                document.querySelector('.winner').textContent = xPlayer === oPlayer ? 'X' : (xPlayer === 'X' ? 'O' : 'O');\n                cells.forEach(c => c.classList.add('winner'));\n                return true;\n            }\n        });\n        return false;\n    }\n\n    function handleClick(e) {\n        if (!gameActive) return;\n        const cell = e.target;\n        if (cell.classList.contains('ai-cell')) return;\n        cell.classList.add('ai-cell');\n        cells.forEach(c => c.classList.add('winner'));\n        board.dataset.result = 'in progress';\n        const winner = checkWinner();\n        if (winner) {\n            gameActive = false;\n            document.querySelector('.winner').textContent = winner;\n        } else if (cells.filter(c => !c.classList.contains('ai-cell')).length === 0) {\n            board.dataset.result = 'tie';\n            document.querySelector('.tie').textContent = 'Draw!';\n        }\n        cells.forEach(cell => cell.focus());\n    }\n\n    for (let i = 0; i < 9; i++) {\n        cells[i].addEventListener('click', handleClick);\n    }\n\n    const restartBtn = document.querySelector('.restart');\n    restartBtn.addEventListener('click', resetGame);\n    document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', (e) => {\n        if (gameActive) handleClick(e);\n    });\n});\n</script>\n</body>\n</html>",
+  "display_type": "html-iframe",
+  "metrics": {
+    "timeToFirstTokenMs": 133.88,
+    "tokensPerSecond": 149.83,
+    "totalLatencyMs": 17627.39,
+    "inputTokens": 158,
+    "outputTokens": 2621,
+    "timestamp": "2026-08-07T06:00:27.254Z"
+  },
+  "runTimestamp": "2026-08-07T06:00:27.254Z",
+  "executionMode": "sequential-loop"
+}

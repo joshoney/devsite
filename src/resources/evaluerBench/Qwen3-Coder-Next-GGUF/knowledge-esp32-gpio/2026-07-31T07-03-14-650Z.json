@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "Qwen3-Coder-Next-GGUF",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "**Primary Function of GPIO Pins on an ESP32:**  \nGPIO (General-Purpose Input/Output) pins are programmable digital pins that allow the ESP32 to interact with external hardware. They can be configured as *inputs* (to read signals from sensors, buttons, etc.) or *outputs* (to control LEDs, relays, displays, etc.), enabling bidirectional communication between the microcontroller and the physical world.\n\n---\n\n**Conceptual Explanation: Configuring a GPIO Pin to Read a Push-Button**\n\nTo read a push-button using a GPIO pin:\n\n1. **Connect the button** in a pull-up or pull-down configuration (e.g., one side of the button to GPIO and VCC, the other to GND, with an internal or external resistor to define the default state).\n2. **Configure the GPIO as an input**, optionally enabling the internal pull-up or pull-down resistor (e.g., `INPUT_PULLUP`) to avoid floating states.\n3. **Read the pin\u2019s logic level** (HIGH or LOW) using a function like `digitalRead(pin)`\u2014the button press changes the pin\u2019s state (e.g., from HIGH to LOW when pressed in a pull-up setup).\n4. **Optionally debounce** the signal (via software delay or hardware filtering) to ignore mechanical noise during press/release transitions.\n\nThis allows the ESP32 to reliably detect whether the button is currently pressed or released.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 323.02,
+    "tokensPerSecond": 47.14,
+    "totalLatencyMs": 6516.89,
+    "inputTokens": 51,
+    "outputTokens": 292,
+    "timestamp": "2026-07-31T07:03:14.650Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies the grading rubric. It correctly defines GPIO as General-Purpose Input/Output and accurately describes their primary function for bidirectional hardware communication. For the push-button configuration, it explicitly explains the need to configure the pin as an `INPUT` (highlighting `INPUT_PULLUP`/`INPUT_PULLDOWN` to prevent floating states), outlines the conceptual hardware setup, describes reading the digital logic level, and appropriately notes debouncing. The explanation is technically accurate, concise, and contains no hallucinations or omissions."
+  },
+  "runTimestamp": "2026-07-31T07:03:14.650Z",
+  "executionMode": "sequential-loop"
+}

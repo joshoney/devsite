@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "\nThe primary function of GPIO (General\u2011Purpose Input/Output) pins on an ESP32 is to provide digital interfaces that can be programmed as either inputs (to sense voltage changes from sensors or switches) or outputs (to drive signals to other devices). Each pin can be configured by software to detect a specific logic level, making the microcontroller able to interact with a wide range of digital hardware.\n\nTo read the state of a push\u2011button with one GPIO pin, you would first connect the button\u2019s two terminals to two pins (or to one pin and a ground reference). Then, in the code, declare the pin as an input (e.g., using pin_mode(pin, INPUT)) and, in the main loop, call a digital\u2011read function such as digital_read(pin). The read will return a HIGH or LOW value while the button is pressed, allowing you to determine whether the button is being held down. If a pull\u2011up or pull\u2011down resistor is added, the pin will default to a known state when no button is pressed.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 100.06,
+    "tokensPerSecond": 154,
+    "totalLatencyMs": 3918.35,
+    "inputTokens": 50,
+    "outputTokens": 588,
+    "timestamp": "2026-08-07T06:02:27.298Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies the grading rubric. It explicitly defines GPIO as General-Purpose Input/Output and accurately describes its primary function as programmable digital interfaces for sensing or driving signals. For the push-button configuration, it correctly explains the conceptual steps: wiring the button to a pin and ground/reference, configuring the pin as an INPUT in software, reading the digital state (HIGH/LOW) in a loop, and appropriately notes the role of pull-up/pull-down resistors to establish a known default state. The explanation is technically accurate, conceptually sound, and free of hallucinations. The use of pseudo-code (`pin_mode`, `digital_read`) is appropriate for a conceptual explanation and aligns with standard microcontroller/Arduino-style practices commonly used with the ESP32."
+  },
+  "runTimestamp": "2026-08-07T06:02:27.298Z",
+  "executionMode": "sequential-loop"
+}

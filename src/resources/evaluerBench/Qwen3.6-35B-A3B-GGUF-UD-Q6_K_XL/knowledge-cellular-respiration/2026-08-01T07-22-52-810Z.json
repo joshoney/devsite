@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "Qwen3.6-35B-A3B-GGUF-UD-Q6_K_XL",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "Here\u2019s a clear, high-school-friendly breakdown of cellular respiration:\n\n### \ud83d\udd0b What Is Cellular Respiration?\nCellular respiration is the process your cells use to turn food into usable energy. Think of it like a microscopic power plant: it takes the sugar from the food you eat and the oxygen you breathe, and converts them into **ATP** (adenosine triphosphate), the molecule that powers everything your body does\u2014moving, thinking, growing, and even staying warm.\n\nMost of this process happens inside the **mitochondria**, often called the \"powerhouse of the cell.\"\n\n---\n\n### \ud83d\udd04 The 3 Main Stages (Simplified)\n1. **Glycolysis** (happens in the cell's fluid, outside the mitochondria)  \n   - One glucose molecule (6-carbon sugar) is split into two smaller molecules called pyruvate.  \n   - This step makes a small amount of ATP and prepares the molecules for the next stage.  \n   - *Note: This step doesn't need oxygen.*\n\n2. **Krebs Cycle** (Citric Acid Cycle) (happens inside the mitochondria)  \n   - The pyruvate molecules are broken down further.  \n   - Carbon atoms are released as **carbon dioxide** (which you eventually exhale).  \n   - High-energy electrons are captured in carrier molecules (like NADH and FADH\u2082) to be used later.  \n   - A little more ATP is made here.\n\n3. **Electron Transport Chain** (also inside the mitochondria)  \n   - This is where the big energy payoff happens.  \n   - The high-energy electrons from the Krebs cycle are passed along a series of proteins, and their energy is used to pump molecules that drive the production of **lots of ATP**.  \n   - **Oxygen** acts as the \"final acceptor\" at the end of this chain. It combines with electrons and hydrogen to form **water**.\n\n---\n\n### \ud83d\udce5 Primary Inputs & \ud83d\udce4 Primary Outputs\n| **Inputs** (What goes in) | **Outputs** (What comes out) |\n|---------------------------|------------------------------|\n| Glucose (from food)       | ATP (usable cellular energy) |\n| Oxygen (from breathing)   | Carbon dioxide (CO\u2082)         |\n|                           | Water (H\u2082O)                  |\n\n**Overall Chemical Equation:**  \n`C\u2086H\u2081\u2082O\u2086 + 6O\u2082 \u2192 6CO\u2082 + 6H\u2082O + ATP (energy)`\n\n---\n\n### \ud83d\udca1 Why It Matters\n- Every time you breathe in, you're delivering oxygen to your cells so they can finish making ATP.\n- Every time you eat carbs, sugars, or fats, you're providing the glucose (or molecules that become glucose) to start the process.\n- The CO\u2082 you exhale and the water your body uses or releases are just the \"exhaust\" of this energy-making process.\n\nWithout cellular respiration, your cells would run out of energy, and your body couldn't function. It's a continuous, highly efficient process that keeps you alive every second of every day. Let me know if you'd like a diagram explanation or a deeper dive into any of the stages!",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 236.36,
+    "tokensPerSecond": 52.48,
+    "totalLatencyMs": 34132.51,
+    "inputTokens": 39,
+    "outputTokens": 1779,
+    "timestamp": "2026-08-01T07:22:52.810Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\n**Evaluation against Rubric:**\n- **Inputs & Outputs:** The model correctly and explicitly identifies all required inputs (glucose/sugar and oxygen) and outputs (ATP/energy, carbon dioxide, and water). These are clearly highlighted in both the stage-by-stage breakdown and a dedicated summary table.\n- **Tone & Accessibility:** The response is written in a highly accessible, educational tone perfectly suited for a high school student. It uses relatable analogies (\"microscopic power plant\"), defines necessary terminology (ATP, mitochondria), avoids overwhelming biochemical detail, and employs clear formatting (headings, bullet points, table) to enhance readability.\n- **Accuracy & Completeness:** The simplified explanation of the three main stages is scientifically sound for the target audience. The overall chemical equation is correctly stated, and the relationship between breathing/eating and the process is accurately contextualized.\n- **Rubric Compliance:** All specified criteria are fully met. No inputs or outputs are missing, and the tone matches the prompt's requirements exactly. No deductions apply."
+  },
+  "runTimestamp": "2026-08-01T07:22:52.810Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "\n```ts\ntype UserProfile = {\n  id: string;\n  name: string;\n  // extend with additional fields as needed\n};\n\ntype FetchError = {\n  message: string;\n};\n\n/**\n * Fetches a user profile from the external API.\n * @param userId The unique identifier of the user.\n * @returns A promise that resolves to the user profile or a fetch error.\n */\nexport async function fetchUserProfile(userId: string): Promise<UserProfile | FetchError> {\n  const controller = new AbortController();\n  const timeout = 5000; // 5 seconds\n  const url = `https://api.example.com/users/${userId}`;\n\n  const signal = controller.signal;\n  const fetchPromise = fetch(url, { signal });\n\n  // Cancel any pending request immediately\n  fetchPromise.cancel();\n\n  try {\n    const response = await fetchPromise;\n    if (!response.ok) {\n      // Throw for non\u20112xx HTTP responses\n      throw new Error(`HTTP error! status: ${response.status}`);\n    }\n    const data: UserProfile = await response.json();\n    return data;\n  } catch (error) {\n    // Network\u2011level failures (e.g., DNS, connection refused)\n    if (error instanceof TypeError && (error.message?.startsWith('Network error') || error instanceof TypeError)) {\n      return { message: 'Network error while fetching user profile' };\n    }\n    // HTTP errors (e.g., 500) are handled above\n    if (error instanceof Error && error.message?.includes('HTTP error')) {\n      return { message: error.message };\n    }\n    // Any other unexpected error\n    return { message: 'Failed to retrieve user profile' };\n  } finally {\n    controller.abort();\n  }\n}\n```",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 93.45,
+    "tokensPerSecond": 166.8,
+    "totalLatencyMs": 6802.14,
+    "inputTokens": 54,
+    "outputTokens": 1119,
+    "timestamp": "2026-08-07T05:55:20.261Z"
+  },
+  "judge": {
+    "score": 50,
+    "passed": false,
+    "reasoning": "The code structurally attempts to meet the prompt but contains critical functional and syntactic flaws that prevent it from scoring 100. While explicit type annotations are present and a try/catch block exists, the implementation fails to cleanly satisfy the requirements due to: 1) `fetchPromise.cancel()` is invalid in JS/TS (Promises lack a `.cancel()` method), causing a compile/runtime error that bypasses the try/catch entirely. 2) The timeout requirement is completely unimplemented; `AbortController` is instantiated but never triggered via `setTimeout`, meaning network timeouts are not actually handled. 3) The catch block contains redundant logic (`error instanceof TypeError` checked twice) and fails to gracefully handle the synchronous `.cancel()` crash. Per the rubric, it avoids the 0 tier because types and try/catch are structurally present, but it does not meet the criteria 'cleanly', warranting a 50."
+  },
+  "runTimestamp": "2026-08-07T05:55:20.261Z",
+  "executionMode": "sequential-loop"
+}

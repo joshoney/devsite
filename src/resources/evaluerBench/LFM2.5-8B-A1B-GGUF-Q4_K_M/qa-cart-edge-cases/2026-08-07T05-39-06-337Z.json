@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "\n1. When the discounted cart total is exactly $50 (i.e., does not exceed the $50 threshold), the system must correctly apply the $10 shipping fee rather than granting free shipping.  \n\n2. When floating\u2011point arithmetic results in a total just below $50 (e.g., $49.999999999999996) due to rounding, the logic must still evaluate the \u201cexceeds $50\u201d condition accurately to avoid unintended free shipping.  \n\n3. When a discount code reduces the total to a value below $10, the rule that the $10 shipping fee is re\u2011applied must be enforced, and tax must be calculated on the discounted amount before any shipping charge is added.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 109.77,
+    "tokensPerSecond": 152.54,
+    "totalLatencyMs": 11497.08,
+    "inputTokens": 108,
+    "outputTokens": 1737,
+    "timestamp": "2026-08-07T05:39:06.337Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Judge model failed to evaluate: 401 Incorrect API key provided: not-need********ocal. You can find your API key at https://platform.openai.com/account/api-keys.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/MODEL_AUTHENTICATION/\n"
+  },
+  "runTimestamp": "2026-08-07T05:39:06.337Z",
+  "executionMode": "sequential-loop"
+}

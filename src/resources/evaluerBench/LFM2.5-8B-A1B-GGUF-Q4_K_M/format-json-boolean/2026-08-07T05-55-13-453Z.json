@@ -1,0 +1,29 @@
+{
+  "evalId": "format-json-boolean",
+  "evalName": "Strict JSON Boolean Response",
+  "category": "formatting",
+  "tags": [
+    "json",
+    "syntax",
+    "fast-path"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Return a valid JSON object with a single key \"ready\" set to boolean true. Do not include markdown formatting, backticks, or any conversational text. Output strictly JSON.\n",
+  "rawOutput": "\n{\n  \"ready\": true\n}",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 213.84,
+    "tokensPerSecond": 169.94,
+    "totalLatencyMs": 625.76,
+    "inputTokens": 45,
+    "outputTokens": 70,
+    "timestamp": "2026-08-07T05:55:13.453Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Regex evaluation against pattern /^\\{\\s*\"ready\"\\s*:\\s*true\\s*\\}$/i."
+  },
+  "runTimestamp": "2026-08-07T05:55:13.453Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "\nThe primary function of GPIO (General\u2011Purpose Input/Output) pins on an ESP32 is to provide digital interfaces that can be programmed as inputs (to sense voltage levels from sensors or switches) or outputs (to drive signals to loads). Each pin can be configured as either an input or an output, allowing the microcontroller to interact with external hardware such as buttons, LEDs, motors, and other peripheral devices.\n\nConfiguring a GPIO pin to read a push\u2011button:\n\n1. Choose a specific GPIO pin (e.g., GPIO23) and declare it as an input in the code.  \n2. In the setup routine, set the pin mode to INPUT (or use a library function that configures the pin accordingly).  \n3. In the loop, call a read function such as digitalRead(pin) to obtain the current voltage level.  \n4. Interpret the read value: a low reading (typically 0\u202fV) indicates the button is not pressed, while a high reading (typically 3.3\u202fV) indicates it is pressed.  \n5. Optionally add debouncing logic to filter out rapid toggling caused by mechanical bounce.  \n\nThis sequence allows the ESP32 to detect the physical state of the button and provide the corresponding digital information to the program.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 99.3,
+    "tokensPerSecond": 154.26,
+    "totalLatencyMs": 3392.54,
+    "inputTokens": 50,
+    "outputTokens": 508,
+    "timestamp": "2026-08-16T05:21:10.466Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output meets all criteria specified in the rubric. It correctly defines GPIO (General-Purpose Input/Output) and accurately describes its primary function. Regarding the configuration explanation, it explicitly states the need to set the pin mode to INPUT to read the state, which satisfies the rubric's requirement to explain the need to configure the pin as an INPUT (or variants). The technical details provided (voltage levels, debouncing, digitalRead) are accurate for the ESP32 platform. There are no hallucinations or significant inaccuracies."
+  },
+  "runTimestamp": "2026-08-16T05:21:10.466Z",
+  "executionMode": "sequential-loop"
+}

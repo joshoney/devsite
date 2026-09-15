@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "Qwen3.6-35B-A3B-GGUF-UD-Q6_K_XL",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "Here's a production-ready TypeScript implementation that meets all your requirements. It uses a **result union type** to safely handle errors without crashing, `AbortController` for precise timeout handling, and explicit type annotations throughout.\n\n```typescript\nexport interface UserProfile {\n  id: string;\n  name: string;\n  email: string;\n}\n\n// Explicit return type: either a successful profile or a structured error response\nexport type FetchUserProfileResult =\n  | { success: true; data: UserProfile }\n  | { success: false; error: string; code?: number };\n\nexport async function fetchUserProfile(userId: string): Promise<FetchUserProfileResult> {\n  const controller = new AbortController();\n  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout\n\n  try {\n    const response = await fetch(`https://api.example.com/users/${userId}`, {\n      signal: controller.signal,\n    });\n\n    clearTimeout(timeoutId);\n\n    // Explicitly handle 500 Internal Server Error\n    if (response.status === 500) {\n      return { success: false, error: 'Internal Server Error', code: 500 };\n    }\n\n    // Handle other HTTP errors\n    if (!response.ok) {\n      return { success: false, error: `HTTP ${response.status}: ${response.statusText}`, code: response.status };\n    }\n\n    const data: UserProfile = await response.json();\n    return { success: true, data };\n  } catch (error) {\n    clearTimeout(timeoutId);\n\n    // Handle network timeouts\n    if (error instanceof Error && error.name === 'AbortError') {\n      return { success: false, error: 'Request timed out', code: 408 };\n    }\n\n    // Handle network failures (DNS, offline, CORS, etc.)\n    if (error instanceof TypeError) {\n      return { success: false, error: 'Network error occurred', code: 0 };\n    }\n\n    // Fallback for unexpected errors\n    return {\n      success: false,\n      error: error instanceof Error ? error.message : 'An unexpected error occurred',\n      code: 500,\n    };\n  }\n}\n```\n\n### Key Design Choices:\n1. **Explicit Return Type**: `Promise<FetchUserProfileResult>` ensures callers always get a predictable shape, whether the request succeeds or fails.\n2. **Safe Error Handling**: Instead of throwing, the function returns a structured `{ success: false, error, code }` object. This prevents unhandled promise rejections and makes error handling predictable at the call site.\n3. **Timeout Handling**: `AbortController` + `setTimeout` is the modern, dependency-free standard for `fetch` timeouts. It cleanly aborts the request and throws an `AbortError` that we catch and map to a 408 status.\n4. **Explicit 500 Handling**: Checked immediately after `await fetch()` before parsing JSON, preventing unnecessary processing on server errors.\n5. **Type Safety**: All variables, parameters, and return values are explicitly typed. The `UserProfile` interface can be expanded to match your actual API schema.\n\n### Usage Example:\n```typescript\nasync function loadUser() {\n  const result = await fetchUserProfile('user-123');\n\n  if (result.success) {\n    console.log('Profile loaded:', result.data.name);\n  } else {\n    console.error(`Failed (${result.code}): ${result.error}`);\n  }\n}\n```",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 231.49,
+    "tokensPerSecond": 51.71,
+    "totalLatencyMs": 81103.61,
+    "inputTokens": 55,
+    "outputTokens": 4182,
+    "timestamp": "2026-08-01T07:09:02.998Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100\n\nEvaluation against rubric:\n1. **Valid TypeScript syntax with explicit type annotations**: The code uses correct, modern TypeScript syntax. Explicit types are provided for the function signature (`userId: string`, `Promise<FetchUserProfileResult>`), the return union type, the `UserProfile` interface, and internal variables (`data: UserProfile`).\n2. **try/catch block around the async operation**: The `fetch` call and subsequent `response.json()` parsing are properly wrapped in a `try/catch` block, satisfying the requirement.\n3. **Graceful error handling with meaningful typing**: The implementation correctly distinguishes between HTTP-level errors (like 500, which `fetch` resolves rather than throws) and runtime/network errors (caught via `try/catch`). Timeouts are handled via `AbortController` and caught as `AbortError`. All error paths return a consistently typed `FetchUserProfileResult` union, preventing unhandled rejections and providing clear, typed feedback to the caller.\n\nAll three rubric criteria are met cleanly. The implementation actually exceeds baseline expectations by correctly handling `fetch`'s non-throwing behavior for 5xx status codes while still using `try/catch` for network/runtime failures, resulting in a production-ready solution."
+  },
+  "runTimestamp": "2026-08-01T07:09:02.998Z",
+  "executionMode": "sequential-loop"
+}

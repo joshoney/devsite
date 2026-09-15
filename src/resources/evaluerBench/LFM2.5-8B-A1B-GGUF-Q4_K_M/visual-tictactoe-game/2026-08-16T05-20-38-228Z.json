@@ -1,0 +1,26 @@
+{
+  "evalId": "visual-tictactoe-game",
+  "evalName": "Standalone Tic-Tac-Toe Web App",
+  "category": "visual-demo",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "game",
+    "interactive"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "You are an automated HTML rendering engine. Output a complete, beautifully styled Tic-Tac-Toe game in a SINGLE standalone HTML document.\n\nRequirements:\n- All CSS and JavaScript must be embedded directly inside <style> and <script> tags within the HTML.\n- Use a modern, dark-mode visual aesthetic with clean typography and smooth hover transitions.\n- Include win/tie state detection and a \"Restart Game\" button.\n- STRICT FORMATTING: Do NOT return JSON, do NOT escape newline characters, and do NOT wrap your response in markdown code fences (```html). Your very first character must be '<' from <!DOCTYPE html> and your very last character must be '>'.\n",
+  "rawOutput": "",
+  "display_type": "html-iframe",
+  "metrics": {
+    "timeToFirstTokenMs": 121.83,
+    "tokensPerSecond": 153.05,
+    "totalLatencyMs": 18142.27,
+    "inputTokens": 158,
+    "outputTokens": 2758,
+    "timestamp": "2026-08-16T05:20:38.228Z"
+  },
+  "runTimestamp": "2026-08-16T05:20:38.228Z",
+  "executionMode": "sequential-loop"
+}

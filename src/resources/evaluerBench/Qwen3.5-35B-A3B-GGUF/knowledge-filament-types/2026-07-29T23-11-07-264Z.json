@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-filament-types",
+  "evalName": "3D Printing Filament Characteristics",
+  "category": "knowledge",
+  "tags": [
+    "3d-printing",
+    "materials",
+    "fabrication"
+  ],
+  "modelName": "Qwen3.5-35B-A3B-GGUF",
+  "prompt": "Compare PLA, ABS, and PETG filaments used in FDM 3D printing. Specifically, contrast their temperature requirements and bed adhesion characteristics.\n",
+  "rawOutput": "Here is a comparison of PLA, ABS, and PETG filaments, specifically focusing on their temperature requirements and bed adhesion characteristics.\n\n### 1. Temperature Requirements\n\nThe thermal properties of these materials dictate the hardware capabilities required for your printer and the environmental conditions needed for a successful print.\n\n| Feature | **PLA (Polylactic Acid)** | **ABS (Acrylonitrile Butadiene Styrene)** | **PETG (Polyethylene Terephthalate Glycol)** |\n| :--- | :--- | :--- | :--- |\n| **Nozzle Temp** | **Low:** 190\u00b0C \u2013 220\u00b0C | **High:** 230\u00b0C \u2013 260\u00b0C | **Medium:** 220\u00b0C \u2013 250\u00b0C |\n| **Bed Temp** | **Low/Optional:** 50\u00b0C \u2013 60\u00b0C (Can print without) | **High:** 90\u00b0C \u2013 110\u00b0C (Required) | **Medium:** 70\u00b0C \u2013 80\u00b0C (Required) |\n| **Enclosure** | Not required | **Highly Recommended** (Prevents warping) | Recommended (For stability) |\n| **Cooling** | High fan speed (100%) | Low fan speed (0% \u2013 20%) | Medium fan speed (50% \u2013 70%) |\n\n*   **PLA:** The easiest to print thermally. It flows well at lower temperatures and solidifies quickly. Because it does not require a high-temperature environment, it is safe to print in a standard room without an enclosure.\n*   **ABS:** Requires the highest heat. It is prone to thermal shock; if the top layers cool too quickly compared to the bottom layers, the part will warp. A heated enclosure is often necessary to maintain a consistent ambient temperature.\n*   **PETG:** Sits in the middle. It requires more heat than PLA to flow properly but less than ABS. However, it is sensitive to cooling; too much fan speed can cause layer delamination, while too little can cause stringing.\n\n### 2. Bed Adhesion Characteristics\n\nBed adhesion refers to how well the first layer sticks to the print surface and how easily the finished part can be removed.\n\n| Feature | **PLA** | **ABS** | **PETG** |\n| :--- | :--- | :--- | :--- |\n| **Natural Adhesion** | **Excellent.** Sticks aggressively to almost any surface. | **Poor.** Tends to lift at corners (warping) without assistance. | **Very Good.** Sticks strongly, often stronger than PLA. |\n| **Bed Surface Needs** | Glass, PEI, Tape, or BuildTak. | Glue stick, Hairspray, ABS Slurry, or PEI. | PEI, Glass (with masking tape), or BuildTak. |\n| **Removal Difficulty** | **Moderate.** Can be difficult to remove if the bed is too hot; may crack the print. | **Moderate.** Once cooled, it shrinks and pops off easily, but warping makes removal hard. | **High.** Can fuse to the bed permanently if the bed is too hot or the print is left to cool too long. |\n| **Warping Risk** | Low. | **High.** Significant shrinkage during cooling pulls corners up. | Low/Medium. |\n\n*   **PLA:** Adhesion is rarely a problem unless the bed is dirty. However, because it sticks so well, removing the print can sometimes damage the print surface (like a PEI sheet) if you try to pry it off while warm.\n*   **ABS:** Adhesion is the biggest challenge. Due to high thermal contraction, the edges curl up as the print cools. Users almost always need an adhesive medium (like a glue stick or hairspray) to bridge the gap between the plastic and the bed.\n*   **PETG:** This is the \"Goldilocks\" of adhesion but also the most finicky. It sticks so well that it can become difficult to remove without scratching the bed. If the bed temperature is too high, the first layer may fuse into the bed material. Conversely, if the bed is too cold, the print will not stick at all.\n\n### Summary of Trade-offs\n\n*   **Choose PLA** if you want **low temperature** and **easy adhesion**. It is the best choice for beginners and visual prototypes.\n*   **Choose ABS** if you need **high heat resistance** and durability, and you have the hardware (enclosure) to manage the **high temperature** and **adhesion challenges**.\n*   **Choose PETG** if you want a balance of **strength and ease of use**. It offers better adhesion than ABS and better heat resistance than PLA, but requires careful tuning to manage its tendency to stick too aggressively to the bed.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 230.05,
+    "tokensPerSecond": 56.85,
+    "totalLatencyMs": 35566.1,
+    "inputTokens": 41,
+    "outputTokens": 2009,
+    "timestamp": "2026-07-29T23:11:07.264Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output directly and comprehensively addresses every requirement in the grading rubric. It explicitly states that PLA requires the lowest temperatures and offers the easiest/most reliable bed adhesion. It correctly identifies that ABS demands high nozzle/bed temperatures and strongly recommends an enclosure to mitigate thermal shock and warping. It accurately positions PETG as a thermal middle ground while highlighting its notorious tendency to adhere too aggressively to glass beds, often making removal difficult or causing permanent bonding. The response is highly structured, factually accurate according to standard FDM 3D printing knowledge, and provides useful supplementary context (cooling fan settings, removal difficulty, warping risk) without straying from the prompt's focus. No factual errors or omissions were detected."
+  },
+  "runTimestamp": "2026-07-29T23:11:07.264Z",
+  "executionMode": "sequential-loop"
+}

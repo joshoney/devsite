@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "Qwen3.5-35B-A3B-GGUF",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "### Primary Function of GPIO Pins\n\n**GPIO** stands for **General Purpose Input/Output**. Their primary function is to serve as the digital interface between the ESP32 microcontroller and the external world.\n\nThese pins are versatile channels that can be programmed to perform two main roles:\n1.  **Input:** They can sense external electrical signals, reading voltage levels (typically 0V for \"Low\" or 3.3V for \"High\") from sensors, switches, or other devices.\n2.  **Output:** They can control external devices by setting a voltage level to drive components like LEDs, relays, or motors.\n\nEssentially, GPIO pins allow the ESP32 to \"talk\" to hardware by sending commands out or listening for signals coming in.\n\n***\n\n### Conceptual Configuration for a Push-Button\n\nTo configure a GPIO pin to read a physical push-button, you follow this logical flow:\n\n1.  **Hardware Setup:** Connect one side of the button to the chosen GPIO pin and the other side to Ground (GND).\n2.  **Set Mode:** In your software, configure that specific GPIO pin as an **Input**. This tells the ESP32 to listen for voltage changes on that pin rather than sending power out.\n3.  **Enable Pull-Up Resistor:** Activate the ESP32's **internal pull-up resistor**. This ensures the pin reads a stable \"High\" (1) voltage when the button is not pressed. Without this, the pin would \"float\" and give erratic readings.\n4.  **Read State:** When the button is pressed, it connects the pin to Ground, pulling the voltage to \"Low\" (0). Your code simply reads the pin value: a **0** indicates the button is pressed, while a **1** indicates it is released.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 1775.08,
+    "tokensPerSecond": 57.24,
+    "totalLatencyMs": 26967.6,
+    "inputTokens": 53,
+    "outputTokens": 1442,
+    "timestamp": "2026-07-29T23:08:54.250Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies the rubric. It correctly defines GPIO as General Purpose Input/Output and accurately describes its primary function as a bidirectional digital interface for reading and writing voltage levels. For the push-button configuration, it explicitly explains the need to set the pin mode to INPUT and correctly highlights the necessity of enabling an internal pull-up resistor to prevent floating states. The conceptual explanation of the logic (pressed = LOW/0, released = HIGH/1) is technically accurate for ESP32 architecture and matches the required scoring criteria exactly."
+  },
+  "runTimestamp": "2026-07-29T23:08:54.250Z",
+  "executionMode": "sequential-loop"
+}

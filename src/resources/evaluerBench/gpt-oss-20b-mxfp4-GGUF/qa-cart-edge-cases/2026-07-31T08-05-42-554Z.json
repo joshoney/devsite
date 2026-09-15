@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "1. **Total hits the exact $50 threshold after discount** \u2013 Apply a discount that brings the cart total to exactly\u202f$50.00. Verify that shipping is *not* waived (shipping fee should still be charged) and that tax is calculated on the $50.00 subtotal only.\n\n2. **Total falls just below $50 after discount** \u2013 Use a discount that reduces the cart total to $49.99 (or any value <\u202f$50). Confirm that the $10 shipping fee is re\u2011applied, that tax is still computed on the discounted subtotal, and that the shipping fee itself is not taxed.\n\n3. **Total is reduced to zero (or negative) by discount** \u2013 Apply a discount that brings the cart total to $0.00 (or a negative value). Check that the system still applies the $10 shipping fee, that no tax is charged on the zero subtotal, and that the shipping fee remains untaxed.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 231.66,
+    "tokensPerSecond": 74.45,
+    "totalLatencyMs": 11703.18,
+    "inputTokens": 164,
+    "outputTokens": 854,
+    "timestamp": "2026-07-31T08:05:42.554Z"
+  },
+  "judge": {
+    "score": 75,
+    "passed": true,
+    "reasoning": "The model correctly identifies two of the three rubric-specified edge cases (exact $50 threshold and $0/negative total) and formats them properly. However, it misses the third rubric requirement regarding the tax/threshold calculation order ambiguity, and Case 2 is functionally redundant with Case 1. The technical depth is solid but incomplete per the rubric."
+  },
+  "runTimestamp": "2026-07-31T08:05:42.554Z",
+  "executionMode": "sequential-loop"
+}

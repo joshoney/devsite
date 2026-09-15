@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "Qwen3.6-35B-A3B-GGUF-UD-Q6_K_XL",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "### Primary Function of GPIO Pins on an ESP32\nGPIO (General Purpose Input/Output) pins serve as the ESP32's programmable digital interface to the outside world. Their primary function is to allow the microcontroller to **read external voltage levels** (as inputs) or **drive external components** (as outputs) using standard 3.3V logic. Each pin can be dynamically reconfigured in software, and many support additional features like internal pull-up/pull-down resistors, interrupt triggering, and multiplexing with specialized peripherals (I2C, SPI, PWM, ADC, etc.). At their core, GPIO pins are the fundamental bridge between the ESP32's processor and physical hardware.\n\n### Conceptual Setup for Reading a Push-Button\nTo read a physical push-button, you'd follow these conceptual steps:\n\n1. **Wiring**: Connect one terminal of the button to the chosen GPIO pin and the other terminal to ground (GND).\n2. **Pin Configuration**: Set the pin mode to `INPUT` and enable the ESP32's **internal pull-up resistor**. This keeps the pin at a stable HIGH (3.3V) logic level when the button is unpressed.\n3. **State Detection**: When the button is pressed, it creates a low-resistance path to GND, pulling the pin voltage LOW. The ESP32 detects this HIGH\u2192LOW transition as a \"pressed\" state.\n4. **Signal Conditioning**: In practice, you'd apply a simple software debounce (e.g., ignoring rapid state changes within a ~20\u201350ms window) to filter out electrical noise caused by mechanical switch bounce.\n\nConceptually, you're using the pin as a voltage sensor that toggles between a known HIGH state (via the pull-up) and a defined LOW state (via the button to ground), allowing the firmware to reliably detect user input.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 261.35,
+    "tokensPerSecond": 53.11,
+    "totalLatencyMs": 28164.68,
+    "inputTokens": 53,
+    "outputTokens": 1482,
+    "timestamp": "2026-08-01T07:16:20.998Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output is technically accurate and fully satisfies the rubric. It correctly defines GPIO (General Purpose Input/Output) and accurately describes its primary function as a configurable digital interface for reading inputs and driving outputs at 3.3V logic. For the push-button configuration, it explicitly explains the necessity of setting the pin to `INPUT` mode and enabling an internal pull-up resistor, clearly detailing the HIGH-to-LOW logic transition when the button is pressed. The explanation is conceptually sound, free of hallucinations, and includes practical embedded systems considerations like debouncing, warranting a full score."
+  },
+  "runTimestamp": "2026-08-01T07:16:20.998Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "format-json-boolean",
+  "evalName": "Strict JSON Boolean Response",
+  "category": "formatting",
+  "tags": [
+    "json",
+    "syntax",
+    "fast-path"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Return a valid JSON object with a single key \"ready\" set to boolean true. Do not include markdown formatting, backticks, or any conversational text. Output strictly JSON.\n",
+  "rawOutput": "{\"ready\": true}",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 371.88,
+    "tokensPerSecond": 8.04,
+    "totalLatencyMs": 1118.12,
+    "inputTokens": 40,
+    "outputTokens": 6,
+    "timestamp": "2026-08-01T07:52:26.023Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^\\{\\s*\"ready\"\\s*:\\s*true\\s*\\}$/i."
+  },
+  "runTimestamp": "2026-08-01T07:52:26.023Z",
+  "executionMode": "sequential-loop"
+}

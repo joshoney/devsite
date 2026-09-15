@@ -1,0 +1,26 @@
+{
+  "evalId": "visual-tictactoe-game",
+  "evalName": "Standalone Tic-Tac-Toe Web App",
+  "category": "visual-demo",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "game",
+    "interactive"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "You are an automated HTML rendering engine. Output a complete, beautifully styled Tic-Tac-Toe game in a SINGLE standalone HTML document.\n\nRequirements:\n- All CSS and JavaScript must be embedded directly inside <style> and <script> tags within the HTML.\n- Use a modern, dark-mode visual aesthetic with clean typography and smooth hover transitions.\n- Include win/tie state detection and a \"Restart Game\" button.\n- STRICT FORMATTING: Do NOT return JSON, do NOT escape newline characters, and do NOT wrap your response in markdown code fences (```html). Your very first character must be '<' from <!DOCTYPE html> and your very last character must be '>'.\n",
+  "rawOutput": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Tic\u2011Tac\u2011Toe</title>\n<style>\nbody { margin:0; background:#1a1a2e; color:#e0e0e0; font-family:'Segoe UI',sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }\n.centered { position:relative; width:350px; text-align:center; }\n.board { display:grid; grid-template-columns:repeat(3,100px); gap:8px; margin:20px auto; border:2px solid #444; border-radius:8px; }\n.cell { width:100px; height:100px; display:flex; justify-content:center; align-items:center; font-size:2rem; font-weight:bold; transition:transform .2s; }\n.cell:not(.empty){ background:#444; }\n.cell:odd { background:#555; }\n.cell:even { background:#777; }\nbutton { padding:8px 16px; font-size:1rem; cursor:pointer; border:none; border-radius:4px; transition:opacity .2s; }\nbutton:active { opacity:0.8; }\nbutton:disabled { opacity:0.5; cursor:not-allowed; }\n#result { margin-bottom:20px; font-size:1.5rem; }\n#restart { margin-left:10px; padding:8px 16px; cursor:pointer; }\n</style>\n<script>\ndocument.addEventListener('DOMContentLoaded',()=>{\nconst board = document.querySelector('.board');\nconst cells = Array.from(document.querySelectorAll('.cell'));\nconst result = document.getElementById('result');\nconst restart = document.getElementById('restart');\n\nlet x, o;\nlet turn = 'x';\nlet gameActive = true;\nlet interval;\n\nfunction init() {\ncells.forEach(cell=>{cell.classList.remove('empty');});\nfunction winLines() {\nconst lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];\nconst winner = cells.find(i=>cells[i].value && cells[i].value===cells[i+1].value && cells[i+2].value);\nreturn winner;\n}\nfunction checkWin() {\nconst winner = winLines();\nif (winner){\nconst cell = cells.findIndex(el=>el.textContent===winner);\nboard.classList.add('winner');\nresult.textContent=`Winner: ${winner}`; gameActive=false;\nclearInterval(interval);\n}\n}\nfunction reset(){\nx=o=null; turn='x'; board.classList.remove('winner'); result.textContent=''; restart.disabled=false;\ninterval=setInterval(play,300);\n}\nfunction play(){\nconst cell = cells[turn];\ncell.classList.add('empty');\ncell.textContent=turn;\nconst winner = winLines();\nif (winner){\nresult.textContent=`Winner: ${winner}`; gameActive=false;\nclearInterval(interval);\n}\nelse if (cells.every(c=>c.classList.contains('empty'))){\nresult.textContent='It\\'s a tie!';\ngameActive=false;\nclearInterval(interval);\n}\nelse {\nturn='o' if turn==='x' else 'x';\ncell.textContent='';\nconst btn = document.querySelector('.controls button');\nbtn.disabled=false;\n}\ninterval=setInterval(play,300);\nreset();\n}\nreset();\n</script>\n<div class=\"centered\">\n<h2>Tic\u2011Tac\u2011Toe</h2>\n<div class=\"controls\">\n<button id='xBtn'>X</button>\n<button id='oBtn'>O</button>\n<button id='restart'>Restart</button>\n</div>\n<div class='board'>\n</div>\n<div id='result'></div>\n</div>\n</body>\n</html>\n>",
+  "display_type": "html-iframe",
+  "metrics": {
+    "timeToFirstTokenMs": 120.88,
+    "tokensPerSecond": 161.52,
+    "totalLatencyMs": 18001.5,
+    "inputTokens": 158,
+    "outputTokens": 2888,
+    "timestamp": "2026-08-07T05:38:01.907Z"
+  },
+  "runTimestamp": "2026-08-07T05:38:01.907Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "# Edge Cases for E-Commerce Cart Business Logic\n\n1. **Cart total is exactly $50.00 before discount, and a 100% discount code is applied** \u2014 This should result in a total of $0.00 (or $10.00 with shipping re-applied), not free shipping, since the discounted total drops below the $50 threshold. The system must correctly re-apply shipping when the post-discount total falls under $50.\n\n2. **Cart total is $49.99 before any discount, and a discount code reduces the total to exactly $50.00** \u2014 This should *not* qualify for free shipping because the original pre-discount total was below $50. The free shipping rule is based on the pre-discount cart total, so the $10 shipping fee must still be applied regardless of the post-discount amount.\n\n3. **Cart total is $50.00 before discount, a 5% discount code is applied (reducing total to $47.50), and then the user removes an item that brings the pre-discount total to $49.99** \u2014 This tests whether the shipping recalculation triggers correctly on a *dynamic cart change* after a discount has already been applied, not just on initial code application. The system must re-evaluate both the discount eligibility and the free shipping threshold in real-time.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 678.57,
+    "tokensPerSecond": 6.69,
+    "totalLatencyMs": 45499.9,
+    "inputTokens": 105,
+    "outputTokens": 300,
+    "timestamp": "2026-08-01T08:21:12.023Z"
+  },
+  "judge": {
+    "score": 55,
+    "passed": false,
+    "reasoning": "The model follows the requested format and provides exactly three numbered edge cases. However, technical validity and rubric alignment are significantly lacking:\n\n1. **Case 1** is strong. It correctly identifies the $50.00 boundary and the $0.00/negative total scenario, aligning well with rubric points 1 and 2.\n2. **Case 2** contains a critical logical error. The model claims free shipping is based on the *pre-discount* total, which directly contradicts the prompt's explicit rule: \"If a discount code drops the total below $50, the $10 shipping fee is re-applied.\" This implies the threshold check occurs on the *post-discount* amount. Misinterpreting core business rules severely impacts QA validity.\n3. **Case 3** tests dynamic state changes, which is a valid QA practice, but it does not address the specific logical conflict highlighted in the rubric regarding tax calculation order. Furthermore, it drifts from testing the stated business logic into testing UI/state management behavior.\n\n**Rubric Alignment:** The model completely misses the third rubric requirement: testing the order of operations between the 10% tax calculation and the $50 free shipping threshold. The prompt states tax is applied \"after discounts but before shipping,\" but does not specify whether the $50 threshold is evaluated against the pre-tax or post-tax subtotal. A robust QA response would flag this ambiguity as a critical edge case.\n\nOverall, only 1 of 3 cases is technically sound and rubric-aligned. The logical contradiction in Case 2 and the omission of the tax/shipping interaction significantly reduce the score."
+  },
+  "runTimestamp": "2026-08-01T08:21:12.023Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "constraint-no-digits",
+  "evalName": "Math without Digits",
+  "category": "constraints",
+  "tags": [
+    "instruction-following",
+    "formatting",
+    "negative-constraint"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "List the first five prime numbers.\n\nNEGATIVE CONSTRAINT: You are strictly forbidden from using any numerical digits (0-9) in your output.\n",
+  "rawOutput": "two, three, five, seven, eleven",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 145.45,
+    "tokensPerSecond": 75.33,
+    "totalLatencyMs": 1765.01,
+    "inputTokens": 97,
+    "outputTokens": 122,
+    "timestamp": "2026-07-31T08:05:30.849Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^[^0-9]+$/i."
+  },
+  "runTimestamp": "2026-07-31T08:05:30.849Z",
+  "executionMode": "sequential-loop"
+}

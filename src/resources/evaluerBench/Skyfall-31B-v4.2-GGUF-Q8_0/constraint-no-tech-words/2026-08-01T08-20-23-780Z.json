@@ -1,0 +1,29 @@
+{
+  "evalId": "constraint-no-tech-words",
+  "evalName": "Explain ML without Tech Words",
+  "category": "constraints",
+  "tags": [
+    "instruction-following",
+    "vocabulary",
+    "negative-constraint"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Explain the basic concept of machine learning in two sentences. \n\nNEGATIVE CONSTRAINT: You must NOT use the words \"data\", \"model\", \"algorithm\", or \"computer\" anywhere in your response. \n",
+  "rawOutput": "Machine learning is the process of enabling systems to learn patterns from experience without being explicitly programmed every step of the way. It allows these systems to improve their performance on tasks over time by identifying relationships and making better predictions or decisions as they encounter more situations.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 381.32,
+    "tokensPerSecond": 6.81,
+    "totalLatencyMs": 7867.51,
+    "inputTokens": 51,
+    "outputTokens": 51,
+    "timestamp": "2026-08-01T08:20:23.780Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^(?!.*\\b(data|model|algorithm|computer)\\b).*$/i."
+  },
+  "runTimestamp": "2026-08-01T08:20:23.780Z",
+  "executionMode": "sequential-loop"
+}

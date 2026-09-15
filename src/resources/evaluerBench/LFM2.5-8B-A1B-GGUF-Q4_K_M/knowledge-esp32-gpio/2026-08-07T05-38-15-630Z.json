@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "\nThe primary function of the GPIO (General\u2011Purpose Input/Output) pins on an ESP32 is to provide digital input and output capabilities. Each pin can be programmed to act as an input that detects voltage levels from external devices (such as a push\u2011button, sensor, or another microcontroller) or as an output that drives signals to loads (like LEDs, motors, or other ESP32 pins).\n\nTo configure a GPIO pin to read the state of a physical push\u2011button:\n\n1. Declare the pin as an input in the project (e.g., using the pin_mode function with the INPUT direction).  \n2. In the main code, call a read function for that pin (such as digitalRead) to obtain a HIGH or LOW value, indicating the button\u2019s position.  \n3. Optionally add a simple debounce routine to filter out brief, noisy transitions before reporting the button state.  \n\nThis sequence allows the ESP32 to sense when the button is pressed or released and respond accordingly.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 98.02,
+    "tokensPerSecond": 160.4,
+    "totalLatencyMs": 2903.54,
+    "inputTokens": 50,
+    "outputTokens": 450,
+    "timestamp": "2026-08-07T05:38:15.630Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Judge model failed to evaluate: 401 Incorrect API key provided: not-need********ocal. You can find your API key at https://platform.openai.com/account/api-keys.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/MODEL_AUTHENTICATION/\n"
+  },
+  "runTimestamp": "2026-08-07T05:38:15.630Z",
+  "executionMode": "sequential-loop"
+}

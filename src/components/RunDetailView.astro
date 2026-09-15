@@ -1,14 +1,15 @@
 ---
-import { getAllRuns } from '../utils/evaluerBench';
+import { getModelGroups } from '../utils/evaluerBench';
 
 interface Props {
-	runId?: string;
+	model?: string;
 }
 
-const { runId } = Astro.props;
-const allRuns = getAllRuns();
-const defaultRun = allRuns.find(r => r.runId === runId) || allRuns[0];
-const safeRunsJson = JSON.stringify(allRuns).replace(/</g, '\\u003c');
+const { model } = Astro.props;
+const allModels = getModelGroups();
+const defaultModel = allModels.find(m => m.modelName === model) || allModels[0];
+const defaultResults = Object.values(defaultModel?.evaluations || {}).map(e => e.latestAttempt);
+const safeModelsJson = JSON.stringify(allModels).replace(/</g, '\\u003c');
 
 function formatDate(isoString: string) {
 	try {
@@ -36,21 +37,26 @@ function formatDate(isoString: string) {
 					<span class="lcars-tag amber">RUN TELEMETRY</span>
 					<a id="runTraceBtn" class="trace-action-btn disabled" target="_blank" title="No trace available for this legacy run">VIEW TRACE</a>
 				</div>
-				<h2 id="runModelName">{defaultRun?.meta?.modelName || 'Unknown Model'}</h2>
-				<span class="run-id-sub" id="runIdDisplay">{defaultRun?.runId}</span>
+				<h2 id="runModelName">{defaultModel?.modelName || 'Unknown Model'}</h2>
+				<span class="run-id-sub" id="runIdDisplay">{defaultModel?.totalEvals} EVALS COMPLETED</span>
 			</div>
 			<div class="header-meta-group">
 				<div class="meta-item">
-					<span class="m-label">TIMESTAMP</span>
-					<span class="m-val" id="runTimestamp">{formatDate(defaultRun?.meta?.timestamp || '')}</span>
+					<span class="m-label">LATEST EVAL</span>
+					<span class="m-val" id="runTimestamp">
+						{defaultResults.length > 0 
+							? formatDate(Math.max(...defaultResults.map(r => new Date(r.runTimestamp || r.metrics?.timestamp || 0).getTime())).toString())
+							: 'N/A'
+						}
+					</span>
 				</div>
 				<div class="meta-item">
-					<span class="m-label">EXECUTION MODE</span>
-					<span class="m-val" id="runExecutionMode">{defaultRun?.meta?.executionMode || 'sequential-loop'}</span>
+					<span class="m-label">OVERALL TPS</span>
+					<span class="m-val" id="runExecutionMode">{defaultModel?.avgTokensPerSecond}</span>
 				</div>
 				<div class="meta-item">
-					<span class="m-label">ERRORS</span>
-					<span class="m-val" id="runErrorCount">{defaultRun?.meta?.errorCount || 0}</span>
+					<span class="m-label">OVERALL TTFT</span>
+					<span class="m-val" id="runErrorCount">{defaultModel?.avgTimeToFirstTokenMs} ms</span>
 				</div>
 			</div>
 		</div>
@@ -59,26 +65,26 @@ function formatDate(isoString: string) {
 		<div class="run-telemetry-grid">
 			<div class="t-card pass-card">
 				<span class="t-label">PASS RATE</span>
-				<span class="t-val" id="runPassRate">{defaultRun?.summary?.passRatePercentage || 0}%</span>
-				<span class="t-sub" id="runPassCount">{defaultRun?.results?.filter(r => r.judge?.passed).length || 0} / {defaultRun?.results?.length || 0} Passed</span>
+				<span class="t-val" id="runPassRate">{defaultModel?.passRatePercentage || 0}%</span>
+				<span class="t-sub" id="runPassCount">{defaultResults.filter(r => r.judge?.passed).length || 0} / {defaultResults.length || 0} Passed</span>
 			</div>
 
 			<div class="t-card speed-card">
 				<span class="t-label">AVG GENERATION SPEED</span>
-				<span class="t-val" id="runAvgTps">{defaultRun?.summary?.averageTokensPerSecond || 0} t/s</span>
+				<span class="t-val" id="runAvgTps">{defaultModel?.avgTokensPerSecond || 0} t/s</span>
 				<span class="t-sub">Tokens per second</span>
 			</div>
 
 			<div class="t-card ttft-card">
 				<span class="t-label">AVG TIME TO FIRST TOKEN</span>
-				<span class="t-val" id="runAvgTtft">{defaultRun?.summary?.averageTimeToFirstTokenMs || 0} ms</span>
+				<span class="t-val" id="runAvgTtft">{defaultModel?.avgTimeToFirstTokenMs || 0} ms</span>
 				<span class="t-sub">TTFT Latency</span>
 			</div>
 
 			<div class="t-card token-card">
 				<span class="t-label">TOTAL OUTPUT TOKENS</span>
 				<span class="t-val" id="runTotalTokens">
-					{defaultRun?.results?.reduce((sum, r) => sum + (r.metrics?.outputTokens || 0), 0) || 0}
+					{defaultResults.reduce((sum, r) => sum + (r.metrics?.outputTokens || 0), 0) || 0}
 				</span>
 				<span class="t-sub">Generated across evals</span>
 			</div>
@@ -104,11 +110,11 @@ function formatDate(isoString: string) {
 	</div>
 </div>
 
-<script id="runDetailData" type="application/json" set:html={safeRunsJson}></script>
-<script>
+<script id="runDetailData" type="application/json" set:html={safeModelsJson}></script>
+<script is:inline>
 	(function() {
 		const dataEl = document.getElementById('runDetailData');
-		const runsData = dataEl ? JSON.parse(dataEl.textContent) : [];
+		const modelsData = dataEl ? JSON.parse(dataEl.textContent) : [];
 
 		let activeFilter = 'all';
 
@@ -154,22 +160,31 @@ function formatDate(isoString: string) {
 			const filterPillsContainer = document.getElementById('filterPillsContainer');
 
 			const params = new URLSearchParams(window.location.search);
-			const runId = params.get('runId') || (runsData[0] ? runsData[0].runId : '');
+			const model = params.get('model') || (modelsData[0] ? modelsData[0].modelName : '');
 
-				const run = runsData.find((r) => r.runId === runId) || runsData[0];
-				if (!run) return;
+				const modelData = modelsData.find((m) => m.modelName === model) || modelsData[0];
+				if (!modelData) return;
+
+				const results = Object.values(modelData.evaluations || {}).map(e => e.latestAttempt);
 
 				// 1. Update Header Telemetry
-				if (runModelName) runModelName.textContent = run.meta?.modelName || 'Unknown Model';
-				if (runIdDisplay) runIdDisplay.textContent = run.runId || '';
-				if (runTimestamp) runTimestamp.textContent = formatDate(run.meta?.timestamp);
-				if (runExecutionMode) runExecutionMode.textContent = run.meta?.executionMode || 'sequential-loop';
-				if (runErrorCount) runErrorCount.textContent = `${run.meta?.errorCount || 0}`;
+				if (runModelName) runModelName.textContent = modelData.modelName || 'Unknown Model';
+				if (runIdDisplay) runIdDisplay.textContent = `${modelData.totalEvals} EVALS COMPLETED`;
+				
+				if (runTimestamp) {
+					runTimestamp.textContent = results.length > 0 
+						? formatDate(Math.max(...results.map(r => new Date(r.runTimestamp || r.metrics?.timestamp || 0).getTime())).toString())
+						: 'N/A';
+				}
+				
+				if (runExecutionMode) runExecutionMode.textContent = `${modelData.avgTokensPerSecond}`;
+				if (runErrorCount) runErrorCount.textContent = `${modelData.avgTimeToFirstTokenMs} ms`;
 
 				if (runTraceBtn) {
-					const traceUrl = run.meta?.traceUrl || run.traceUrl;
-					if (traceUrl) {
-						runTraceBtn.href = traceUrl;
+					// We might have multiple traces, link to the first one for now or disable
+					const firstTrace = results.find(r => r.traceUrl)?.traceUrl;
+					if (firstTrace) {
+						runTraceBtn.href = firstTrace;
 						runTraceBtn.classList.remove('disabled');
 						runTraceBtn.title = 'View LangSmith Trace';
 					} else {
@@ -179,21 +194,13 @@ function formatDate(isoString: string) {
 					}
 				}
 
-				const results = run.results || [];
-				const judgedResults = results.filter((r) => r.hasJudge || (r.judge && r.judge.score !== undefined));
 				const passedCount = results.filter((r) => r.judge?.passed).length;
 				const totalOutputTokens = results.reduce((acc, r) => acc + (r.metrics?.outputTokens || 0), 0);
 
-				const computedPassRate = run.summary?.passRatePercentage !== null && run.summary?.passRatePercentage !== undefined
-					? run.summary.passRatePercentage
-					: (judgedResults.length > 0 ? Math.round((passedCount / judgedResults.length) * 100) : 0);
-
-				if (runPassRate) runPassRate.textContent = `${computedPassRate}%`;
-				if (runPassCount) runPassCount.textContent = judgedResults.length > 0
-					? `${passedCount} / ${judgedResults.length} Passed`
-					: `${results.length} Tests (Unjudged)`;
-				if (runAvgTps) runAvgTps.textContent = `${run.summary?.averageTokensPerSecond || 0} t/s`;
-				if (runAvgTtft) runAvgTtft.textContent = `${run.summary?.averageTimeToFirstTokenMs || 0} ms`;
+				if (runPassRate) runPassRate.textContent = `${modelData.passRatePercentage || 0}%`;
+				if (runPassCount) runPassCount.textContent = `${passedCount} / ${results.length} Passed`;
+				if (runAvgTps) runAvgTps.textContent = `${modelData.avgTokensPerSecond || 0} t/s`;
+				if (runAvgTtft) runAvgTtft.textContent = `${modelData.avgTimeToFirstTokenMs || 0} ms`;
 				if (runTotalTokens) runTotalTokens.textContent = `${totalOutputTokens.toLocaleString()}`;
 
 				// 2. Filter Results
@@ -228,7 +235,7 @@ function formatDate(isoString: string) {
 
 				filteredResults.forEach((res, index) => {
 					const isPass = res.judge?.passed;
-					const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
+					const hasJudge = res.hasJudge || (res.judge && !res.judge.reasoning.includes("No automated judge evaluation recorded"));
 					const isVisual = res.display_type === 'html-iframe' || res.evalId.startsWith('visual-');
 
 					const cardEl = document.createElement('details');
@@ -273,7 +280,7 @@ function formatDate(isoString: string) {
 								${isVisual && res.artifactUrl ? `
 									<div class="m-box visual-box">
 										<div class="lcars-split-btn">
-											<button class="launch-artifact-btn main-split" data-url="${res.artifactUrl}" data-title="${escapeHtml(res.evalName)}" data-model="${escapeHtml(run.meta?.modelName)}">
+											<button class="launch-artifact-btn main-split" data-url="${res.artifactUrl}" data-title="${escapeHtml(res.evalName)}" data-model="${escapeHtml(modelData.modelName)}">
 												⚡ LAUNCH VISUAL APP
 											</button>
 											<a href="${res.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">

@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "### Primary Function of GPIO Pins on an ESP32\nGPIO (General Purpose Input/Output) pins on an ESP32 serve as flexible, software-configurable digital interfaces that bridge the microcontroller and external hardware. Their core purpose is to allow each pin to be dynamically assigned as either a **digital input** (reading voltage levels from switches, sensors, or other devices) or a **digital output** (driving LEDs, relays, or sending control signals). While many ESP32 GPIO pins also support specialized functions like analog reading, PWM, or communication protocols (I2C, SPI, UART), their foundational role is to provide a programmable, bidirectional digital I/O channel. *(Note: ESP32 GPIOs operate at 3.3V logic and are generally not 5V-tolerant.)*\n\n### Conceptual Configuration for Reading a Push-Button\nTo read a physical push-button, you'd follow these conceptual steps:\n\n1. **Set Pin Mode & Bias:** Configure the chosen GPIO as a digital input and enable the ESP32's internal pull-up resistor. This internally connects the pin to 3.3V through a high-value resistor, holding it at a stable `HIGH` state when idle.\n2. **Hardware Wiring:** Connect one side of the button to the GPIO pin and the other side to `GND`. When unpressed, the pull-up keeps the pin `HIGH`. When pressed, the button creates a low-resistance path to ground, pulling the pin `LOW`.\n3. **Software Reading:** Read the pin's digital state in your code. `HIGH` = button released, `LOW` = button pressed. You can poll this state in a loop or trigger an interrupt on state change.\n4. **Debouncing:** Mechanical buttons generate rapid electrical noise when contacts close. Add a short software delay or a state-filtering routine to ignore this \"bounce,\" ensuring each physical press registers as exactly one clean digital event.\n\nThis approach leverages the ESP32's built-in pull-ups, minimizes external components, and follows standard digital input design principles.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 546.63,
+    "tokensPerSecond": 11.79,
+    "totalLatencyMs": 142841.2,
+    "inputTokens": 53,
+    "outputTokens": 1678,
+    "timestamp": "2026-07-30T07:32:26.534Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\n**Evaluation against Rubric:**\n- **GPIO Definition:** The model explicitly defines GPIO as \"General Purpose Input/Output\" and accurately describes its foundational role as a software-configurable, bidirectional digital interface between the ESP32 and external hardware.\n- **Configuration Explanation:** The response directly addresses the rubric requirement by explaining the need to configure the pin as a digital input and specifically recommends enabling the internal pull-up resistor (`INPUT_PULLUP`). It clearly articulates the electrical behavior (idle HIGH, pressed LOW via GND connection) and correctly notes ESP32-specific constraints (3.3V logic, non-5V tolerance).\n- **Technical Accuracy & Completeness:** The conceptual steps are technically sound, covering pin mode setup, hardware wiring, software state reading, and mechanical debouncing. No hallucinations or inaccuracies are present. The explanation is concise, directly answers both parts of the prompt, and fully satisfies the scoring criteria for a complete, accurate response."
+  },
+  "runTimestamp": "2026-07-30T07:32:26.534Z",
+  "executionMode": "sequential-loop"
+}

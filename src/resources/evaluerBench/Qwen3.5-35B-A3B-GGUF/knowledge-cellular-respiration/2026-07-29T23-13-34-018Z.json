@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "Qwen3.5-35B-A3B-GGUF",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "Here is an explanation of cellular respiration designed for a high school student.\n\n### What is Cellular Respiration?\n\nThink of your body like a high-performance car. To run, the car needs fuel (gasoline). To run, your cells need fuel too. That fuel is **glucose** (sugar from the food you eat).\n\nHowever, cells can't just burn sugar like a fire. They need a controlled way to extract the energy stored in the chemical bonds of glucose. That energy is packaged into a molecule called **ATP** (Adenosine Triphosphate).\n\n**Cellular respiration** is the process cells use to break down glucose and convert it into ATP. It is essentially how your cells \"breathe\" to get energy.\n\n---\n\n### The Big Picture: The Chemical Equation\n\nThe entire process can be summarized by this chemical equation. If you memorize this, you understand the core of the topic:\n\n$$C_6H_{12}O_6 + 6O_2 \\rightarrow 6CO_2 + 6H_2O + \\text{Energy (ATP)}$$\n\n**In plain English:**\nGlucose + Oxygen $\\rightarrow$ Carbon Dioxide + Water + Energy\n\n---\n\n### Primary Inputs and Outputs\n\nHere is the breakdown of what goes in and what comes out.\n\n| **Inputs (Reactants)** | **Outputs (Products)** |\n| :--- | :--- |\n| **1. Glucose ($C_6H_{12}O_6$)** | **1. Carbon Dioxide ($CO_2$)** |\n| *The sugar fuel from food.* | *The waste gas you exhale.* |\n| **2. Oxygen ($O_2$)** | **2. Water ($H_2O$)** |\n| *The gas you breathe in.* | *Water produced as a byproduct.* |\n| | **3. ATP (Energy)** |\n| | *The usable energy for the cell.* |\n\n---\n\n### The 3 Stages of the Process\n\nCellular respiration happens in three main steps. It is mostly an **aerobic** process, meaning it requires oxygen.\n\n#### 1. Glycolysis (\"Sugar Splitting\")\n*   **Where:** Cytoplasm (the jelly-like fluid inside the cell).\n*   **What happens:** One molecule of glucose (6 carbons) is split into two smaller molecules called pyruvate (3 carbons each).\n*   **Energy:** This step produces a small amount of ATP.\n*   **Note:** This step does **not** require oxygen.\n\n#### 2. The Krebs Cycle (Citric Acid Cycle)\n*   **Where:** Mitochondria (specifically the matrix).\n*   **What happens:** The pyruvate enters the mitochondria. It is broken down further.\n*   **Energy:** This releases carbon dioxide (which you breathe out) and creates electron carriers that will be used in the next step. It produces a little more ATP.\n\n#### 3. Electron Transport Chain (ETC)\n*   **Where:** Inner membrane of the Mitochondria.\n*   **What happens:** This is the \"power plant.\" The electron carriers from the previous steps drop off their electrons. These electrons move through a chain of proteins, creating a flow of energy.\n*   **The Role of Oxygen:** Oxygen is the \"final acceptor.\" It waits at the end of the chain to catch the electrons and combine with hydrogen to form **water**. Without oxygen, this chain stops.\n*   **Energy:** This step produces the **vast majority** of the ATP (about 32-34 molecules per glucose).\n\n---\n\n### Why is this important?\n\n1.  **Survival:** Without ATP, your cells cannot function. You couldn't move your muscles, think, or keep your heart beating.\n2.  **Breathing:** When you exercise and breathe harder, your body is trying to get more **Oxygen** to your cells so they can run the Electron Transport Chain faster and make more ATP.\n3.  **Waste:** The **Carbon Dioxide** you exhale is actually the waste product of this process.\n\n### Summary\n*   **Goal:** Make ATP (Energy).\n*   **Fuel:** Glucose + Oxygen.\n*   **Waste:** Carbon Dioxide + Water.\n*   **Location:** Mostly inside the **Mitochondria**.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 234.51,
+    "tokensPerSecond": 56.87,
+    "totalLatencyMs": 35892.01,
+    "inputTokens": 39,
+    "outputTokens": 2028,
+    "timestamp": "2026-07-29T23:13:34.018Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output perfectly aligns with the grading rubric. It correctly identifies all required inputs (glucose and oxygen) and outputs (ATP/energy, carbon dioxide, and water). The explanation is structured clearly, uses an appropriate analogy (car/fuel), breaks down the chemical equation into plain English, and maintains an accessible, educational tone ideal for a high school student. No elements are missing, and the scientific accuracy is appropriate for the target audience. Therefore, it earns a full score."
+  },
+  "runTimestamp": "2026-07-29T23:13:34.018Z",
+  "executionMode": "sequential-loop"
+}

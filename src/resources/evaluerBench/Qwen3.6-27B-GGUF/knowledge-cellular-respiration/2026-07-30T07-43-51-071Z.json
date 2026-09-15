@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "### What is Cellular Respiration?\n\nThink of your body like a car. To drive, the car needs gas. To live, move, and think, your cells need energy. **Cellular respiration** is the process your cells use to convert the food you eat into a usable form of energy.\n\nWhile we \"breathe\" air into our lungs, our cells \"breathe\" at a microscopic level to release energy from food.\n\n### The Primary Inputs and Outputs\n\nYou can think of this process like a chemical recipe.\n\n**The Inputs (What goes in):**\n*   **Glucose ($C_6H_{12}O_6$):** This is sugar, derived from the food you eat (carbohydrates). It is the fuel.\n*   **Oxygen ($O_2$):** This is the air you breathe in. It is required to burn the fuel efficiently.\n\n**The Outputs (What comes out):**\n*   **ATP (Adenosine Triphosphate):** This is the \"energy currency\" of the cell. It is the usable energy that powers everything your body does.\n*   **Carbon Dioxide ($CO_2$):** A waste product that you exhale.\n*   **Water ($H_2O$):** A byproduct of the reaction.\n\n**The Chemical Equation:**\n$$C_6H_{12}O_6 + 6O_2 \\rightarrow 6CO_2 + 6H_2O + \\text{Energy (ATP)}$$\n\n---\n\n### The Process: Three Main Stages\n\nCellular respiration happens mostly inside the **mitochondria** (often called the \"powerhouse\" of the cell). It occurs in three main steps:\n\n#### 1. Glycolysis (The Split)\n*   **Location:** Cytoplasm (the fluid outside the mitochondria).\n*   **What happens:** The cell takes one molecule of glucose and splits it in half.\n*   **Result:** This releases a small amount of energy (ATP) and creates smaller molecules that are ready for the next stage.\n\n#### 2. The Krebs Cycle (The Breakdown)\n*   **Location:** Inside the mitochondria.\n*   **What happens:** The split glucose molecules are broken down further.\n*   **Result:** This releases Carbon Dioxide (which you breathe out) and captures more energy carriers to be used in the final step.\n\n#### 3. The Electron Transport Chain (The Payoff)\n*   **Location:** The inner membrane of the mitochondria.\n*   **What happens:** This is where the magic happens. The energy carriers from the previous steps are used to create a massive amount of ATP. Oxygen is used here to accept electrons, turning into water.\n*   **Result:** This step produces the vast majority of the cell's energy.\n\n### Summary\nIn short, cellular respiration is the process of taking **Glucose** and **Oxygen**, breaking them down through three stages, and turning them into **ATP** (energy), **Carbon Dioxide**, and **Water**. Without this process, your cells would have no power to function.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 532.51,
+    "tokensPerSecond": 11.79,
+    "totalLatencyMs": 146224.32,
+    "inputTokens": 39,
+    "outputTokens": 1717,
+    "timestamp": "2026-07-30T07:43:51.071Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies all rubric criteria. It correctly and explicitly identifies the primary inputs (glucose/sugar and oxygen) and outputs (ATP/energy, carbon dioxide, and water). The explanation is structured logically, uses clear analogies (car/gas, chemical recipe), and maintains an accessible, educational tone perfectly suited for a high school audience. The breakdown of the three main stages is scientifically accurate yet appropriately simplified. No elements are missing or incorrect, warranting a full score."
+  },
+  "runTimestamp": "2026-07-30T07:43:51.071Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "gemma-4-26B-A4B-it-GGUF-UD-Q4_K_XL",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "1. **The Exact Boundary Case ($50.00):** Test a cart where the subtotal is exactly $50.00. Since the logic states shipping is free only if the total *exceeds* $50, the system must correctly apply the $10 shipping fee. This ensures the \"greater than\" vs. \"greater than or equal to\" logic is implemented correctly.\n\n2. **The Discount-to-Threshold Transition:** Test a scenario where a user applies a discount code to a cart that was previously eligible for free shipping (e.g., a $55.00 subtotal), bringing the new total to exactly $50.00 or just below it (e.g., $49.99). This verifies that the system successfully triggers the \"re-applied\" shipping fee logic once the discount is active.\n\n3. **The Zero-Dollar Subtotal:** Test a scenario where a discount code reduces the subtotal to exactly $0.00. This ensures the system correctly calculates $0.00 in tax (10% of $0) and correctly applies the $10.00 shipping fee, rather than failing due to a null value or incorrectly applying tax to the shipping fee.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 298.96,
+    "tokensPerSecond": 47.14,
+    "totalLatencyMs": 36449.81,
+    "inputTokens": 120,
+    "outputTokens": 1704,
+    "timestamp": "2026-07-31T05:03:22.622Z"
+  },
+  "judge": {
+    "score": 80,
+    "passed": true,
+    "reasoning": "The model correctly followed the formatting instructions and provided three distinct, technically sound edge cases. It successfully addressed two of the three rubric expectations: the exact $50.00 boundary condition (Case 1) and the $0.00/negative subtotal scenario (Case 3). The explanations are clear, use appropriate QA terminology, and correctly identify potential implementation pitfalls (e.g., strict inequality vs. inclusive, null/zero handling). However, the model missed the third rubric expectation: testing the order of operations ambiguity regarding whether the $50 free shipping threshold is evaluated against the pre-tax or post-tax amount. This is a critical logical conflict in e-commerce pricing engines that a senior QA engineer would typically flag. The omission prevents a perfect score, but the overall technical depth and validity of the provided cases remain strong."
+  },
+  "runTimestamp": "2026-07-31T05:03:22.622Z",
+  "executionMode": "sequential-loop"
+}

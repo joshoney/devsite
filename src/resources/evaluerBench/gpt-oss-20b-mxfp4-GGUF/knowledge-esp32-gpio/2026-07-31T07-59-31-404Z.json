@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "**Primary function of ESP32 GPIO pins**\n\nThe ESP32\u2019s General\u2011Purpose Input/Output (GPIO) pins are the interface between the chip and the outside world.  \n* They can be driven high or low (output) or read as high or low (input).  \n* They support a variety of peripheral functions (UART, I\u00b2C, SPI, PWM, ADC, DAC, touch, etc.) through multiplexing.  \n* In software you simply configure a pin\u2019s mode (input, output, or one of the peripheral functions) and then write to or read from it.\n\n---\n\n### Reading a push\u2011button with a GPIO pin \u2013 conceptual steps\n\n1. **Choose a free GPIO** (e.g., GPIO\u202f12).  \n2. **Connect the button**  \n   * One side to the chosen GPIO.  \n   * The other side to ground (or to VCC, depending on pull\u2011up/down choice).  \n3. **Configure the pin as an input**  \n   * In the ESP32 SDK (e.g., ESP-IDF or Arduino) set the pin mode to `INPUT`.  \n4. **Enable an internal pull\u2011up or pull\u2011down resistor**  \n   * If the button connects the pin to ground when pressed, enable the internal **pull\u2011up** so the pin reads HIGH when the button is open and LOW when pressed.  \n   * Conversely, if the button connects the pin to VCC when pressed, enable the internal **pull\u2011down**.  \n5. **Read the pin state**  \n   * In your loop or interrupt, call `digitalRead(GPIO_NUM_12)` (Arduino) or `gpio_get_level(GPIO_NUM_12)` (ESP-IDF).  \n   * HIGH \u2192 button released, LOW \u2192 button pressed (or vice\u2011versa, depending on pull configuration).  \n6. **Optional \u2013 debounce**  \n   * Add a small delay or a software debounce routine to avoid false triggers from mechanical bounce.\n\nThat\u2019s all\u2014once the pin is set as an input with the appropriate pull resistor, the ESP32 can detect the button\u2019s state simply by reading the digital level on that GPIO.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 192.63,
+    "tokensPerSecond": 74.73,
+    "totalLatencyMs": 8302.11,
+    "inputTokens": 108,
+    "outputTokens": 606,
+    "timestamp": "2026-07-31T07:59:31.404Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies the rubric. It explicitly defines GPIO as 'General-Purpose Input/Output' and accurately describes its primary function as the digital interface between the microcontroller and external circuits. For the push-button configuration, it clearly explains the necessity of setting the pin to `INPUT` mode and correctly details the role of internal pull-up/pull-down resistors to establish a known default state. The conceptual steps are technically accurate for the ESP32 architecture, reference appropriate SDK functions, and correctly address logic levels and debouncing. No hallucinations or inaccuracies are present."
+  },
+  "runTimestamp": "2026-07-31T07:59:31.404Z",
+  "executionMode": "sequential-loop"
+}

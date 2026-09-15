@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "# Cellular Respiration: A Simple Breakdown\n\n## What Is It?\n\nCellular respiration is the process your cells use to **convert the food you eat into usable energy**. Think of it as your body's way of \"burning\" glucose (sugar) to power everything you do \u2014 from thinking to running to even breathing.\n\n---\n\n## The Big Picture\n\nAt its simplest, the process can be summarized as:\n\n> **Glucose + Oxygen \u2192 Carbon Dioxide + Water + Energy (ATP)**\n\nThat's it! Your cells take in glucose and oxygen, break them down, and release carbon dioxide and water as waste products while capturing energy along the way.\n\n---\n\n## The Three Main Stages\n\n### 1. **Glycolysis** (Literally: \"sugar splitting\")\n- **Where:** Cytoplasm (the fluid inside the cell)\n- **What happens:** One molecule of glucose (6 carbons) is split into two smaller molecules (each 3 carbons).\n- **Energy gained:** A small amount of ATP (the cell's energy currency) and NADH (a helper molecule that carries energy).\n- **Key point:** This stage happens **without oxygen** and is the only stage that occurs in *every* living cell, even bacteria.\n\n### 2. **The Krebs Cycle** (Also called the Citric Acid Cycle)\n- **Where:** Mitochondria (the \"powerhouses\" of the cell)\n- **What happens:** The smaller molecules from glycolysis are further broken down, step by step. Carbon atoms are stripped away and released as **carbon dioxide**.\n- **Energy gained:** More ATP, NADH, and another energy carrier called FADH\u2082.\n- **Key point:** This is like the \"assembly line\" where the bulk of the carbon is removed and energy is collected.\n\n### 3. **Electron Transport Chain (ETC) & Oxidative Phosphorylation**\n- **Where:** Inner membrane of the mitochondria\n- **What happens:** The NADH and FADH\u2082 from earlier stages donate their energy to a chain of protein pumps. As electrons travel down this chain, they spin a molecular \"turbine\" (like a rotor) that produces the **majority of your ATP** \u2014 roughly 34 out of the ~36\u201338 total ATP molecules.\n- **Key point:** This is where **oxygen** plays its critical role. Oxygen acts as the \"final electron acceptor\" at the end of the chain. Without it, the whole chain backs up and the process stops.\n\n---\n\n## Primary Inputs and Outputs\n\n| | Inputs | Outputs |\n|---|---|---|\n| **Molecules** | Glucose (C\u2086H\u2081\u2082O\u2086) & Oxygen (O\u2082) | Carbon Dioxide (CO\u2082) & Water (H\u2082O) |\n| **Energy** | Chemical energy stored in glucose bonds | ATP (usable energy) + Heat |\n\n---\n\n## Why This Matters\n\n- This is essentially the **reverse** of photosynthesis (plants make glucose and oxygen; you use them up and release CO\u2082 and water).\n- Your body produces roughly **30\u201338 ATP molecules** from each glucose molecule \u2014 enough to power your cells for a short time.\n- When you exercise intensely and your muscles burn, it's often because they're running out of oxygen and switching to a less efficient backup process called **anaerobic respiration** (fermentation), which produces **lactic acid** instead of CO\u2082 and water.\n\nIn short: cellular respiration is how your body turns lunch into life.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 311.14,
+    "tokensPerSecond": 6.67,
+    "totalLatencyMs": 110693.58,
+    "inputTokens": 31,
+    "outputTokens": 736,
+    "timestamp": "2026-08-01T08:18:12.091Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\n**Evaluation against Rubric:**\n- **Inputs & Outputs:** Correctly and explicitly identifies all required elements. Inputs (glucose/sugar and oxygen) and outputs (ATP/energy, carbon dioxide, and water) are clearly stated in the opening chemical equation and reinforced in a dedicated summary table.\n- **Tone & Accessibility:** The explanation maintains an accessible, educational tone perfectly suited for a high school audience. Complex biochemical pathways are simplified using clear analogies (e.g., \"molecular turbine,\" \"assembly line,\" \"powerhouses\") and organized with logical headings, bullet points, and concise stage breakdowns.\n- **Process Explanation:** Accurately covers the three core stages (glycolysis, Krebs cycle, electron transport chain) with correct cellular locations, key functions, and relative energy yields, without overwhelming the reader with unnecessary biochemical jargon.\n- **Rubric Compliance:** Meets every specified criterion. All required inputs and outputs are present and scientifically accurate. No deductions are warranted.\n\n**Final Verdict:** Perfect score. The response is scientifically sound, well-structured, and precisely calibrated to the requested audience and requirements."
+  },
+  "runTimestamp": "2026-08-01T08:18:12.091Z",
+  "executionMode": "sequential-loop"
+}

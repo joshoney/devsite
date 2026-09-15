@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "\n\n1. **Boundary case where the discounted total equals $50 (or $50.01)** \u2013 verifies that shipping is free only when the total *exceeds* $50 and is correctly re\u2011applied when the total is $50 or less.  \n\n2. **No discount (or a discount that provides no net benefit) with a pre\u2011discount total below $50** \u2013 ensures the system applies the $10 shipping fee after tax as specified.  \n\n3. **Discount code that reduces the total to less than $10** \u2013 tests that tax is calculated on the minimal discounted subtotal and that the $10 shipping fee is still added after tax.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 117.43,
+    "tokensPerSecond": 152.75,
+    "totalLatencyMs": 19233.74,
+    "inputTokens": 108,
+    "outputTokens": 2920,
+    "timestamp": "2026-08-16T05:25:27.369Z"
+  },
+  "judge": {
+    "score": 60,
+    "passed": false,
+    "reasoning": "The model's output is partially correct but fails to meet the specific technical depth required by the rubric and the prompt's request for 'edge cases'.\n\n1. **Rubric Point 1 ($50 Boundary):** The model correctly identifies the boundary condition at $50 in Case 1. This is a strong point.\n2. **Rubric Point 2 (Negative/$0 Total):** Case 3 addresses low totals ('less than $10'), which is close to the rubric's requirement for 'negative or $0', but lacks the specificity of testing the $0 or negative state explicitly.\n3. **Rubric Point 3 (Tax vs. Threshold Order):** The model fails to identify the critical ambiguity in the business logic regarding whether the $50 free shipping threshold is calculated before or after tax is applied. This is a significant logical gap that a QA engineer should flag. The model assumes the threshold is on the discounted subtotal without testing the alternative.\n4. **Edge Case Validity:** Case 2 ('No discount... with pre-discount total below $50') is a standard validation scenario, not an edge case. The prompt explicitly requested three distinct *edge cases*. Including a standard path reduces the technical depth score.\n\nOverall, while the formatting is correct and Case 1 is valid, the model misses the critical ambiguity regarding tax/threshold interaction and includes a non-edge case, resulting in a moderate score."
+  },
+  "runTimestamp": "2026-08-16T05:25:27.369Z",
+  "executionMode": "sequential-loop"
+}

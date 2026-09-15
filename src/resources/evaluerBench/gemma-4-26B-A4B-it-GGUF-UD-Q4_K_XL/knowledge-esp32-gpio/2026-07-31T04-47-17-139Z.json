@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "gemma-4-26B-A4B-it-GGUF-UD-Q4_K_XL",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "### Primary Function of GPIO Pins\n\n**GPIO** stands for **General Purpose Input/Output**. As the name suggests, these pins are \"general purpose\" because they do not have a single, fixed function assigned by the hardware. Instead, their behavior is defined by the programmer through software.\n\nThe primary functions can be divided into two categories:\n\n1.  **Input Mode:** The microcontroller \"listens\" to the electrical state of the pin. It detects whether the voltage is **HIGH** (typically 3.3V on an ESP32) or **LOW** (0V/Ground). This is used to read data from sensors, switches, or other digital devices.\n2.  **Output Mode:** The microcontroller \"sends\" a voltage to the pin. It can drive the pin **HIGH** to turn on an LED or a relay, or **LOW** to turn it off.\n\nBeyond simple High/Low digital signals, ESP32 GPIOs are highly versatile and can be configured for specialized tasks like **PWM** (to dim LEDs or control motors), **ADC** (to read varying analog voltages), and communication protocols like **I2C, SPI, or UART**.\n\n---\n\n### Conceptual Configuration: Reading a Push-Button\n\nTo read a physical push-button, you are essentially turning a GPIO pin into a **Digital Input**. However, there is a specific electrical challenge you must address: **Floating Pins.**\n\n#### 1. The Problem: Floating States\nIf you connect a button to a pin and nothing is happening, the pin is \"floating.\" In this state, the pin isn't connected to anything, so it acts like a tiny antenna, picking up electromagnetic noise from the air. The ESP32 might randomly report the button as \"pressed\" or \"not pressed\" even when you aren't touching it.\n\n#### 2. The Solution: Pull-up or Pull-down Resistors\nTo prevent floating, you must ensure the pin has a \"default\" state when the button is *not* being pressed. \n\n*   **Pull-up Configuration (Most Common):** You use a resistor to connect the pin to the 3.3V supply. This \"pulls\" the voltage up to a steady **HIGH** state by default. When you press the button, it completes a path to **Ground**, forcing the pin to **LOW**.\n*   **The ESP32 Advantage:** The ESP32 has built-in **internal pull-up resistors**. This means you don't need to solder an extra physical resistor to your breadboard; you can simply tell the software to activate the internal one.\n\n#### 3. The Logical Workflow\nTo implement this, your logic follows these three steps:\n\n1.  **Initialization:** In your code, you define a specific GPIO pin and set its mode to `INPUT_PULLUP`. This tells the ESP32: *\"Make this pin an input, and internally connect it to 3.3V so it stays HIGH by default.\"*\n2.  **Polling/Reading:** You write a loop that constantly asks the microcontroller: *\"What is the current state of this pin?\"* (using a command like `digitalRead`).\n3.  **Interpretation:** You apply \"inverted\" logic in your code. Because you used a pull-up resistor:\n    *   If `digitalRead` returns **HIGH**, the button is **NOT pressed**.\n    *   If `digitalRead` returns **LOW**, the button **IS pressed**.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 280.92,
+    "tokensPerSecond": 47.58,
+    "totalLatencyMs": 28843.48,
+    "inputTokens": 58,
+    "outputTokens": 1359,
+    "timestamp": "2026-07-31T04:47:17.139Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies the prompt and grading rubric. It correctly defines GPIO as General Purpose Input/Output, accurately describes its primary functions (digital input/output, plus specialized modes like PWM/ADC/communication protocols), and provides a clear, conceptual explanation of configuring a pin to read a push-button. It explicitly addresses the need to configure the pin as an INPUT (specifically `INPUT_PULLUP`), explains the electrical rationale (preventing floating states), correctly notes the ESP32's internal pull-up resistors, and accurately describes the inverted logic required when reading the button state. All technical details are accurate for the ESP32 architecture, with no hallucinations or misleading information. Therefore, it earns a perfect score."
+  },
+  "runTimestamp": "2026-07-31T04:47:17.139Z",
+  "executionMode": "sequential-loop"
+}

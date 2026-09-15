@@ -1,0 +1,29 @@
+{
+  "evalId": "constraint-no-digits",
+  "evalName": "Math without Digits",
+  "category": "constraints",
+  "tags": [
+    "instruction-following",
+    "formatting",
+    "negative-constraint"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "List the first five prime numbers.\n\nNEGATIVE CONSTRAINT: You are strictly forbidden from using any numerical digits (0-9) in your output.\n",
+  "rawOutput": "The first five prime numbers are two, three, five, seven, and eleven.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 475.14,
+    "tokensPerSecond": 11.83,
+    "totalLatencyMs": 70906.72,
+    "inputTokens": 40,
+    "outputTokens": 833,
+    "timestamp": "2026-07-30T07:52:53.269Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^[^0-9]+$/i."
+  },
+  "runTimestamp": "2026-07-30T07:52:53.269Z",
+  "executionMode": "sequential-loop"
+}

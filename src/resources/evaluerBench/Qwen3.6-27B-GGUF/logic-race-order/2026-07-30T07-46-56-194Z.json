@@ -1,0 +1,29 @@
+{
+  "evalId": "logic-race-order",
+  "evalName": "Sequential Race Logic",
+  "category": "logic",
+  "tags": [
+    "reasoning",
+    "puzzle",
+    "strict-formatting"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "Alice finished a race before Bob, but behind Charlie. Dave finished after Bob. Eve finished exactly in the middle of the pack. \n\nDetermine the exact finishing order of all five runners.\nOutput ONLY a comma-separated list of the names from first place to last place. Do not include any other text or punctuation.\n",
+  "rawOutput": "Charlie, Alice, Eve, Bob, Dave",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 691.69,
+    "tokensPerSecond": 11.81,
+    "totalLatencyMs": 108999.16,
+    "inputTokens": 74,
+    "outputTokens": 1279,
+    "timestamp": "2026-07-30T07:46:56.194Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Exact match evaluation: Expected \"Charlie, Alice, Eve, Bob, Dave\", got \"Charlie, Alice, Eve, Bob, Dave\"."
+  },
+  "runTimestamp": "2026-07-30T07:46:56.194Z",
+  "executionMode": "sequential-loop"
+}

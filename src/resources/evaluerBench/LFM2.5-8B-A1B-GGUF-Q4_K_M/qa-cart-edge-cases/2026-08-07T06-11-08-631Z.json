@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "\n1. A discount code reduces the cart total to exactly $50 (or $49.999\u2026 due to rounding), testing whether the system correctly distinguishes between \u201cexceeds $50\u201d and \u201cbelow or equal to $50\u201d for free\u2011shipping eligibility.  \n\n2. A discount code brings the subtotal just above $50 after rounding, while the system\u2019s rounding logic incorrectly treats it as below $50, revealing a boundary\u2011condition bug in the free\u2011shipping rule.  \n\n3. A discount code drops the subtotal just below $50 after rounding, but the system\u2019s tax calculation applies the 10\u202f% tax to the discounted subtotal (not including the re\u2011applied shipping fee), exposing an edge case in how tax is computed relative to shipping.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 166.32,
+    "tokensPerSecond": 152.83,
+    "totalLatencyMs": 20561.97,
+    "inputTokens": 108,
+    "outputTokens": 3117,
+    "timestamp": "2026-08-07T06:11:08.631Z"
+  },
+  "judge": {
+    "score": 55,
+    "passed": false,
+    "reasoning": "The model correctly follows the formatting instructions and identifies one strong boundary condition (Case 1). However, Case 2 is redundant with Case 1, focusing on rounding without introducing a distinct logical conflict. Case 3 mischaracterizes an explicitly stated rule as an edge case and fails to identify the actual order-of-operations ambiguity (whether the $50 threshold is evaluated pre-tax or post-tax). The model also completely misses the negative/$0 discount scenario outlined in the rubric. Overall, only 1 of the 3 expected edge case categories is addressed with technical precision."
+  },
+  "runTimestamp": "2026-08-07T06:11:08.631Z",
+  "executionMode": "sequential-loop"
+}

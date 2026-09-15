@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "1. **Exact $50 Boundary Condition:** Test a cart with a post-discount total of exactly $50.00 to verify strict inequality handling (\"exceeds $50\"), ensuring the $10 shipping fee is correctly applied at $50.00 and only waived at $50.01 or higher.\n\n2. **Tax Rounding & Fractional Cents:** Test discounted subtotals that produce non-terminating decimals when calculating 10% tax (e.g., a $33.33 discounted total yields $3.333 tax) to verify consistent rounding behavior and prevent off-by-one cent errors in the final order total.\n\n3. **Shipping Threshold Evaluation Basis:** Test a scenario where the post-discount subtotal is below $50, but adding the 10% tax pushes the intermediate total to $50 or above, to verify whether the free shipping threshold is evaluated against the pre-tax discounted amount or the post-tax amount, as the stated logic sequence does not explicitly define this boundary.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 641.41,
+    "tokensPerSecond": 11.76,
+    "totalLatencyMs": 231926.85,
+    "inputTokens": 113,
+    "outputTokens": 2720,
+    "timestamp": "2026-07-30T07:56:45.200Z"
+  },
+  "judge": {
+    "score": 95,
+    "passed": true,
+    "reasoning": "The model successfully followed all formatting constraints (numbered list, exactly three items) and demonstrated strong QA engineering expertise. Case 1 directly addresses the $50 boundary condition from the rubric. Case 3 correctly identifies the logical ambiguity in the order of operations relative to the shipping threshold, matching rubric point #3. Case 2 substitutes the rubric's suggested $0/negative discount scenario with a highly relevant floating-point/rounding edge case, which is technically valid and common in e-commerce systems. The explanations for each case clearly define the test scenario, expected behavior, and rationale, showing high technical depth."
+  },
+  "runTimestamp": "2026-07-30T07:56:45.200Z",
+  "executionMode": "sequential-loop"
+}

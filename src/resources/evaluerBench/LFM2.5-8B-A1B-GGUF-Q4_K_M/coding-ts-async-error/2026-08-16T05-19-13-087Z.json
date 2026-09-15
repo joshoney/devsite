@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "\n```ts\ntype UserProfile = {\n  id: string;\n  name: string;\n  // extend with additional fields as needed\n};\n\ntype FetchError = {\n  message: string;\n};\n\n/**\n * Fetches a user profile from the external API.\n * @param userId The unique identifier of the user.\n * @returns A promise that resolves to the user profile or a fetch error.\n */\nexport async function fetchUserProfile(userId: string): Promise<UserProfile | FetchError> {\n  const controller = new AbortController();\n  const timeout = 5000; // 5 seconds\n\n  const url = `https://api.example.com/users/${userId}`;\n\n  const signal = controller.signal;\n  const fetchPromise = fetch(url, { signal });\n\n  // Cancel any pending request immediately\n  fetchPromise.cancel();\n\n  try {\n    const response = await fetchPromise;\n    if (!response.ok) {\n      throw new Error(`HTTP error! status: ${response.status}`);\n    }\n    const data: UserProfile = await response.json();\n    return data;\n  } catch (error) {\n    // Network\u2011level failure (e.g., DNS, connection refused)\n    if (error instanceof TypeError && (error.message?.includes('Network error') || error instanceof TypeError)) {\n      return { message: 'Network error while fetching user profile' };\n    }\n    // Server error (status 500)\n    if (error instanceof Error && (error.message?.startsWith('HTTP error!') || error.message?.includes('status')) {\n      return { message: 'Server error (500)' };\n    }\n    // Re\u2011throw unexpected errors\n    throw error;\n  } finally {\n    controller.abort();\n  }\n}\n```",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 89.1,
+    "tokensPerSecond": 154.74,
+    "totalLatencyMs": 7204.16,
+    "inputTokens": 54,
+    "outputTokens": 1101,
+    "timestamp": "2026-08-16T05:19:13.087Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "The code fails the rubric due to syntax errors and invalid method calls, resulting in a score of 0.\n\n1. **Syntax Error**: The second `if` statement inside the `catch` block is missing a closing parenthesis before the opening brace `{`. Specifically: `if (error instanceof Error && (error.message?.startsWith('HTTP error!') || error.message?.includes('status')) {` lacks the final `)` to close the initial `if (`.\n2. **Invalid Method Call**: The code calls `fetchPromise.cancel()`. The `fetch` API returns a `Promise<Response>`, which does not have a `cancel` method. Cancellation is handled via the `AbortController`'s `abort()` method.\n3. **Incomplete Timeout Logic**: While a `timeout` variable is defined, it is never used to trigger the `AbortController`. The requirement to handle network timeouts is not functionally implemented.\n4. **Rubric Compliance**: The rubric explicitly states 'Score 0 if syntax is invalid'. Since the code contains a syntax error preventing compilation, it cannot receive a higher score regardless of the type annotations or try/catch structure."
+  },
+  "runTimestamp": "2026-08-16T05:19:13.087Z",
+  "executionMode": "sequential-loop"
+}

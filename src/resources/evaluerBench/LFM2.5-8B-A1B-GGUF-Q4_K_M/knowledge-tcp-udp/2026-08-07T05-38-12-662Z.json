@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "\n**Fundamental Differences Between TCP and UDP:**\n\n1. **Connection Orientation:**  \n   - **TCP** is connection-oriented, requiring a three-way handshake (SYN, SYN-ACK, ACK) to establish a reliable connection.  \n   - **UDP** is connectionless, operating without establishing a connection, making it faster to initiate.\n\n2. **Reliability:**  \n   - **TCP** guarantees reliable delivery through acknowledgments, retransmissions, and flow/congestion control.  \n   - **UDP** does not guarantee delivery, order, or protection against duplication, making it inherently unreliable.\n\n3. **Ordering and Sequencing:**  \n   - **TCP** ensures packets are received in the exact order they were sent.  \n   - **UDP** sends packets independently, and reordering is left to the application.\n\n4. **Latency and Overhead:**  \n   - **TCP** introduces higher latency due to acknowledgment delays and retransmissions.  \n   - **UDP** has lower latency and minimal overhead, as it avoids connection setup and reduces protocol complexity.\n\n5. **Use Cases for Reliability vs. Performance:**  \n   - TCP excels in scenarios where data integrity and order are critical (e.g., web browsing, email).  \n   - UDP prioritizes speed and efficiency, suitable for applications where minor packet loss or delay is acceptable.\n\n**When to Choose UDP Over TCP:**\n\nDevelopers explicitly opt for UDP in scenarios where:\n\n- **Real-Time Interactivity is Critical:** Applications like online gaming, video conferencing, or live streaming where low latency is essential, and minor delays or packet loss are tolerable.  \n- **Broadcasting or Multicasting:** Sending data to multiple recipients simultaneously (e.g., live TV, IoT sensor networks) without requiring individual acknowledgments.  \n- **Low Overhead is Desired:** Use cases with constrained bandwidth or resources where TCP\u2019s header overhead and connection management are inefficient (e.g., DNS queries, VoIP).  \n- **Application-Level Reliability Handling:** When the application can manage reliability, such as custom protocols for telemetry, chat systems, or real-time data streams where retransmission is handled internally.  \n- **Order Does Not Matter:** Scenarios where packet order is irrelevant (e.g., sensor data collection, game state updates).\n\n**Example Use Cases:**  \n- Live video streaming (e.g., YouTube, Twitch).  \n- Online multiplayer games (e.g., Fortnite, League of Legends).  \n- VoIP (e.g., Zoom, Discord).  \n- Real-time collaborative tools (e.g., Google Docs, video conferencing).  \n\nIn contrast, TCP is chosen when data integrity, order, and reliability are non-negotiable, such as in file transfers (FTP), web browsing (HTTP), or email (SMTP).",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 82.65,
+    "tokensPerSecond": 159.81,
+    "totalLatencyMs": 10751.68,
+    "inputTokens": 35,
+    "outputTokens": 1705,
+    "timestamp": "2026-08-07T05:38:12.662Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Judge model failed to evaluate: 401 Incorrect API key provided: not-need********ocal. You can find your API key at https://platform.openai.com/account/api-keys.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/MODEL_AUTHENTICATION/\n"
+  },
+  "runTimestamp": "2026-08-07T05:38:12.662Z",
+  "executionMode": "sequential-loop"
+}

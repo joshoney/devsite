@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "Qwen3-Coder-Next-GGUF",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "### Fundamental Differences Between TCP and UDP\n\n| Feature | **TCP (Transmission Control Protocol)** | **UDP (User Datagram Protocol)** |\n|--------|------------------------------------------|----------------------------------|\n| **Connection Type** | Connection-oriented: Requires a handshake (SYN \u2192 SYN-ACK \u2192 ACK) before data transfer. | Connectionless: No connection setup; sends datagrams independently. |\n| **Reliability** | Reliable: Guarantees delivery via acknowledgments, retransmissions, and error-checking. | Unreliable: No delivery guarantees; packets may be lost, duplicated, or arrive out of order. |\n| **Ordering** | Ensures in-order delivery using sequence numbers. | No ordering; datagrams may arrive in any order or not at all. |\n| **Flow Control** | Uses sliding window for flow control (prevents sender from overwhelming receiver). | No built-in flow control; application must handle if needed. |\n| **Congestion Control** | Implements congestion avoidance (e.g., slow start, congestion window). | No congestion control; can flood the network (though RFC 4340 added some rate control). |\n| **Header Size** | 20\u201360 bytes (variable, due to options). | Fixed 8 bytes (simpler, lower overhead). |\n| **Overhead** | Higher due to reliability, ordering, and control mechanisms. | Lower; minimal overhead makes it faster and more efficient for small/real-time data. |\n| **Use Cases** | Web browsing (HTTP/HTTPS), email (SMTP, IMAP), file transfer (FTP), databases. | Real-time media (VoIP, video streaming), online gaming, DNS, IoT sensor data, broadcasting/multicasting. |\n\n---\n\n### When Would a Developer Choose UDP Over TCP?\n\nA developer explicitly chooses **UDP** when:\n\n\u2705 **Low latency is more critical than reliability**  \n\u2192 E.g., real-time voice/video (VoIP, Zoom, Twitch): A few lost packets cause minor quality degradation, but retransmitting them would cause unacceptable delay or jitter.\n\n\u2705 **Stateless or idempotent operations**  \n\u2192 E.g., DNS queries: A client sends a query and expects a single response; if lost, it simply retries (often with TCP fallback if UDP fails). Retransmission logic is handled at the application layer.\n\n\u2705 **Broadcasting or multicasting**  \n\u2192 UDP supports one-to-many communication efficiently (e.g., network discovery, live TV streaming to multiple clients). TCP only supports point-to-point.\n\n\u2705 **Lightweight, high-throughput applications**  \n\u2192 E.g., IoT sensor networks sending periodic telemetry: Small, frequent updates where occasional loss is acceptable, and minimizing overhead (CPU, battery, bandwidth) matters.\n\n\u2705 **Custom reliability mechanisms at the application layer**  \n\u2192 E.g., game engines implement their own packet retransmission, ordering, or prediction (like QUIC does over UDP). This allows fine-grained control over trade-offs (e.g., prioritizing newer game state over old ones).\n\n> \ud83d\udca1 **Rule of thumb**:  \n> Use **TCP** when *data integrity and completeness* matter (e.g., downloading a file, sending a payment).  \n> Use **UDP** when *speed and timeliness* matter more than perfection (e.g., live gameplay, real-time analytics, streaming).\n\nNote: Modern protocols like **QUIC** (used by HTTP/3) run over UDP to combine the benefits of both\u2014avoiding TCP\u2019s head-of-line blocking while enabling built-in encryption and multiplexing.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 307.24,
+    "tokensPerSecond": 47.01,
+    "totalLatencyMs": 15856.28,
+    "inputTokens": 33,
+    "outputTokens": 731,
+    "timestamp": "2026-07-31T07:00:58.024Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\n**Evaluation against Rubric:**\n- **TCP/UDP Identification:** The model accurately and explicitly identifies TCP as connection-oriented and reliable, and UDP as connectionless and faster (lower overhead). The comparison table correctly details all fundamental differences, including reliability mechanisms, ordering, flow/congestion control, and header overhead.\n- **UDP Use Case:** The model provides multiple valid, well-explained scenarios where a developer would explicitly choose UDP, including real-time media (VoIP/video streaming), online gaming, DNS, broadcasting/multicasting, and IoT telemetry. This fully satisfies the rubric's requirement.\n- **Factual Accuracy:** All technical claims are correct. The trade-offs (latency vs. reliability, application-layer retransmission, head-of-line blocking) are precisely described and align with standard networking principles. The mention of QUIC/HTTP3 is factually accurate and adds relevant modern context.\n\nThe response is technically precise, well-structured, and completely fulfills all prompt and rubric requirements. No deductions apply."
+  },
+  "runTimestamp": "2026-07-31T07:00:58.024Z",
+  "executionMode": "sequential-loop"
+}

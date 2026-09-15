@@ -26,40 +26,29 @@ export interface EvalItem {
 	judge: EvalJudge;
 	artifactFilename?: string;
 	artifactUrl?: string;
-}
-
-export interface RunMeta {
-	modelName: string;
-	timestamp: string;
-	executionMode: string;
-	totalTests: number;
-	errorCount: number;
+	runTimestamp?: string;
+	executionMode?: string;
 	traceUrl?: string;
 }
 
-export interface RunSummary {
-	averageTokensPerSecond: number;
-	averageTimeToFirstTokenMs: number;
-	passRatePercentage: number;
-}
-
-export interface BenchmarkRun {
-	runId: string;
-	meta: RunMeta;
-	summary: RunSummary;
-	results: EvalItem[];
-	systemErrors?: any[];
-	traceUrl?: string;
+export interface ModelEvalHistory {
+	evalId: string;
+	evalName: string;
+	category: string;
+	tags: string[];
+	attempts: EvalItem[];
+	latestAttempt: EvalItem;
 }
 
 export interface ModelGroup {
 	modelName: string;
-	latestRun: BenchmarkRun;
-	runs: BenchmarkRun[];
+	evaluations: Record<string, ModelEvalHistory>;
+	
+	// Aggregated metrics across latest attempts
 	avgTokensPerSecond: number;
 	avgTimeToFirstTokenMs: number;
 	passRatePercentage: number;
-	totalRunsCount: number;
+	totalEvals: number;
 }
 
 export interface MatrixColumn {
@@ -76,13 +65,13 @@ export interface MatrixCell {
 }
 
 export interface MatrixRow {
-	runId: string;
 	modelName: string;
-	timestamp: string;
-	isLatest: boolean;
-	summary: RunSummary;
+	summary: {
+		averageTokensPerSecond: number;
+		averageTimeToFirstTokenMs: number;
+		passRatePercentage: number;
+	};
 	cells: Record<string, MatrixCell>;
-	traceUrl?: string;
 }
 
 export interface MatrixCategoryGroup {
@@ -108,158 +97,130 @@ export interface ComparisonEvalPair {
 }
 
 export interface ComparisonData {
-	runA: BenchmarkRun;
-	runB: BenchmarkRun;
+	modelA: ModelGroup;
+	modelB: ModelGroup;
 	tpsDelta: number;
 	ttftDelta: number;
 	passRateDelta: number;
 	evalPairs: ComparisonEvalPair[];
 }
 
-// Ingest all bench.json files dynamically at build time
-const rawBenchModules = import.meta.glob<{ default?: BenchmarkRun } & BenchmarkRun>(
-	'/src/resources/evaluerBench/**/bench.json',
+const rawModules = import.meta.glob<EvalItem>(
+	'/src/resources/evaluerBench/*/*/*.json',
 	{ eager: true }
 );
 
-/**
- * Loads all benchmark runs sorted by timestamp (newest first).
- */
-export function getAllRuns(): BenchmarkRun[] {
-	const runs: BenchmarkRun[] = [];
+let cachedModelGroups: ModelGroup[] | null = null;
 
-	for (const path in rawBenchModules) {
-		const mod = rawBenchModules[path];
-		const data = (mod && 'default' in mod && mod.default ? mod.default : mod) as BenchmarkRun;
-
-		// Extract runId from directory path (e.g. "run-Qwen3.5-35B-A3B-GGUF-2026-07-29T08-52-56")
-		const pathSegments = path.split('/');
-		const runDirName = pathSegments[pathSegments.length - 2] || 'unknown-run';
-
-		const resultsWithArtifacts = (data.results || []).map((result) => {
-			const artifactFilename = `artifact-${result.evalId}.html`;
-			const artifactUrl = `/evals/artifact/${runDirName}/${artifactFilename}`;
-			const hasJudge = !!result.judge;
-			return {
-				...result,
-				judge: hasJudge ? result.judge : {
-					score: 0,
-					passed: false,
-					reasoning: "No automated judge evaluation recorded for this run."
-				},
-				hasJudge,
-				artifactFilename,
-				artifactUrl
-			};
-		});
-
-		const judgedResults = resultsWithArtifacts.filter(r => (r as any).hasJudge);
-		const passedCount = judgedResults.filter(r => r.judge?.passed).length;
-		const calcPassRate = judgedResults.length > 0 
-			? Math.round((passedCount / judgedResults.length) * 100) 
-			: (data.summary?.passRatePercentage ?? 0);
-
-		const summary = {
-			averageTokensPerSecond: data.summary?.averageTokensPerSecond || 0,
-			averageTimeToFirstTokenMs: data.summary?.averageTimeToFirstTokenMs || 0,
-			passRatePercentage: (data.summary?.passRatePercentage !== null && data.summary?.passRatePercentage !== undefined)
-				? data.summary.passRatePercentage
-				: calcPassRate
-		};
-
-		runs.push({
-			...data,
-			summary,
-			runId: runDirName,
-			results: resultsWithArtifacts
-		});
-	}
-
-	// Sort runs by timestamp descending (newest first)
-	return runs.sort((a, b) => {
-		const timeA = new Date(a.meta?.timestamp || 0).getTime();
-		const timeB = new Date(b.meta?.timestamp || 0).getTime();
-		return timeB - timeA;
-	});
-}
-
-/**
- * Retrieves a single run by runId.
- */
-export function getRunById(runId: string): BenchmarkRun | undefined {
-	const runs = getAllRuns();
-	return runs.find((r) => r.runId === runId);
-}
-
-/**
- * Groups runs by model name, identifying the latest run per model and aggregate stats.
- */
 export function getModelGroups(): ModelGroup[] {
-	const runs = getAllRuns();
-	const groupMap = new Map<string, BenchmarkRun[]>();
-
-	for (const run of runs) {
-		const model = run.meta?.modelName || 'Unknown Model';
-		if (!groupMap.has(model)) {
-			groupMap.set(model, []);
+	if (cachedModelGroups) return cachedModelGroups;
+	
+	const modelMap = new Map<string, Record<string, EvalItem[]>>();
+	
+	for (const path in rawModules) {
+		const mod = rawModules[path];
+		const item = (mod && 'default' in (mod as any) ? (mod as any).default : mod) as EvalItem;
+		
+		const parts = path.split('/');
+		const filename = parts.pop() || '';
+		const evalId = parts.pop() || 'unknown';
+		const modelName = parts.pop() || 'unknown';
+		
+		item.modelName = modelName; // ensure
+		
+		if (!modelMap.has(modelName)) {
+			modelMap.set(modelName, {});
 		}
-		groupMap.get(model)!.push(run);
+		if (!modelMap.get(modelName)![evalId]) {
+			modelMap.get(modelName)![evalId] = [];
+		}
+		
+		// Map artifact URL
+		if (item.display_type === 'html-iframe') {
+			const artifactFilename = `artifact-${evalId}.html`;
+			item.artifactFilename = artifactFilename;
+			item.artifactUrl = `/evals/artifact/${modelName}/${artifactFilename}`;
+		}
+		
+		if (!item.judge) {
+			item.judge = { score: 0, passed: false, reasoning: "No automated judge evaluation recorded." };
+		}
+		
+		modelMap.get(modelName)![evalId].push(item);
 	}
-
+	
 	const groups: ModelGroup[] = [];
-
-	for (const [modelName, modelRuns] of groupMap.entries()) {
-		// Sorted newest first
-		const sortedRuns = modelRuns.sort((a, b) => {
-			const timeA = new Date(a.meta?.timestamp || 0).getTime();
-			const timeB = new Date(b.meta?.timestamp || 0).getTime();
-			return timeB - timeA;
-		});
-
-		const latestRun = sortedRuns[0];
-
-		const avgTps =
-			sortedRuns.reduce((acc, r) => acc + (r.summary?.averageTokensPerSecond || 0), 0) /
-			sortedRuns.length;
-		const avgTtft =
-			sortedRuns.reduce((acc, r) => acc + (r.summary?.averageTimeToFirstTokenMs || 0), 0) /
-			sortedRuns.length;
-		const avgPass =
-			sortedRuns.reduce((acc, r) => acc + (r.summary?.passRatePercentage || 0), 0) /
-			sortedRuns.length;
-
+	
+	for (const [modelName, evals] of modelMap.entries()) {
+		const evaluations: Record<string, ModelEvalHistory> = {};
+		
+		let totalTps = 0;
+		let totalTtft = 0;
+		let passedCount = 0;
+		let evalCount = 0;
+		
+		for (const [evalId, attempts] of Object.entries(evals)) {
+			attempts.sort((a, b) => {
+				const tA = new Date(a.runTimestamp || a.metrics?.timestamp || 0).getTime();
+				const tB = new Date(b.runTimestamp || b.metrics?.timestamp || 0).getTime();
+				return tB - tA; // newest first
+			});
+			
+			const latest = attempts[0];
+			evaluations[evalId] = {
+				evalId,
+				evalName: latest.evalName,
+				category: latest.category || 'general',
+				tags: latest.tags || [],
+				attempts,
+				latestAttempt: latest
+			};
+			
+			totalTps += latest.metrics?.tokensPerSecond || 0;
+			totalTtft += latest.metrics?.timeToFirstTokenMs || 0;
+			if (latest.judge?.passed) passedCount++;
+			evalCount++;
+		}
+		
 		groups.push({
 			modelName,
-			latestRun,
-			runs: sortedRuns,
-			avgTokensPerSecond: Math.round(avgTps * 100) / 100,
-			avgTimeToFirstTokenMs: Math.round(avgTtft * 100) / 100,
-			passRatePercentage: Math.round(avgPass * 100) / 100,
-			totalRunsCount: sortedRuns.length
+			evaluations,
+			avgTokensPerSecond: evalCount ? Math.round((totalTps / evalCount) * 100) / 100 : 0,
+			avgTimeToFirstTokenMs: evalCount ? Math.round((totalTtft / evalCount) * 100) / 100 : 0,
+			passRatePercentage: evalCount ? Math.round((passedCount / evalCount) * 100) : 0,
+			totalEvals: evalCount
 		});
 	}
-
+	
+	// Sort by pass rate then TPS
+	groups.sort((a, b) => {
+		if (b.passRatePercentage !== a.passRatePercentage) {
+			return b.passRatePercentage - a.passRatePercentage;
+		}
+		return b.avgTokensPerSecond - a.avgTokensPerSecond;
+	});
+	
+	cachedModelGroups = groups;
 	return groups;
 }
 
-/**
- * Builds matrix grid data with:
- * - Columns = Union of all unique evals grouped by category.
- * - Rows = Model runs (newest first).
- */
+export function getModelByName(modelName: string): ModelGroup | undefined {
+	const groups = getModelGroups();
+	return groups.find(g => g.modelName === modelName);
+}
+
 export function getMatrixData(): MatrixData {
-	const runs = getAllRuns();
+	const models = getModelGroups();
 	const evalMap = new Map<string, MatrixColumn>();
 
-	// 1. Gather union of all unique evals
-	for (const run of runs) {
-		for (const res of run.results || []) {
-			if (!evalMap.has(res.evalId)) {
-				evalMap.set(res.evalId, {
-					evalId: res.evalId,
-					evalName: res.evalName,
-					category: res.category || 'general',
-					tags: res.tags || []
+	for (const model of models) {
+		for (const evalData of Object.values(model.evaluations)) {
+			if (!evalMap.has(evalData.evalId)) {
+				evalMap.set(evalData.evalId, {
+					evalId: evalData.evalId,
+					evalName: evalData.evalName,
+					category: evalData.category,
+					tags: evalData.tags
 				});
 			}
 		}
@@ -267,7 +228,6 @@ export function getMatrixData(): MatrixData {
 
 	const allColumns = Array.from(evalMap.values());
 
-	// Group columns by category
 	const categoryMap = new Map<string, MatrixColumn[]>();
 	for (const col of allColumns) {
 		if (!categoryMap.has(col.category)) {
@@ -283,7 +243,6 @@ export function getMatrixData(): MatrixData {
 		})
 	);
 
-	// Sort categories to put visual-demo and coding-complex at the end
 	categories.sort((a, b) => {
 		const order: Record<string, number> = { 'coding-complex': 1, 'visual-demo': 2 };
 		const aOrder = order[a.category] || 0;
@@ -292,25 +251,16 @@ export function getMatrixData(): MatrixData {
 		return a.category.localeCompare(b.category);
 	});
 
-	// 2. Build rows
-	const latestRunPerModel = new Set<string>();
-	const modelGroups = getModelGroups();
-	for (const group of modelGroups) {
-		if (group.latestRun) {
-			latestRunPerModel.add(group.latestRun.runId);
-		}
-	}
-
-	const rows: MatrixRow[] = runs.map((run) => {
+	const rows: MatrixRow[] = models.map((model) => {
 		const cells: Record<string, MatrixCell> = {};
 
 		for (const col of allColumns) {
-			const matchedResult = run.results?.find((r) => r.evalId === col.evalId);
-			if (matchedResult) {
+			const evalHistory = model.evaluations[col.evalId];
+			if (evalHistory) {
 				cells[col.evalId] = {
 					evalId: col.evalId,
 					tested: true,
-					result: matchedResult
+					result: evalHistory.latestAttempt
 				};
 			} else {
 				cells[col.evalId] = {
@@ -321,17 +271,13 @@ export function getMatrixData(): MatrixData {
 		}
 
 		return {
-			runId: run.runId,
-			modelName: run.meta?.modelName || 'Unknown Model',
-			timestamp: run.meta?.timestamp || '',
-			isLatest: latestRunPerModel.has(run.runId),
-			summary: run.summary || {
-				averageTokensPerSecond: 0,
-				averageTimeToFirstTokenMs: 0,
-				passRatePercentage: 0
+			modelName: model.modelName,
+			summary: {
+				averageTokensPerSecond: model.avgTokensPerSecond,
+				averageTimeToFirstTokenMs: model.avgTimeToFirstTokenMs,
+				passRatePercentage: model.passRatePercentage
 			},
-			cells,
-			traceUrl: run.meta?.traceUrl || run.traceUrl
+			cells
 		};
 	});
 
@@ -342,33 +288,25 @@ export function getMatrixData(): MatrixData {
 	};
 }
 
-/**
- * Computes side-by-side comparison stats and paired eval items for two specified runs.
- */
-export function getRunComparison(runIdA: string, runIdB: string): ComparisonData | undefined {
-	const runA = getRunById(runIdA);
-	const runB = getRunById(runIdB);
+export function getModelComparison(modelA: string, modelB: string): ComparisonData | undefined {
+	const mA = getModelByName(modelA);
+	const mB = getModelByName(modelB);
 
-	if (!runA || !runB) return undefined;
+	if (!mA || !mB) return undefined;
 
-	const tpsDelta =
-		(runA.summary?.averageTokensPerSecond || 0) - (runB.summary?.averageTokensPerSecond || 0);
-	const ttftDelta =
-		(runA.summary?.averageTimeToFirstTokenMs || 0) -
-		(runB.summary?.averageTimeToFirstTokenMs || 0);
-	const passRateDelta =
-		(runA.summary?.passRatePercentage || 0) - (runB.summary?.passRatePercentage || 0);
+	const tpsDelta = mA.avgTokensPerSecond - mB.avgTokensPerSecond;
+	const ttftDelta = mA.avgTimeToFirstTokenMs - mB.avgTimeToFirstTokenMs;
+	const passRateDelta = mA.passRatePercentage - mB.passRatePercentage;
 
-	// Gather all unique evalIds tested across either runA or runB
 	const evalIds = new Set<string>();
-	runA.results.forEach((r) => evalIds.add(r.evalId));
-	runB.results.forEach((r) => evalIds.add(r.evalId));
+	Object.keys(mA.evaluations).forEach(id => evalIds.add(id));
+	Object.keys(mB.evaluations).forEach(id => evalIds.add(id));
 
 	const evalPairs: ComparisonEvalPair[] = [];
 
 	for (const evalId of evalIds) {
-		const resA = runA.results.find((r) => r.evalId === evalId);
-		const resB = runB.results.find((r) => r.evalId === evalId);
+		const resA = mA.evaluations[evalId]?.latestAttempt;
+		const resB = mB.evaluations[evalId]?.latestAttempt;
 
 		const name = resA?.evalName || resB?.evalName || evalId;
 		const cat = resA?.category || resB?.category || 'general';
@@ -398,8 +336,8 @@ export function getRunComparison(runIdA: string, runIdB: string): ComparisonData
 	}
 
 	return {
-		runA,
-		runB,
+		modelA: mA,
+		modelB: mB,
 		tpsDelta: Math.round(tpsDelta * 100) / 100,
 		ttftDelta: Math.round(ttftDelta * 100) / 100,
 		passRateDelta: Math.round(passRateDelta * 100) / 100,

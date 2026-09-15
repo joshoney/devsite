@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "Qwen3-Coder-Next-GGUF",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "1. **Cart total exactly at $50 after discount application**: A discount code reduces the subtotal to exactly $50.00\u2014verify that shipping remains free (i.e., no $10 fee is applied), as the condition is \u201cexceeds $50\u201d but the logic may incorrectly treat \u201c$50 or more\u201d as free shipping.\n\n2. **Discount code applied that results in a negative or zero cart total before tax**: For example, a $100 discount on a $49.99 subtotal. Tax (10%) is applied *after* discounts but *before* shipping\u2014this could yield a negative or zero taxable amount, potentially causing calculation errors (e.g., negative tax, or tax rounding anomalies), and shipping should still be re-applied if the *pre-tax* total is below $50.\n\n3. **Multiple discount codes attempted (only one allowed)**: User tries to apply a second discount code after one is already active. Verify the system rejects the second code *without* altering the cart state (e.g., no partial application, no silent overwrites), and that the shipping/tax logic remains consistent with the single active discount.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 475.86,
+    "tokensPerSecond": 47.05,
+    "totalLatencyMs": 5704.5,
+    "inputTokens": 109,
+    "outputTokens": 246,
+    "timestamp": "2026-07-31T07:10:02.623Z"
+  },
+  "judge": {
+    "score": 80,
+    "passed": true,
+    "reasoning": "The model correctly followed the formatting constraints (numbered list, exactly three items) and demonstrated strong QA engineering instincts. Cases 1 and 2 directly align with the rubric's expected boundary conditions (exact $50 threshold and negative/zero totals). Case 3, while a valid test for the 'one code per order' rule, misses the rubric's third target: the logical conflict/ambiguity in the order of operations between the 10% tax calculation and the $50 free-shipping threshold check. This omission reduces the technical depth relative to the prompt's explicit mathematical sequence."
+  },
+  "runTimestamp": "2026-07-31T07:10:02.623Z",
+  "executionMode": "sequential-loop"
+}

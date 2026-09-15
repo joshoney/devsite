@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "Qwen3.5-35B-A3B-GGUF",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "# TCP vs UDP: Fundamental Differences\n\n## Core Comparison\n\n| Feature | TCP | UDP |\n|---------|-----|-----|\n| **Connection** | Connection-oriented (handshake) | Connectionless |\n| **Reliability** | Guaranteed delivery | Best-effort delivery |\n| **Ordering** | Packets arrive in order | No ordering guarantee |\n| **Error Recovery** | Automatic retransmission | No retransmission |\n| **Flow Control** | Yes (window-based) | No |\n| **Congestion Control** | Yes | No |\n| **Overhead** | Higher (headers + state) | Lower (minimal headers) |\n| **Speed** | Slower | Faster |\n| **Use Case** | Data integrity critical | Speed critical |\n\n## When to Choose UDP Over TCP\n\nDevelopers explicitly choose UDP in these scenarios:\n\n### 1. **Real-Time Applications**\n```javascript\n// Video conferencing, VoIP, live streaming\n// Late packets are useless anyway\n// Better to skip than wait for retransmission\n```\n- **Example**: Zoom, Discord, live sports streaming\n- **Why**: A 200ms delay in video is worse than occasional packet loss\n\n### 2. **Online Gaming**\n```javascript\n// Fast-paced games (FPS, racing)\n// Player position updates every 10-50ms\n// Retransmitting old data is meaningless\n```\n- **Example**: Fortnite, League of Legends\n- **Why**: Current state matters more than perfect accuracy\n\n### 3. **DNS Queries**\n```javascript\n// Simple request-response\n// Quick timeout if no response\n// Multiple redundant servers\n```\n- **Why**: Low overhead, fast resolution needed\n\n### 4. **Broadcast/Multicast**\n```javascript\n// One-to-many communication\n// No need for acknowledgments from all receivers\n```\n- **Example**: Service discovery, live event distribution\n- **Why**: TCP doesn't support multicast natively\n\n### 5. **Simple Request-Response**\n```javascript\n// IoT sensors, telemetry\n// Occasional data loss acceptable\n// Low bandwidth, high frequency\n```\n- **Why**: Minimal protocol overhead saves battery and bandwidth\n\n## Code Example: When UDP Makes Sense\n\n```javascript\n// UDP for live video streaming\nconst socket = dgram.createSocket('udp4');\n\n// Send video frames without waiting for ACK\nsocket.send(videoFrame, 0, videoFrame.length, port, host);\n\n// If frame is lost, next frame arrives on time\n// Application handles quality degradation gracefully\n```\n\n```javascript\n// TCP for file transfer\nconst socket = net.createConnection(port, host);\n\n// Every byte must arrive correctly\n// Retransmission ensures 100% accuracy\n// Even if it takes 2 seconds longer\n```\n\n## Decision Framework\n\n```\nIs reliability critical? \u2500\u2500YES\u2500\u2500> Use TCP\n         \u2502\n         NO\n         \u2502\nIs speed critical? \u2500\u2500YES\u2500\u2500> Use UDP\n         \u2502\n         NO\n         \u2502\n         Use TCP\n```\n\n## Key Takeaway\n\n**Choose UDP when:**\n- \u2705 Latency matters more than reliability\n- \u2705 Application can handle occasional data loss\n- \u2705 Real-time performance is essential\n- \u2705 Overhead reduction is important\n\n**Choose TCP when:**\n- \u2705 Data integrity is non-negotiable\n- \u2705 Complete data transfer is required\n- \u2705 Connection state management is needed\n- \u2705 Network conditions are unpredictable\n\nModern applications often use **both**: TCP for control/signaling, UDP for media/data streams (e.g., WebRTC, video conferencing).",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 227.13,
+    "tokensPerSecond": 57.2,
+    "totalLatencyMs": 17622.43,
+    "inputTokens": 35,
+    "outputTokens": 995,
+    "timestamp": "2026-07-29T23:06:36.201Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\nThe response perfectly satisfies all rubric criteria:\n1. **Fundamental Differences:** Accurately and comprehensively contrasts TCP and UDP using a clear comparison table. It correctly identifies TCP as connection-oriented, reliable, ordered, and featuring flow/congestion control, while correctly identifying UDP as connectionless, best-effort, unordered, and faster with lower overhead.\n2. **UDP Use Case:** Provides multiple valid, industry-standard scenarios where UDP is explicitly preferred (real-time video/VoIP, online gaming, DNS, multicast, IoT). Each scenario includes a clear technical justification (e.g., latency tolerance over reliability, stale data handling, low overhead).\n3. **Accuracy:** Contains zero factual errors. The technical explanations, code illustrations, and decision framework align precisely with standard networking principles.\n\nThe output is well-structured, technically precise, and directly answers both parts of the prompt. Meets the rubric's requirement for a perfect score."
+  },
+  "runTimestamp": "2026-07-29T23:06:36.201Z",
+  "executionMode": "sequential-loop"
+}

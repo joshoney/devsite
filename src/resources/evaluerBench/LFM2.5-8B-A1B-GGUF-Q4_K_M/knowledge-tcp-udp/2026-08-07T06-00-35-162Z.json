@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "\n**Fundamental Differences Between TCP and UDP:**\n\n1. **Connection Model:**\n   - **TCP** is **connection-oriented**: Establishes a reliable, ordered connection via a handshake (SYN, SYN-ACK, ACK). Both parties must agree before data transfer.\n   - **UDP** is **connectionless**: No setup or teardown; data is sent immediately without establishing a connection.\n\n2. **Reliability:**\n   - **TCP** guarantees **reliable delivery** through acknowledgments, retransmissions, and flow control. It ensures data arrives intact and in order.\n   - **UDP** provides **no guarantees**: Packets may be lost, duplicated, or arrive out of order. It does not handle error detection or correction.\n\n3. **Latency and Overhead:**\n   - **TCP** introduces **higher latency** due to handshakes, acknowledgments, and retransmissions. Its larger header overhead (due to sequence numbers, timestamps, etc.) increases bandwidth usage.\n   - **UDP** has **lower latency** and minimal header overhead, making it faster for small or time-sensitive data.\n\n4. **Use Cases for Reliability:**\n   - TCP is ideal for applications requiring **data integrity**, such as file transfers (FTP), web browsing (HTTP/HTTPS), or email (SMTP), where missing data is unacceptable.\n\n---\n\n**When to Choose UDP Over TCP:**\n\nDevelopers explicitly opt for UDP in scenarios where **speed and low latency outweigh the need for reliability**:\n\n1. **Real-Time Applications:**\n   - **Live video/audio streaming** (e.g., streaming services, web conferencing): Delays from TCP retransmissions are unacceptable.\n   - **Online gaming**: Minimal latency is critical; packet loss is tolerated if the application can handle it (e.g., rebuffering in video games).\n\n2. **Low-Latency, High-Frequency Data Exchange:**\n   - **IoT sensor data transmission**: Sending small, frequent packets where occasional loss is acceptable.\n   - **VoIP/streaming communication**: Prioritizes timely delivery over perfect accuracy.\n\n3. **Scenarios Where Partial Data Loss Is Tolerable:**\n   - **Chat applications** or **multiplayer games**: A missing message or out-of-order packet may not disrupt functionality.\n   - **DNS queries**: While DNS uses UDP for small lookups, reliability is not critical.\n\n4. **Bandwidth-Constrained Environments:**\n   - **Mobile networks or satellite links**: UDP\u2019s lower overhead reduces data usage and conserves resources.\n\n5. **Multicast/Broadcast Communication:**\n   - UDP is efficient for one-to-many transmissions (e.g., live broadcasts), where delivering data to many recipients simultaneously is more important than individual reliability.\n\n**Key Trade-Off:** UDP sacrifices reliability for performance, making it unsuitable for applications where data loss would cause critical failures (e.g., financial transactions, mission-critical systems). Developers use UDP when the cost of TCP\u2019s reliability mechanisms (e.g., latency, overhead) would degrade user experience or operational efficiency.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 92.78,
+    "tokensPerSecond": 151.57,
+    "totalLatencyMs": 7904.57,
+    "inputTokens": 35,
+    "outputTokens": 1184,
+    "timestamp": "2026-08-07T06:00:35.162Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\nThe model output perfectly satisfies all criteria in the grading rubric:\n1. **TCP Identification:** Correctly identifies TCP as connection-oriented and reliable, accurately describing the handshake process, acknowledgments, retransmissions, and ordered delivery.\n2. **UDP Identification:** Correctly identifies UDP as connectionless and fast, accurately noting the lack of setup/teardown, minimal header overhead, and lower latency.\n3. **Valid UDP Use Cases:** Provides multiple highly accurate and industry-standard scenarios where UDP is explicitly preferred over TCP, including real-time video/audio streaming, online gaming, VoIP, IoT sensor data, DNS queries, and multicast/broadcast communication.\n\nThe response is technically precise, well-structured, and contains no factual errors. It directly and comprehensively answers both parts of the prompt."
+  },
+  "runTimestamp": "2026-08-07T06:00:35.162Z",
+  "executionMode": "sequential-loop"
+}

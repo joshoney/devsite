@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-filament-types",
+  "evalName": "3D Printing Filament Characteristics",
+  "category": "knowledge",
+  "tags": [
+    "3d-printing",
+    "materials",
+    "fabrication"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "Compare PLA, ABS, and PETG filaments used in FDM 3D printing. Specifically, contrast their temperature requirements and bed adhesion characteristics.\n",
+  "rawOutput": "",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 137.34,
+    "tokensPerSecond": 73.47,
+    "totalLatencyMs": 54570.03,
+    "inputTokens": 97,
+    "outputTokens": 3999,
+    "timestamp": "2026-07-31T08:02:14.964Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "The model output is completely blank. It fails to address the prompt or satisfy any of the required rubric criteria: it does not mention PLA's low temperature requirements and easy bed adhesion, ABS's high temperature needs and requirement for an enclosure to prevent warping, or PETG's middle-ground temperatures and tendency to adhere too strongly to glass beds. As a result, it scores 0 for both thoroughness and factual accuracy."
+  },
+  "runTimestamp": "2026-07-31T08:02:14.964Z",
+  "executionMode": "sequential-loop"
+}

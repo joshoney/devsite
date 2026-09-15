@@ -1,0 +1,29 @@
+{
+  "evalId": "constraint-no-digits",
+  "evalName": "Math without Digits",
+  "category": "constraints",
+  "tags": [
+    "instruction-following",
+    "formatting",
+    "negative-constraint"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "List the first five prime numbers.\n\nNEGATIVE CONSTRAINT: You are strictly forbidden from using any numerical digits (0-9) in your output.\n",
+  "rawOutput": "The first five prime numbers are:\n\ntwo, three, five, seven, eleven",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 346.45,
+    "tokensPerSecond": 7.11,
+    "totalLatencyMs": 2737.63,
+    "inputTokens": 36,
+    "outputTokens": 17,
+    "timestamp": "2026-08-01T08:20:26.520Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^[^0-9]+$/i."
+  },
+  "runTimestamp": "2026-08-01T08:20:26.520Z",
+  "executionMode": "sequential-loop"
+}

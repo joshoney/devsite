@@ -1,0 +1,29 @@
+{
+  "evalId": "logic-misleading-servers",
+  "evalName": "Misleading Server Math",
+  "category": "logic",
+  "tags": [
+    "trick-question",
+    "reading-comprehension",
+    "math"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "A data center has 50 server racks. Rack A contains 10 web servers running Linux, each with 32GB of RAM. Rack B contains 20 database servers running Windows, each with 64GB of RAM. The remaining 20 racks are completely empty due to a recent hardware migration handled by a technician named Dave. The facility's ambient temperature is 68\u00b0F. \n\nHow many total operating systems are actively running across all the servers mentioned in this prompt? Answer with a single numerical digit and nothing else.\n",
+  "rawOutput": "30",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 711.6,
+    "tokensPerSecond": 11.78,
+    "totalLatencyMs": 176410.96,
+    "inputTokens": 121,
+    "outputTokens": 2069,
+    "timestamp": "2026-07-30T07:49:52.607Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Exact match evaluation: Expected \"30\", got \"30\"."
+  },
+  "runTimestamp": "2026-07-30T07:49:52.607Z",
+  "executionMode": "sequential-loop"
+}

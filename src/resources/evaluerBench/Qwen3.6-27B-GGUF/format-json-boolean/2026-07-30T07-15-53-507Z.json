@@ -1,0 +1,29 @@
+{
+  "evalId": "format-json-boolean",
+  "evalName": "Strict JSON Boolean Response",
+  "category": "formatting",
+  "tags": [
+    "json",
+    "syntax",
+    "fast-path"
+  ],
+  "modelName": "Qwen3.6-27B-GGUF",
+  "prompt": "Return a valid JSON object with a single key \"ready\" set to boolean true. Do not include markdown formatting, backticks, or any conversational text. Output strictly JSON.\n",
+  "rawOutput": "{\"ready\": true}",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 551.46,
+    "tokensPerSecond": 11.82,
+    "totalLatencyMs": 46311.6,
+    "inputTokens": 46,
+    "outputTokens": 541,
+    "timestamp": "2026-07-30T07:15:53.507Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Regex evaluation against pattern /^\\{\\s*\"ready\"\\s*:\\s*true\\s*\\}$/i."
+  },
+  "runTimestamp": "2026-07-30T07:15:53.507Z",
+  "executionMode": "sequential-loop"
+}

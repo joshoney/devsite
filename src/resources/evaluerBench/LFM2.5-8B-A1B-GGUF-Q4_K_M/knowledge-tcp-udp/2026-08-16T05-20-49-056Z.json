@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "\n**Fundamental Differences Between TCP and UDP:**\n\n1. **Connection Model:**\n   - **TCP** is **connection-oriented**, requiring a three-way handshake (SYN, SYN-ACK, ACK) to establish a reliable connection before data transfer.\n   - **UDP** is **connectionless**, sending datagrams without prior setup, making it faster but less reliable.\n\n2. **Reliability:**\n   - **TCP** guarantees **reliable delivery** via acknowledgments, retransmissions, and flow/congestion control.\n   - **UDP** provides **no guarantees**; packets may be lost, duplicated, or reordered, and there is no mechanism to confirm receipt.\n\n3. **Order and Integrity:**\n   - **TCP** ensures **ordered delivery** and maintains data integrity through sequence numbers and acknowledgments.\n   - **UDP** delivers packets **independently**, without ordering guarantees, making it suitable for applications where partial data loss is acceptable.\n\n4. **Overhead:**\n   - **TCP** incurs **higher overhead** due to connection setup, headers, and reliability mechanisms.\n   - **UDP** has **minimal overhead**, ideal for lightweight, high-speed applications.\n\n5. **Use Cases:**\n   - **TCP** is used for applications requiring **reliability** (e.g., web browsing, email, file transfers).\n   - **UDP** is used for **real-time or time-sensitive** applications where speed outweighs reliability.\n\n**When to Choose UDP Over TCP:**\n\nDevelopers explicitly opt for UDP in scenarios where:\n- **Low latency is critical**, and delays from TCP handshakes or retransmissions are unacceptable. Examples include:\n  - **Live video/audio streaming** (e.g., streaming services, VoIP).\n  - **Online gaming**, where timely packet delivery is more important than perfect accuracy.\n  - **Real-time multiplayer games**, where occasional packet loss is tolerated.\n- **Bandwidth or processing constraints** limit the overhead of maintaining TCP connections. Examples include:\n  - **IoT devices** with limited resources.\n  - **High-frequency trading systems**, where microsecond delays matter.\n- **Unreliable delivery is acceptable**, such as:\n  - **DNS queries**, where a missing response is inconsequential.\n  - **Broadcast scenarios** (e.g., live TV streaming to multiple viewers).\n- **Applications prioritize simplicity and speed** over error checking. Examples include:\n  - **Sensor data transmission** where occasional loss is tolerable.\n  - **Remote control systems**, where minimal delay is essential.\n\n**Key Trade-offs:**  \nWhile UDP sacrifices reliability and order, it excels in scenarios where speed and efficiency are paramount, and the application can tolerate or manage the risks of packet loss or reordering. Developers choose UDP when these trade-offs align with the application's requirements.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 89.36,
+    "tokensPerSecond": 153.79,
+    "totalLatencyMs": 10824.5,
+    "inputTokens": 35,
+    "outputTokens": 1651,
+    "timestamp": "2026-08-16T05:20:49.056Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output is technically accurate and comprehensive. It correctly identifies TCP as connection-oriented and reliable, while characterizing UDP as connectionless and faster with lower overhead. It explicitly addresses the second part of the prompt by providing multiple valid scenarios where a developer would choose UDP over TCP (e.g., live video/audio streaming, online gaming, VoIP, DNS queries, high-frequency trading). There are no factual errors present in the explanation of protocols or use cases. The response fully satisfies the criteria for a perfect score according to the provided rubric."
+  },
+  "runTimestamp": "2026-08-16T05:20:49.056Z",
+  "executionMode": "sequential-loop"
+}

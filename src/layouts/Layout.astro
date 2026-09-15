@@ -7,10 +7,10 @@ interface Props {
 	title: string;
 	isEvalsPage?: boolean;
 	activeView?: 'matrix' | 'compare' | 'run';
-	activeRunId?: string;
+	activeModel?: string;
 }
 
-const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro.props;
+const { title, isEvalsPage = false, activeView = 'matrix', activeModel } = Astro.props;
 ---
 
 <!doctype html>
@@ -35,7 +35,7 @@ const { title, isEvalsPage = false, activeView = 'matrix', activeRunId } = Astro
 
 			<!-- ROW 2: LOCKED SIDEBAR & SCROLLABLE MAIN CONTENT -->
 			{isEvalsPage ? (
-				<EvalsSidebar activeView={activeView} activeRunId={activeRunId} />
+				<EvalsSidebar activeView={activeView} activeModel={activeModel} />
 			) : (
 				<Sidebar />
 			)}

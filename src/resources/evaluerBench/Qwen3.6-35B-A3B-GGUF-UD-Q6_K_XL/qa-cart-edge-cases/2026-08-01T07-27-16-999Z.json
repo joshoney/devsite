@@ -1,0 +1,29 @@
+{
+  "evalId": "qa-cart-edge-cases",
+  "evalName": "E-Commerce Cart QA",
+  "category": "quality-assurance",
+  "tags": [
+    "testing",
+    "edge-cases",
+    "logic-analysis"
+  ],
+  "modelName": "Qwen3.6-35B-A3B-GGUF-UD-Q6_K_XL",
+  "prompt": "Review the following hypothetical business logic for an e-commerce cart:\n\"Users can apply one discount code per order. If the cart total exceeds $50, shipping is free. If a discount code drops the total below $50, the $10 shipping fee is re-applied. Tax is 10%, applied after discounts but before shipping.\"\n\nAs a QA engineer, identify exactly three distinct edge cases that should be tested to ensure this logic is robust. Format your output as a numbered list.\n",
+  "rawOutput": "1. **Exact $50.00 Discounted Subtotal Boundary:** Test a cart where the discounted subtotal is exactly $50.00. Since the rule specifies shipping is free only if the total *exceeds* $50, the system must correctly apply the $10 shipping fee (not free shipping) and confirm the threshold check uses strict inequality (`> 50`, not `>= 50`).\n\n2. **Multiple Discount Code Stacking Attempt:** Test applying a second discount code to an order that already has one active. The system must enforce the \"one discount code per order\" constraint by rejecting the second code, replacing the first, or displaying a clear error, preventing stacking that could artificially manipulate the subtotal and shipping eligibility.\n\n3. **100% Discount with Tax/Shipping Sequence Validation:** Test a cart where a discount code reduces the subtotal to $0.00. This verifies the explicit calculation order and handles extreme values: tax must be calculated on the discounted subtotal ($0.00 \u00d7 10% = $0.00), the $10 shipping fee must apply (since $0 does not exceed $50), and the final total must be exactly $10.00, confirming the strict `discount \u2192 tax \u2192 shipping` sequence without negative totals or rounding errors.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 355,
+    "tokensPerSecond": 52,
+    "totalLatencyMs": 54025.47,
+    "inputTokens": 113,
+    "outputTokens": 2791,
+    "timestamp": "2026-08-01T07:27:16.999Z"
+  },
+  "judge": {
+    "score": 95,
+    "passed": true,
+    "reasoning": "The model strictly follows the formatting requirement (numbered list of exactly three items) and adopts the requested QA engineer perspective. Each edge case is technically sound, clearly explains the test scenario, expected system behavior, and underlying logic being validated. Case 1 directly addresses the rubric's boundary condition hint ($50.00 strict inequality). Case 3 effectively covers the extreme value hint ($0/negative discount) and explicitly validates the calculation sequence (`discount \u2192 tax \u2192 shipping`), aligning well with the rubric's order-of-operations concern. Case 2, while valid for constraint enforcement, focuses on UI/business rule validation rather than the mathematical/logical flow emphasized in the rubric, but remains a legitimate QA edge case. Overall, the output demonstrates strong technical depth, precise terminology, and practical testing methodology."
+  },
+  "runTimestamp": "2026-08-01T07:27:16.999Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "Qwen3-Coder-Next-GGUF",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "```typescript\ninterface UserProfile {\n  id: string;\n  name: string;\n  email: string;\n  avatarUrl?: string;\n  bio?: string;\n}\n\n/**\n * Fetches user profile data from an external API\n * @param userId - The unique identifier for the user\n * @returns A Promise that resolves to the UserProfile object\n * @throws Will throw an error if the request fails due to network issues, timeout, or server errors (500+)\n */\nasync function fetchUserProfile(userId: string): Promise<UserProfile> {\n  try {\n    const controller = new AbortController();\n    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout\n\n    const response = await fetch(`https://api.example.com/users/${userId}`, {\n      signal: controller.signal,\n      headers: {\n        'Accept': 'application/json',\n      }\n    });\n\n    clearTimeout(timeoutId);\n\n    // Handle HTTP errors (4xx and 5xx status codes)\n    if (!response.ok) {\n      if (response.status >= 500) {\n        throw new Error(`Server error (${response.status}): ${response.statusText}`);\n      }\n      if (response.status >= 400 && response.status < 500) {\n        throw new Error(`Client error (${response.status}): ${response.statusText}`);\n      }\n      throw new Error(`Unexpected HTTP status: ${response.status}`);\n    }\n\n    const data: UserProfile = await response.json();\n    return data;\n\n  } catch (error) {\n    // Handle specific error types\n    if (error instanceof Error) {\n      if (error.name === 'AbortError') {\n        throw new Error(`Request timed out for user ID: ${userId}`);\n      }\n      // Re-throw with more context for network errors\n      if (error.message.includes('fetch')) {\n        throw new Error(`Network error while fetching user profile for ID: ${userId}`);\n      }\n    }\n    \n    // Re-throw the error with additional context\n    throw new Error(`Failed to fetch user profile for ID ${userId}: ${error instanceof Error ? error.message : 'Unknown error'}`);\n  }\n}\n```",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 324.91,
+    "tokensPerSecond": 48.48,
+    "totalLatencyMs": 9462.79,
+    "inputTokens": 53,
+    "outputTokens": 443,
+    "timestamp": "2026-07-31T06:58:02.485Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The implementation meets all rubric criteria cleanly:\n1. **Valid TypeScript & Explicit Types**: The function signature `async function fetchUserProfile(userId: string): Promise<UserProfile>` includes explicit parameter and return type annotations. The `UserProfile` interface and `data: UserProfile` assignment further demonstrate strict typing.\n2. **Try/Catch Implementation**: The entire async `fetch` operation is wrapped in a `try/catch` block as requested.\n3. **Error Handling**: Timeouts are handled via `AbortController` and caught as `AbortError`. 5xx errors are explicitly checked via `response.status >= 500`. Network errors and unexpected failures are caught, typed-checked (`error instanceof Error`), and re-thrown with meaningful, contextual messages. The error handling is robust and production-ready.\n\nAll three requirements are satisfied without syntax errors or sloppy typing."
+  },
+  "runTimestamp": "2026-07-31T06:58:02.485Z",
+  "executionMode": "sequential-loop"
+}

@@ -81,20 +81,14 @@ function formatDate(isoString: string) {
 			<tbody>
 				{matrixData.rows.map((row) => (
 					<tr class="matrix-row">
-						<!-- FIXED LEFT COLUMN: MODEL NAME + TIMESTAMP -->
+						<!-- FIXED LEFT COLUMN: MODEL NAME + METRICS -->
 						<td class="sticky-col model-cell">
 							<div class="model-row-header">
 								<span class="model-title-text">{row.modelName}</span>
-								{row.isLatest && <span class="latest-tag">LATEST</span>}
 							</div>
-							{row.traceUrl && (
-								<div class="model-trace-row">
-									<a href={row.traceUrl} target="_blank" class="trace-link" title="View LangSmith Trace">↗ VIEW TRACE</a>
-								</div>
-							)}
 							<div class="model-sub-info">
-								<span class="run-date">{formatDate(row.timestamp)}</span>
 								<span class="speed-badge">{row.summary.averageTokensPerSecond} t/s</span>
+								<span class="speed-badge" style="background: rgba(255,255,255,0.1); margin-left: 5px;">{row.summary.passRatePercentage}% PASS</span>
 							</div>
 						</td>
 
@@ -115,7 +109,7 @@ function formatDate(isoString: string) {
 									}
 
 									const res = cell.result;
-									const hasJudge = res.hasJudge || (res.judge && res.judge.reasoning !== "No automated judge evaluation recorded for this run.");
+									const hasJudge = (res.judge && !res.judge.reasoning.includes("No automated judge evaluation recorded"));
 									const isPass = res.judge?.passed;
 									const isVisual = res.display_type === 'html-iframe' || (res.evalId && res.evalId.startsWith('visual-'));
 									
@@ -137,8 +131,6 @@ function formatDate(isoString: string) {
 											<button 
 												class={`eval-pill-btn ${pillClass}`}
 												data-eval-id={res.evalId}
-												data-run-id={row.runId}
-												data-trace-url={row.traceUrl || ''}
 												data-eval-name={res.evalName}
 												data-model-name={row.modelName}
 												data-has-judge={hasJudge ? 'true' : 'false'}
@@ -319,7 +311,7 @@ function formatDate(isoString: string) {
 				const modalTraceBtn = document.getElementById('modalTraceBtn');
 				if (modalTraceBtn) {
 					if (traceUrl) {
-						modalTraceBtn.href = traceUrl;
+						modalTraceBtn.setAttribute('href', traceUrl);
 						modalTraceBtn.classList.remove('hidden');
 					} else {
 						modalTraceBtn.removeAttribute('href');
@@ -332,7 +324,7 @@ function formatDate(isoString: string) {
 
 				// Show/hide launch button for visual artifacts
 				if (isVisual && artifactUrl && visualLaunchWrapper) {
-					if (launchVisualTabBtn) launchVisualTabBtn.href = artifactUrl;
+					if (launchVisualTabBtn) launchVisualTabBtn.setAttribute('href', artifactUrl);
 					visualLaunchWrapper.classList.remove('hidden');
 				} else if (visualLaunchWrapper) {
 					visualLaunchWrapper.classList.add('hidden');
@@ -384,14 +376,14 @@ function formatDate(isoString: string) {
 		});
 
 		// Launch Visual Overlay
-		if (launchVisualBtn) {
+		if (launchVisualBtn && visualOverlay) {
 			launchVisualBtn.addEventListener('click', () => {
 				if (!currentArtifactUrl) return;
 
 				if (overlayEvalTitle && modalEvalName) overlayEvalTitle.textContent = modalEvalName.textContent || '';
 				if (overlayModelTitle && modalModelRun) overlayModelTitle.textContent = ` (${modalModelRun.textContent})`;
 				if (overlayExternalLink) overlayExternalLink.setAttribute('href', currentArtifactUrl);
-				if (artifactIframe) artifactIframe.src = currentArtifactUrl;
+				if (artifactIframe) artifactIframe.setAttribute('src', currentArtifactUrl);
 
 				if (modal) modal.classList.add('hidden');
 				if (visualOverlay) visualOverlay.classList.remove('hidden');
@@ -402,14 +394,14 @@ function formatDate(isoString: string) {
 		if (exitVisualOverlayBtn && visualOverlay) {
 			exitVisualOverlayBtn.addEventListener('click', () => {
 				visualOverlay.classList.add('hidden');
-				if (artifactIframe) artifactIframe.src = 'about:blank';
+				if (artifactIframe) artifactIframe.setAttribute('src', 'about:blank');
 			});
 		}
 	});
 </script>
 
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
+	document.addEventListener('astro:page-load', () => {
 		const matrixTable = document.getElementById('matrixTable');
 		if (matrixTable) {
 			const catHeaders = matrixTable.querySelectorAll('.category-group-header');
@@ -428,7 +420,7 @@ function formatDate(isoString: string) {
 						if (isCollapsed) {
 							// Expand
 							th.classList.remove('collapsed');
-							th.setAttribute('colspan', th.getAttribute('data-orig-colspan'));
+							th.setAttribute('colspan', th.getAttribute('data-orig-colspan') || '1');
 							
 							colsToToggle.forEach(el => el.classList.remove('hidden'));
 							placeholders.forEach(el => el.classList.add('hidden'));
@@ -902,9 +894,10 @@ function formatDate(isoString: string) {
 		justify-content: center;
 		padding: 4px;
 		transition: transform 0.2s;
+		transform: rotate(180deg);
 	}
 	.category-group-header.collapsed .cat-toggle-btn {
-		transform: rotate(180deg);
+		transform: rotate(0deg);
 	}
 
 	.placeholder-vertical-bar {

@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "```typescript\ninterface UserProfile {\n  id: string;\n  name: string;\n  email: string;\n  avatarUrl?: string;\n  createdAt: string;\n}\n\ninterface ApiError {\n  message: string;\n  statusCode?: number;\n}\n\nasync function fetchUserProfile(\n  userId: string\n): Promise<UserProfile | ApiError> {\n  const controller = new AbortController();\n  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout\n\n  try {\n    const response = await fetch(`https://api.example.com/users/${userId}`, {\n      method: 'GET',\n      headers: {\n        'Content-Type': 'application/json',\n      },\n      signal: controller.signal,\n    });\n\n    clearTimeout(timeoutId);\n\n    if (!response.ok) {\n      if (response.status === 500) {\n        return {\n          message: `Internal server error while fetching user profile for userId: ${userId}`,\n          statusCode: 500,\n        };\n      }\n\n      return {\n        message: `Received unexpected status code: ${response.status}`,\n        statusCode: response.status,\n      };\n    }\n\n    const data: UserProfile = await response.json();\n    return data;\n  } catch (error) {\n    clearTimeout(timeoutId);\n\n    if (error instanceof DOMException && error.name === 'AbortError') {\n      return {\n        message: `Request timed out after 5 seconds for userId: ${userId}`,\n        statusCode: 504,\n      };\n    }\n\n    if (error instanceof TypeError) {\n      return {\n        message: `Network error: ${error.message}`,\n        statusCode: 0,\n      };\n    }\n\n    return {\n      message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,\n      statusCode: 0,\n    };\n  }\n}\n```\n\n## Explanation\n\nHere's a breakdown of the key design decisions:\n\n### Return Type\nThe function returns `Promise<UserProfile | ApiError>`, meaning it can resolve to either a valid user profile or an error object. This avoids the anti-pattern of throwing errors for expected failure cases like timeouts or 500s.\n\n### Timeout Handling\n- An `AbortController` is used to cancel the fetch request after 5 seconds\n- The `signal` option on the fetch config ties into this\n- When the timeout fires, it throws a `DOMException` with `name === 'AbortError'`, which is caught in the catch block\n\n### Error Handling\n| Error Type | Handling |\n|---|---|\n| **500 errors** | Explicitly checked via `response.status === 500` and returned as a structured error |\n| **Non-2xx responses** | Caught and returned with the status code |\n| **Timeout (AbortError)** | Caught and returned as a 504-like error |\n| **Network failures** | Caught as `TypeError` and returned with a network error message |\n| **Unexpected errors** | Caught as a generic error with the message extracted |\n\n### Type Annotations\n- **`userId: string`** \u2014 Explicit parameter type\n- **`Promise<UserProfile \\| ApiError>`** \u2014 Explicit return type using a union, making it clear at the call site what shapes the result can take",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 329.6,
+    "tokensPerSecond": 6.66,
+    "totalLatencyMs": 106443.77,
+    "inputTokens": 52,
+    "outputTokens": 707,
+    "timestamp": "2026-08-01T07:54:12.471Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\nEvaluation against rubric:\n1. Valid TypeScript syntax with explicit type annotations: \u2705 Met. The function signature explicitly annotates the parameter (`userId: string`) and return type (`Promise<UserProfile | ApiError>`). Supporting interfaces (`UserProfile`, `ApiError`) and internal variables are also properly typed.\n2. Try/catch block around the async operation: \u2705 Met. The `fetch` call, response validation, and JSON parsing are cleanly wrapped in a `try/catch` block.\n3. Gracefully handle or re-throw the error with meaningful typing: \u2705 Met. Network timeouts are handled via `AbortController` and caught as `AbortError`. 500 errors are explicitly intercepted via `response.status === 500`. Both failure paths return a structured `ApiError` object instead of throwing, which is a robust, graceful handling strategy. The union return type accurately documents this behavior for callers.\n\nConclusion: The code is syntactically valid, follows modern TypeScript/JavaScript best practices for async error handling, and cleanly satisfies all three rubric criteria without missing or sloppy types."
+  },
+  "runTimestamp": "2026-08-01T07:54:12.471Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "Qwen3.5-35B-A3B-GGUF",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "```typescript\n// Define the UserProfile type\ninterface UserProfile {\n  id: string;\n  name: string;\n  email: string;\n  avatarUrl?: string;\n  createdAt: string;\n}\n\n// Define custom error types for better error handling\nclass NetworkTimeoutError extends Error {\n  constructor(message: string) {\n    super(message);\n    this.name = 'NetworkTimeoutError';\n  }\n}\n\nclass ServerError extends Error {\n  constructor(message: string, public statusCode: number) {\n    super(message);\n    this.name = 'ServerError';\n  }\n}\n\n/**\n * Fetches a user profile from an external API\n * @param userId - The unique identifier of the user\n * @returns A promise that resolves to the user profile\n * @throws NetworkTimeoutError if the request times out\n * @throws ServerError if the server returns a 500 error\n */\nexport async function fetchUserProfile(\n  userId: string\n): Promise<UserProfile> {\n  const controller = new AbortController();\n  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout\n\n  try {\n    const response = await fetch(`/api/users/${userId}`, {\n      method: 'GET',\n      headers: {\n        'Content-Type': 'application/json',\n      },\n      signal: controller.signal,\n    });\n\n    clearTimeout(timeoutId);\n\n    if (!response.ok) {\n      if (response.status === 500) {\n        throw new ServerError('Internal server error', response.status);\n      }\n      throw new Error(`HTTP error! status: ${response.status}`);\n    }\n\n    const data = await response.json();\n\n    // Validate the response structure\n    if (!data.id || !data.name || !data.email) {\n      throw new Error('Invalid user profile data received');\n    }\n\n    return data as UserProfile;\n  } catch (error) {\n    if (error instanceof Error && error.name === 'AbortError') {\n      throw new NetworkTimeoutError('Request timed out');\n    }\n    throw error;\n  }\n}\n```\n\nThis function:\n\n- Accepts a `userId` string and returns a `Promise<UserProfile>`\n- Uses `AbortController` to enforce a 5-second timeout\n- Handles 500 errors with a custom `ServerError`\n- Throws a `NetworkTimeoutError` on timeout\n- Validates the response structure before returning\n- Includes explicit type annotations throughout for clarity and safety",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 232.56,
+    "tokensPerSecond": 57.45,
+    "totalLatencyMs": 12155.25,
+    "inputTokens": 55,
+    "outputTokens": 685,
+    "timestamp": "2026-07-29T23:02:46.909Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100\n\n**Criterion 1: Valid TypeScript syntax with explicit type annotations**\n\u2705 Met cleanly. The function signature explicitly annotates the parameter (`userId: string`) and return type (`Promise<UserProfile>`). The `UserProfile` interface, custom error classes, and internal variables all use proper TypeScript typing. Syntax is fully valid and compiles without errors in a standard TS environment.\n\n**Criterion 2: Implement a try/catch block around the async operation**\n\u2705 Met cleanly. The `await fetch(...)` call and subsequent response processing are wrapped in a `try/catch` block, exactly as requested.\n\n**Criterion 3: Gracefully handle or re-throw the error with meaningful typing**\n\u2705 Met cleanly. The implementation uses `AbortController` to enforce a timeout, catches the resulting `AbortError`, and throws a custom `NetworkTimeoutError`. It explicitly checks for `response.status === 500` and throws a typed `ServerError`. Other errors are safely re-thrown. The custom error classes include meaningful properties (`name`, `statusCode`) and extend `Error` correctly.\n\nAll rubric requirements are satisfied cleanly with production-ready patterns. No deductions applied."
+  },
+  "runTimestamp": "2026-07-29T23:02:46.909Z",
+  "executionMode": "sequential-loop"
+}

@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-cellular-respiration",
+  "evalName": "Cellular Respiration",
+  "category": "knowledge",
+  "tags": [
+    "science",
+    "biology",
+    "general-knowledge"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the process of cellular respiration in simple terms suitable for a high school student. What are the primary inputs and outputs of this process?\n",
+  "rawOutput": "\n**Cellular respiration \u2013 the cell\u2019s \u201cenergy factory\u201d**\n\nThink of a cell as a tiny power plant. To keep the lights on (i.e., to keep the cell alive and functioning), it needs to turn food into usable energy. The whole process is called **cellular respiration**.\n\n---\n\n### 1. What the cell needs (inputs)\n\n| Input | Why it\u2019s needed | Where it comes from |\n|-------|----------------|---------------------|\n| **Glucose** (a sugar) | The \u201cfuel\u201d that contains the chemical energy we can harvest. | Food (e.g., a banana, a slice of bread). |\n| **Oxygen (O\u2082)** | Acts like the \u201cfinal electron acceptor\u201d that helps pull energy out of glucose. | Air we breathe in through the lungs. |\n\n*Both glucose and oxygen are small, simple molecules that can be broken down quickly.*\n\n---\n\n### 2. What the cell produces (outputs)\n\n| Output | What it does | Where it goes |\n|--------|--------------|---------------|\n| **Carbon dioxide (CO\u2082)** | Waste product; must be removed from the cell. | Exhaled through the lungs. |\n| **Water (H\u2082O)** | By\u2011product of the reactions. | Released in urine and sweat. |\n| **ATP (adenosine triphosphate)** | The cell\u2019s energy \u201ccurrency.\u201d | Used immediately for cellular work (muscle contraction, building new molecules, etc.). |\n\n---\n\n### 3. The three main \u201cstages\u201d (how the energy is harvested)\n\n1. **Glycolysis** \u2013 *Location:* the cell\u2019s cytoplasm (outside the mitochondria)  \n   - Glucose is split into two smaller molecules (pyruvate).  \n   - This step **does not need oxygen** and makes a tiny amount of ATP and CO\u2082.\n\n2. **Krebs Cycle (Citric Acid Cycle)** \u2013 *Location:* the inner membrane of the mitochondria  \n   - The pyruvate enters the mitochondria, is broken down, and releases more CO\u2082.  \n   - It also produces a few ATP molecules and a lot of \u201chigh\u2011energy electrons\u201d that will be used next.\n\n3. **Oxidative Phosphorylation (Electron Transport Chain + Chemiosmosis)** \u2013 *Location:* inner mitochondrial membrane  \n   - The high\u2011energy electrons travel through a series of protein \u201cstations.\u201d  \n   - At each station, the energy released is used to pump protons (H\u207a) across the membrane, creating a pressure gradient.  \n   - The flow of protons back through a special enzyme (ATP synthase) powers the production of **most of the ATP** (about 28\u201134 molecules per glucose).\n\n---\n\n### 4. Putting it all together (the big picture)\n\n```\nGlucose + 6 O\u2082  \u2192  6 CO\u2082 + 6 H\u2082O + (large amount of) ATP\n```\n\n- **Inputs:** glucose + oxygen  \n- **Outputs:** carbon dioxide + water + usable energy (ATP)\n\n---\n\n### 5. Why it matters\n\n- **Energy:** ATP is the immediate energy the cell can spend on anything that requires work.  \n- **Efficiency:** Cellular respiration extracts **\u2248 30\u201332 ATP molecules** from each glucose molecule\u2014far more than any other single reaction.  \n- **Life support:** The CO\u2082 we exhale is the same gas that plants use for photosynthesis, linking the processes of life on Earth.\n\n---\n\n### Quick\u2011look summary (for a test or note)\n\n| **Primary inputs** | **Primary outputs** |\n|--------------------|---------------------|\n| Glucose (C\u2086H\u2081\u2082O\u2086)  | Carbon dioxide (CO\u2082) + Water (H\u2082O) |\n| Oxygen (O\u2082)        | ATP (energy)        |\n| (plus ADP + Pi)    | (used immediately for cellular work) |\n\n---\n\n**Bottom line:** Cellular respiration is the cell\u2019s way of \u201cburning\u201d glucose with oxygen to release energy stored in ATP, while discarding harmless waste gases (CO\u2082) and water. This process powers every activity\u2014from thinking and moving to growing and repairing tissues.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 88.73,
+    "tokensPerSecond": 153.85,
+    "totalLatencyMs": 6842,
+    "inputTokens": 36,
+    "outputTokens": 1039,
+    "timestamp": "2026-08-07T06:07:21.643Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model correctly identifies all required inputs (glucose/sugar and oxygen) and outputs (ATP/energy, carbon dioxide, and water). The explanation is structured clearly with tables, analogies, and a step-by-step breakdown that aligns perfectly with a high school reading level and educational tone. All rubric criteria are fully satisfied."
+  },
+  "runTimestamp": "2026-08-07T06:07:21.643Z",
+  "executionMode": "sequential-loop"
+}

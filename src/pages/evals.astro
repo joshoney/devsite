@@ -3,20 +3,20 @@ import Layout from '../layouts/Layout.astro';
 import MatrixGridView from '../components/MatrixGridView.astro';
 import ComparisonView from '../components/ComparisonView.astro';
 import RunDetailView from '../components/RunDetailView.astro';
-import { getAllRuns, getModelGroups } from '../utils/evaluerBench';
+import { getModelGroups } from '../utils/evaluerBench';
 
 const searchParams = Astro.url.searchParams;
-const runIdParam = searchParams.get('runId') || undefined;
-const runAParam = searchParams.get('runA') || undefined;
-const runBParam = searchParams.get('runB') || undefined;
+const modelParam = searchParams.get('model') || undefined;
+const modelAParam = searchParams.get('modelA') || undefined;
+const modelBParam = searchParams.get('modelB') || undefined;
 
-const allRuns = getAllRuns();
 const modelGroups = getModelGroups();
 ---
 
 <Layout 
 	title="evaluerBench // LCARS Benchmark System" 
 	isEvalsPage={true} 
+	activeModel={modelParam}
 >
 	<div class="evals-container">
 		<!-- HEADER TELEMETRY STRIP -->
@@ -26,8 +26,8 @@ const modelGroups = getModelGroups();
 				<span class="telemetry-val">evaluerBench v1.0</span>
 			</div>
 			<div class="telemetry-pill blue">
-				<span class="telemetry-label">TOTAL RUNS</span>
-				<span class="telemetry-val">{allRuns.length} EXECUTIONS</span>
+				<span class="telemetry-label">TOTAL EVALS</span>
+				<span class="telemetry-val">{modelGroups.reduce((acc, g) => acc + g.totalEvals, 0)} TESTS</span>
 			</div>
 			<div class="telemetry-pill purple">
 				<span class="telemetry-label">MODELS TESTED</span>
@@ -46,11 +46,11 @@ const modelGroups = getModelGroups();
 			</div>
 
 			<div id="view-compare" class="view-section hidden">
-				<ComparisonView runIdA={runAParam} runIdB={runBParam} />
+				<ComparisonView modelA={modelAParam} modelB={modelBParam} />
 			</div>
 
 			<div id="view-run" class="view-section hidden">
-				<RunDetailView runId={runIdParam} />
+				<RunDetailView model={modelParam} />
 			</div>
 		</div>
 	</div>
@@ -76,7 +76,7 @@ const modelGroups = getModelGroups();
 			<iframe id="artifactIframe" class="artifact-iframe" src="about:blank"></iframe>
 		</div>
 	</div>
-</Layout><script>
+</Layout><script is:inline>
 	document.addEventListener('astro:page-load', () => {
 		const activeViewTelemetry = document.getElementById('activeViewTelemetry');
 
@@ -87,7 +87,7 @@ const modelGroups = getModelGroups();
 		function updateActiveView() {
 			const params = new URLSearchParams(window.location.search);
 			const view = params.get('view') || 'matrix';
-			const runId = params.get('runId') || '';
+			const model = params.get('model') || '';
 
 			// 1. Hide all view sections
 			if (viewMatrix) viewMatrix.classList.add('hidden');
@@ -118,13 +118,13 @@ const modelGroups = getModelGroups();
 				}
 			});
 
-			// 4. Sync Run Submenu state
-			document.querySelectorAll('.run-sub-btn').forEach((btn) => {
-				const btnRunId = btn.getAttribute('data-run-id');
-				if (view === 'run' && btnRunId === runId) {
-					btn.classList.add('active-run');
+			// 4. Sync Model Submenu state
+			document.querySelectorAll('.model-accordion-list .lcars-btn').forEach((btn) => {
+				const btnModel = btn.getAttribute('data-model');
+				if (view === 'run' && btnModel === model) {
+					btn.classList.add('active');
 				} else {
-					btn.classList.remove('active-run');
+					btn.classList.remove('active');
 				}
 			});
 		}

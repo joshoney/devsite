@@ -1,0 +1,29 @@
+{
+  "evalId": "constraint-no-tech-words",
+  "evalName": "Explain ML without Tech Words",
+  "category": "constraints",
+  "tags": [
+    "instruction-following",
+    "vocabulary",
+    "negative-constraint"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Explain the basic concept of machine learning in two sentences. \n\nNEGATIVE CONSTRAINT: You must NOT use the words \"data\", \"model\", \"algorithm\", or \"computer\" anywhere in your response. \n",
+  "rawOutput": "\nMachine learning enables systems to improve their performance by recognizing patterns from past experiences. It does this by adjusting internal rules based on feedback, allowing it to handle new situations without explicit instructions.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 88.34,
+    "tokensPerSecond": 153.14,
+    "totalLatencyMs": 3294.51,
+    "inputTokens": 51,
+    "outputTokens": 491,
+    "timestamp": "2026-08-07T05:38:52.639Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Regex evaluation against pattern /^(?!.*\\b(data|model|algorithm|computer)\\b).*$/i."
+  },
+  "runTimestamp": "2026-08-07T05:38:52.639Z",
+  "executionMode": "sequential-loop"
+}

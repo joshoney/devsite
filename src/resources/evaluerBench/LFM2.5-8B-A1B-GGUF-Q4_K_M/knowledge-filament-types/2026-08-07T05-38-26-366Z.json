@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-filament-types",
+  "evalName": "3D Printing Filament Characteristics",
+  "category": "knowledge",
+  "tags": [
+    "3d-printing",
+    "materials",
+    "fabrication"
+  ],
+  "modelName": "LFM2.5-8B-A1B-GGUF-Q4_K_M",
+  "prompt": "Compare PLA, ABS, and PETG filaments used in FDM 3D printing. Specifically, contrast their temperature requirements and bed adhesion characteristics.\n",
+  "rawOutput": "\n\n**FDM Filament Comparison \u2013 PLA vs. ABS vs. PETG**  \n*(focus on temperature requirements and bed\u2011adhesion behavior)*  \n\n| Filament | Typical Nozzle (Printing) Temp. | Typical Bed Temp. | Bed\u2011Adhesion Characteristics* |\n|----------|--------------------------------|-------------------|--------------------------------|\n| **PLA**  | 190\u202f\u2013\u202f220\u202f\u00b0C                    | 50\u202f\u2013\u202f60\u202f\u00b0C (optional) | **Good on a heated glass bed** \u2013 PLA is amorphous with low shrinkage, so it sticks well when the bed is warm. It can warp if the bed is too cool or the part is not level, so a brim/raft or a thin layer of glue\u2011stick/hairspray is often used. |\n| **ABS**  | 230\u202f\u2013\u202f250\u202f\u00b0C                    | 95\u202f\u2013\u202f105\u202f\u00b0C       | **Poor self\u2011adhesion** \u2013 ABS is semi\u2011crystalline and has higher shrinkage; without a heated bed it tends to lift and warp. A heated bed (\u2248100\u202f\u00b0C) plus an enclosure dramatically improves adhesion and reduces warping. |\n| **PETG** | 220\u202f\u2013\u202f250\u202f\u00b0C                    | 70\u202f\u2013\u202f80\u202f\u00b0C        | **Moderate adhesion** \u2013 PETG has a higher glass\u2011transition temperature (\u224880\u202f\u00b0C) than PLA, giving it better dimensional stability, yet it is still less crystalline than ABS. It adheres well on a heated bed and usually needs only a thin brim or light surface treatment; warping is less severe than with ABS but more than with PLA. |\n\n\\*Adhesion notes are based on typical printer performance and material science:  \n\n- **PLA** \u2013 Low melt viscosity, low crystallinity \u2192 easy to lay down on a warm surface; however, its tendency to stick to glass can cause part detachment if the bed isn\u2019t heated or the part isn\u2019t level.  \n- **ABS** \u2013 Higher melt viscosity and significant crystallinity \u2192 strong inter\u2011layer bonding but also pronounced shrinkage; without a heated bed the part will lift and warp.  \n- **PETG** \u2013 Intermediate crystallinity and viscosity \u2192 good flow and adhesion on a moderately heated bed; it is less prone to warping than ABS but still benefits from a heated surface and a thin adhesion aid.\n\n### Key Take\u2011aways\n1. **Temperature range** \u2013 PLA needs the lowest nozzle temperature and the lowest bed temperature; ABS requires the highest nozzle and bed temperatures; PETG sits in between.  \n2. **Bed adhesion** \u2013 PLA adheres best on a heated glass bed (or with extra surface aids); ABS needs a heated bed plus an enclosure to prevent warping; PETG adheres moderately well on a heated bed and generally requires only a thin brim or light adhesion aid.  \n\nChoosing the right filament and bed\u2011preparation method depends on the printer\u2019s capabilities and the desired balance between print ease, dimensional stability, and surface finish.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 90.08,
+    "tokensPerSecond": 157.77,
+    "totalLatencyMs": 10700.23,
+    "inputTokens": 39,
+    "outputTokens": 1674,
+    "timestamp": "2026-08-07T05:38:26.366Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "Judge model failed to evaluate: 401 Incorrect API key provided: not-need********ocal. You can find your API key at https://platform.openai.com/account/api-keys.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/MODEL_AUTHENTICATION/\n"
+  },
+  "runTimestamp": "2026-08-07T05:38:26.366Z",
+  "executionMode": "sequential-loop"
+}

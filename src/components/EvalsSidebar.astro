@@ -3,10 +3,10 @@ import { getModelGroups } from '../utils/evaluerBench';
 
 interface Props {
 	activeView?: 'matrix' | 'compare' | 'run';
-	activeRunId?: string;
+	activeModel?: string;
 }
 
-const { activeView = 'matrix', activeRunId } = Astro.props;
+const { activeView = 'matrix', activeModel } = Astro.props;
 const modelGroups = getModelGroups();
 
 const socialLinks = [
@@ -67,44 +67,52 @@ function formatDate(isoString: string) {
 		</a>
 	</nav>
 
-	<!-- 4. Models & Sub-Runs Accordion -->
-	<div class="stack-label margin-top">MODELS & BENCHMARKS</div>
-	<div class="model-accordion-list">
-		{modelGroups.map((group, index) => {
-			const isCurrentModelActive = group.runs.some(r => r.runId === activeRunId);
-			return (
-				<details class="model-accordion" open={isCurrentModelActive}>
-					<summary class="model-summary-btn" style={`--btn-color: ${index % 2 === 0 ? 'var(--lcars-tan)' : 'var(--lcars-purple)'}`}>
-						<span class="summary-left">
-							<span class="btn-num">M{index + 1}</span>
-							<span class="model-title">{group.modelName}</span>
-						</span>
-						<span class="badge-pill">{group.runs.length} {group.runs.length === 1 ? 'RUN' : 'RUNS'}</span>
-					</summary>
+	<!-- 4. Models List -->
+	<details class="sidebar-accordion" open>
+		<summary class="stack-label margin-top">
+			MODELS
+			<svg class="sidebar-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M6 9l6 6 6-6" /></svg>
+		</summary>
+		<div class="model-accordion-list">
+			{modelGroups.map((group, index) => {
+				const isCurrentModelActive = group.modelName === activeModel;
+				return (
+					<a 
+						href={`/evals?view=run&model=${group.modelName}`}
+						data-view="run"
+						data-model={group.modelName}
+						class={`lcars-btn ${isCurrentModelActive ? 'active' : ''}`}
+						style={`--btn-color: ${index % 2 === 0 ? 'var(--lcars-tan)' : 'var(--lcars-purple)'}; margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 15px;`}
+					>
+						<span class="btn-num">M{index + 1}</span>
+						<span class="btn-text">{group.modelName}</span>
+					</a>
+				);
+			})}
+		</div>
+	</details>
 
-					<div class="runs-submenu">
-						{group.runs.map((run, rIdx) => {
-							const isActiveRun = run.runId === activeRunId;
-							return (
-								<a 
-									href={`/evals?view=run&runId=${run.runId}`}
-									data-view="run"
-									data-run-id={run.runId}
-									class={`run-sub-btn ${isActiveRun ? 'active-run' : ''}`}
-								>
-									<span class="run-icon">{isActiveRun ? '►' : '•'}</span>
-									<span class="run-date">{formatDate(run.meta?.timestamp)}</span>
-									<span class="run-meta-pill">
-										{run.summary?.averageTokensPerSecond} t/s
-									</span>
-								</a>
-							);
-						})}
-					</div>
-				</details>
-			);
-		})}
-	</div>
+	<!-- 5. Evaluations List -->
+	<details class="sidebar-accordion" open>
+		<summary class="stack-label margin-top">
+			EVALUATIONS
+			<svg class="sidebar-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M6 9l6 6 6-6" /></svg>
+		</summary>
+		<div class="model-accordion-list">
+			{Array.from(new Set(modelGroups.flatMap(m => Object.keys(m.evaluations)))).map((evalId, index) => {
+				return (
+					<a 
+						href={`/evals?view=matrix`}
+						class={`lcars-btn`}
+						style={`--btn-color: var(--lcars-blue); margin-bottom: 4px; display: flex; justify-content: space-between; padding-right: 15px;`}
+					>
+						<span class="btn-num">E{index + 1}</span>
+						<span class="btn-text">{evalId}</span>
+					</a>
+				);
+			})}
+		</div>
+	</details>
 
 	<!-- 5. Flexible Filler -->
 	<div class="sidebar-filler"></div>
@@ -255,6 +263,28 @@ function formatDate(isoString: string) {
 	}
 
 	/* Model Accordion Styling */
+	.sidebar-accordion summary {
+		list-style: none;
+		cursor: pointer;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-right: 18px;
+		transition: background-color 0.2s;
+	}
+	.sidebar-accordion summary::-webkit-details-marker {
+		display: none;
+	}
+	.sidebar-accordion summary:hover {
+		background-color: rgba(255,255,255,0.05);
+	}
+	.sidebar-chevron {
+		transition: transform 0.2s ease;
+	}
+	.sidebar-accordion:not([open]) .sidebar-chevron {
+		transform: rotate(180deg);
+	}
+
 	.model-accordion-list {
 		display: flex;
 		flex-direction: column;

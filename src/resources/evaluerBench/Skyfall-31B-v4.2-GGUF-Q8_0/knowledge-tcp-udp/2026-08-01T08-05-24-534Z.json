@@ -1,0 +1,29 @@
+{
+  "evalId": "knowledge-tcp-udp",
+  "evalName": "TCP vs UDP Networking",
+  "category": "knowledge",
+  "tags": [
+    "networking",
+    "technical",
+    "explanation"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Explain the fundamental differences between TCP and UDP protocols. In what scenario would a developer explicitly choose to use UDP over TCP?\n",
+  "rawOutput": "# TCP vs. UDP: Fundamental Differences\n\n## TCP (Transmission Control Protocol)\n- **Connection-oriented**: Establishes a formal handshake (three-way handshake) before data transfer begins\n- **Reliable**: Guarantees delivery of data in the correct order; uses acknowledgments and retransmissions\n- **Flow-controlled**: Adapts transmission rate based on network conditions to prevent overwhelming the receiver\n- **Error-checked**: Detects corrupted data and requests retransmission\n- **Higher overhead**: Requires additional header information (sequence numbers, acknowledgment numbers, flags, window size)\n- **Slower**: The reliability mechanisms introduce latency\n- **Congestion-aware**: Uses congestion control algorithms to prevent network flooding\n\n## UDP (User Datagram Protocol)\n- **Connectionless**: No handshake or formal connection establishment\n- **Unreliable**: Does not guarantee delivery; packets may be lost, duplicated, or arrive out of order\n- **No flow control**: Sends data at whatever rate the application specifies\n- **Minimal overhead**: Has a very small header (just source/destination ports, length, and checksum)\n- **Faster**: Lower latency due to the absence of reliability mechanisms\n- **No congestion control**: Can flood the network if not managed at the application layer\n\n## When a Developer Would Choose UDP\n\nA developer would explicitly choose UDP over TCP in scenarios where **speed and efficiency are more critical than guaranteed delivery**:\n\n### Common Scenarios\n\n1. **Real-time streaming (video/audio)**\n   - A dropped frame in a video stream is less noticeable than a half-second delay caused by TCP retransmission\n   - Example: Live video broadcasting, VoIP (Voice over IP), IPTV\n\n2. **Online gaming**\n   - A player's position update arriving 50ms late is worse than one that occasionally doesn't arrive at all\n   - Example: Multiplayer game state updates, player movement synchronization\n\n3. **DNS queries**\n   - DNS lookups are small, infrequent, and the overhead of a TCP connection is disproportionate\n   - (Though TCP is used for larger DNS responses)\n\n4. **Network monitoring and management**\n   - Ping (ICMP, often treated similarly to UDP) and traceroute use UDP-like principles\n   - Example: SNMP (Simple Network Management Protocol)\n\n5. **Broadcast and multicast communication**\n   - Sending data to thousands of recipients simultaneously doesn't work well with TCP's one-to-one connection model\n   - Example: IP multicast for stock ticker updates, weather data distribution\n\n6. **Financial trading (market data feeds)**\n   - Price updates need to arrive as fast as possible; the occasional missed tick is acceptable\n   - Example: FIX protocol over UDP for real-time market data\n\n### The Key Decision Framework\n\n| Priority | TCP | UDP |\n|---|---|---|\n| **Reliability** | \u2705 Critical | \u2705 Acceptable to lose some data |\n| **Latency** | Higher (retransmissions) | Lower (no handshake, no retransmission) |  \n| **Ordering** | Guaranteed | Best-effort |\n| **Overhead** | Higher | Minimal |\n| **Connection setup** | Required | None |\n| **Scalability** | Point-to-point | Supports broadcast/multicast |\n\nThe general rule is: **use UDP when the application can tolerate occasional data loss and needs maximum speed and efficiency, and use TCP when data integrity and completeness are non-negotiable.**",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 350.75,
+    "tokensPerSecond": 6.67,
+    "totalLatencyMs": 109780.25,
+    "inputTokens": 28,
+    "outputTokens": 730,
+    "timestamp": "2026-08-01T08:05:24.534Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "Score: 100/100\n\nThe model output perfectly satisfies all criteria in the grading rubric:\n1. **TCP Identification**: Correctly and comprehensively identifies TCP as connection-oriented, reliable, flow-controlled, and congestion-aware.\n2. **UDP Identification**: Correctly identifies UDP as connectionless, unreliable, fast (low latency), and minimal overhead.\n3. **UDP Use Case**: Provides multiple valid, industry-standard scenarios where UDP is explicitly preferred over TCP (real-time streaming, online gaming, DNS, broadcast/multicast, financial trading), each with clear technical justification.\n4. **Accuracy**: All networking concepts, mechanisms (three-way handshake, acknowledgments, retransmissions, headers), and trade-offs are factually correct. The response is well-structured, directly answers both parts of the prompt, and contains zero factual errors."
+  },
+  "runTimestamp": "2026-08-01T08:05:24.534Z",
+  "executionMode": "sequential-loop"
+}

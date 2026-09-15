@@ -1,0 +1,29 @@
+{
+  "evalId": "visual-cyberpunk-dashboard",
+  "evalName": "Cyberpunk System Monitor Dashboard",
+  "category": "coding-complex",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "visual-demo",
+    "cyberpunk",
+    "animations"
+  ],
+  "runTimestamp": "2026-08-19T18:30:54.619Z",
+  "executionMode": "sequential-loop",
+  "modelName": "Qwen3.8-27B-GGUF-Q4_K_M",
+  "prompt": "You are an expert frontend developer and UI designer. Create a single-page, standalone HTML document containing a complex, animated \"System Monitor\" dashboard with a heavy Cyberpunk / Sci-Fi aesthetic.\n\nSTRICT TECHNICAL REQUIREMENTS:\n1. ALL HTML, CSS, and JavaScript must be contained within a single file. Do not import external libraries (no React, no Tailwind, no external CSS). You may use Google Fonts (e.g., 'Share Tech Mono' or 'Orbitron').\n2. Do NOT output markdown code blocks (```html). Start exactly with <!DOCTYPE html> and end with </html>.\n\nLAYOUT SPECIFICATIONS:\n1. The layout must feature a permanent, fixed sidebar on the left side (approx 250px wide) containing a futuristic user profile and at least four functional-looking navigation buttons.\n2. The main content area must utilize a responsive CSS Grid structure to display at least three distinct data panels.\n\nAESTHETIC & GEOMETRIC SPECIFICATIONS:\n1. The color palette must be dark mode: deep black backgrounds (#050505), with neon cyan, hot magenta, and toxic green accents.\n2. To achieve a seamless Sci-Fi look, the primary data panels must feature an inward-curving top corner (a custom border-radius or clip-path cut-out), giving it a highly structured, non-boxy appearance.\n3. Include a subtle, semi-transparent CSS \"scanline\" overlay across the entire viewport to simulate a CRT monitor.\n\nANIMATION & INTERACTIVITY SPECIFICATIONS (JavaScript required):\n1. Glitch Effect: The main dashboard header text must feature a CSS keyframe animation that occasionally \"glitches\" (splitting colors or offsetting text for a split second).\n2. Live Telemetry: One of the grid panels must contain a \"CPU/RAM Load\" bar chart or circular progress indicator. Use JavaScript to randomly update these values and animate the bars/circles every 800 milliseconds.\n3. Terminal Output: Another panel must act as a terminal window. Use JavaScript to automatically append simulated, matrix-style data logs (e.g., \"0x00FF... BYPASSING SECURITY...\") that scroll continuously.\n\nEnsure the final output is visually stunning, responsive, and immediately interactive upon loading.\n",
+  "rawOutput": "",
+  "display_type": "html-iframe",
+  "traceId": "01a01b16-7a1c-7115-9ee0-314cebba6c40",
+  "traceUrl": "https://smith.langchain.com/public/a0a1bd76-00bc-41a9-9234-39c537fb7fc8/r",
+  "metrics": {
+    "timeToFirstTokenMs": 1812.73,
+    "tokensPerSecond": 11.53,
+    "totalLatencyMs": 3396886.47,
+    "inputTokens": 528,
+    "outputTokens": 39152,
+    "timestamp": "2026-08-19T18:30:49.905Z"
+  }
+}

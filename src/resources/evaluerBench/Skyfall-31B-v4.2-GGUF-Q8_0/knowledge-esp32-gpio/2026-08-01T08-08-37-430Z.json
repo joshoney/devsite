@@ -1,0 +1,30 @@
+{
+  "evalId": "knowledge-esp32-gpio",
+  "evalName": "ESP32 GPIO Operations",
+  "category": "knowledge",
+  "tags": [
+    "hardware",
+    "esp32",
+    "microcontrollers",
+    "iot"
+  ],
+  "modelName": "Skyfall-31B-v4.2-GGUF-Q8_0",
+  "prompt": "Explain the primary function of GPIO pins on an ESP32 microcontroller. Then, provide a short, conceptual explanation of how you would configure one of these pins to read the state of a physical push-button.\n",
+  "rawOutput": "# GPIO Pins on the ESP32\n\n## Primary Function\n\nGPIO (General Purpose Input/Output) pins on the ESP32 serve as the primary interface between the microcontroller's digital logic and the physical world. They are **multi-purpose digital pins** that can be individually configured to either:\n\n- **Output** digital signals (HIGH = 3.3V, LOW = 0V) to drive external components like LEDs, relays, or other logic circuits.\n- **Input** digital signals from external sensors, switches, or other devices, allowing the ESP32 to react to real-world events.\n\nBeyond basic I/O, many ESP32 GPIO pins can also be repurposed for specialized functions such as UART communication, I\u00b2C, SPI, PWM (pulse-width modulation), ADC (analog-to-digital conversion), and interrupt handling. This flexibility makes the ESP32 highly versatile for embedded projects.\n\n---\n\n## Reading a Push-Button: Conceptual Explanation\n\nA push-button is a simple mechanical switch that either **connects** (closes) or **disconnects** (opens) a circuit. To read its state:\n\n1. **Connect one side of the button to a GPIO pin** (e.g., GPIO 5) and the other side to **3.3V** (the supply voltage).\n\n2. **Add a pull-down resistor** (either a physical resistor or the ESP32's internal pull-down resistor). This ensures the pin reads `LOW` (0) when the button is *not* pressed, because the resistor pulls the voltage toward ground.\n\n3. **Configure the GPIO pin as an input** in software using the ESP32's SDK or Arduino framework:\n   ```cpp\n   pinMode(5, INPUT);  // Set GPIO 5 as an input\n   ```\n\n4. **Read the pin's state** by calling `digitalRead(5)`. When the button is pressed, it connects the pin directly to 3.3V, overriding the pull-down resistor, and the pin reads `HIGH` (1). When released, the pull-down resistor pulls the pin back to `LOW`.\n\n5. **React to the state change** \u2014 for example, toggle an LED, send a network request, or trigger an interrupt service routine.\n\n> **Key concept:** The pull-down (or pull-up) resistor is essential because without it, the floating input pin would read random, unstable values when the button is not pressed. The resistor provides a **defined default state**, so the microcontroller always reads a clean `LOW` or `HIGH`.",
+  "display_type": "text",
+  "metrics": {
+    "timeToFirstTokenMs": 386.48,
+    "tokensPerSecond": 6.68,
+    "totalLatencyMs": 80650.86,
+    "inputTokens": 46,
+    "outputTokens": 536,
+    "timestamp": "2026-08-01T08:08:37.430Z"
+  },
+  "judge": {
+    "score": 100,
+    "passed": true,
+    "reasoning": "The model output fully satisfies all requirements in the prompt and scoring rubric. It correctly defines GPIO (General Purpose Input/Output) and accurately describes its primary function as a configurable digital interface for interacting with external hardware, while also noting the ESP32's multi-function pin capabilities. For the push-button configuration, it provides a clear, conceptually sound explanation that explicitly covers: (1) hardware setup with a pull-down resistor, (2) software configuration using `pinMode(INPUT)`, (3) the conceptual necessity of the pull resistor to prevent floating/unstable states, and (4) how the microcontroller interprets the resulting HIGH/LOW logic levels. The explanation is technically accurate for the ESP32's 3.3V logic domain and standard Arduino/ESP-IDF frameworks. No hallucinations or inaccuracies are present."
+  },
+  "runTimestamp": "2026-08-01T08:08:37.430Z",
+  "executionMode": "sequential-loop"
+}

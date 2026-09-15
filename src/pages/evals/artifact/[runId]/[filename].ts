@@ -9,7 +9,7 @@ export function getStaticPaths() {
 	return Object.entries(artifactFiles).map(([path, content]) => {
 		const parts = path.split('/');
 		const filename = parts.pop() || '';
-		const runId = parts.pop() || '';
+		const runId = parts.pop() || ''; // This is actually the model name now!
 
 		const htmlContent = typeof content === 'string' ? content : (content as any)?.default || '';
 

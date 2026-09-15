@@ -1,8 +1,8 @@
 ---
-import { getAllRuns } from '../utils/evaluerBench';
+import { getModelGroups } from '../utils/evaluerBench';
 
-const allRuns = getAllRuns();
-const safeRunsJson = JSON.stringify(allRuns).replace(/</g, '\\u003c');
+const allModels = getModelGroups();
+const safeModelsJson = JSON.stringify(allModels).replace(/</g, '\\u003c');
 
 function formatDate(isoString: string) {
 	try {
@@ -17,9 +17,9 @@ function formatDate(isoString: string) {
 	}
 }
 
-// Default run IDs
-const defaultRunA = allRuns[0]?.runId || '';
-const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.modelName)?.runId || allRuns[1]?.runId || defaultRunA;
+// Default models
+const defaultModelA = allModels[0]?.modelName || '';
+const defaultModelB = allModels.find(m => m.modelName !== defaultModelA)?.modelName || allModels[1]?.modelName || defaultModelA;
 ---
 
 <div class="compare-container">
@@ -32,11 +32,11 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 
 		<form id="compareForm" class="selectors-form" onsubmit="return false;">
 			<div class="select-group group-a">
-				<label for="selectRunA">RUN A (PRIMARY):</label>
+				<label for="selectRunA">MODEL A (PRIMARY):</label>
 				<select id="selectRunA" class="lcars-select amber">
-					{allRuns.map((r) => (
-						<option value={r.runId} selected={r.runId === defaultRunA}>
-							{r.meta?.modelName} — {formatDate(r.meta?.timestamp)} ({r.summary?.averageTokensPerSecond} t/s)
+					{allModels.map((m) => (
+						<option value={m.modelName} selected={m.modelName === defaultModelA}>
+							{m.modelName} ({m.avgTokensPerSecond} t/s)
 						</option>
 					))}
 				</select>
@@ -45,11 +45,11 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 			<div class="vs-divider">VS</div>
 
 			<div class="select-group group-b">
-				<label for="selectRunB">RUN B (BASELINE):</label>
+				<label for="selectRunB">MODEL B (BASELINE):</label>
 				<select id="selectRunB" class="lcars-select blue">
-					{allRuns.map((r) => (
-						<option value={r.runId} selected={r.runId === defaultRunB}>
-							{r.meta?.modelName} — {formatDate(r.meta?.timestamp)} ({r.summary?.averageTokensPerSecond} t/s)
+					{allModels.map((m) => (
+						<option value={m.modelName} selected={m.modelName === defaultModelB}>
+							{m.modelName} ({m.avgTokensPerSecond} t/s)
 						</option>
 					))}
 				</select>
@@ -106,11 +106,11 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 		</div>
 	</div>
 </div>
-<script id="compareRunData" type="application/json" set:html={safeRunsJson}></script>
-<script>
+<script id="compareModelData" type="application/json" set:html={safeModelsJson}></script>
+<script is:inline>
 	(function() {
-		const dataEl = document.getElementById('compareRunData');
-		const runsData = dataEl ? JSON.parse(dataEl.textContent) : [];
+		const dataEl = document.getElementById('compareModelData');
+		const modelsData = dataEl ? JSON.parse(dataEl.textContent) : [];
 
 		function initComparisonView() {
 			const selectRunA = document.getElementById('selectRunA');
@@ -136,8 +136,8 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 
 			// Read URL params if present
 			const params = new URLSearchParams(window.location.search);
-			const urlRunA = params.get('runA');
-			const urlRunB = params.get('runB');
+			const urlRunA = params.get('modelA');
+			const urlRunB = params.get('modelB');
 
 			if (urlRunA && selectRunA.querySelector(`option[value="${urlRunA}"]`)) {
 				selectRunA.value = urlRunA;
@@ -156,22 +156,22 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 				const idA = selectRunA.value;
 				const idB = selectRunB.value;
 
-				const runA = runsData.find((r) => r.runId === idA);
-				const runB = runsData.find((r) => r.runId === idB);
+				const modelA = modelsData.find((m) => m.modelName === idA);
+				const modelB = modelsData.find((m) => m.modelName === idB);
 
-				if (!runA || !runB) return;
+				if (!modelA || !modelB) return;
 
 				// 1. Update Telemetry Cards
-				const tpsA = runA.summary?.averageTokensPerSecond || 0;
-				const tpsB = runB.summary?.averageTokensPerSecond || 0;
+				const tpsA = modelA.avgTokensPerSecond || 0;
+				const tpsB = modelB.avgTokensPerSecond || 0;
 				const tpsDelta = Math.round((tpsA - tpsB) * 100) / 100;
 
-				const ttftA = runA.summary?.averageTimeToFirstTokenMs || 0;
-				const ttftB = runB.summary?.averageTimeToFirstTokenMs || 0;
+				const ttftA = modelA.avgTimeToFirstTokenMs || 0;
+				const ttftB = modelB.avgTimeToFirstTokenMs || 0;
 				const ttftDelta = Math.round((ttftA - ttftB) * 100) / 100;
 
-				const passA = runA.summary?.passRatePercentage || 0;
-				const passB = runB.summary?.passRatePercentage || 0;
+				const passA = modelA.passRatePercentage || 0;
+				const passB = modelB.passRatePercentage || 0;
 				const passDelta = Math.round((passA - passB) * 100) / 100;
 
 				if (cmpTpsA) cmpTpsA.textContent = `${tpsA} t/s`;
@@ -197,8 +197,8 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 
 				// 2. Gather All Unique Evals
 				const evalMap = new Map();
-				(runA.results || []).forEach((r) => evalMap.set(r.evalId, { name: r.evalName, cat: r.category }));
-				(runB.results || []).forEach((r) => evalMap.set(r.evalId, { name: r.evalName, cat: r.category }));
+				Object.values(modelA.evaluations || {}).forEach((e) => evalMap.set(e.evalId, { name: e.evalName, cat: e.category }));
+				Object.values(modelB.evaluations || {}).forEach((e) => evalMap.set(e.evalId, { name: e.evalName, cat: e.category }));
 
 				const evalList = Array.from(evalMap.entries());
 				if (cmpPairsCount) cmpPairsCount.textContent = `${evalList.length} EVALS ALIGNED`;
@@ -208,8 +208,8 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 				pairsListContainer.innerHTML = '';
 
 				evalList.forEach(([evalId, meta], index) => {
-					const resA = (runA.results || []).find((r) => r.evalId === evalId);
-					const resB = (runB.results || []).find((r) => r.evalId === evalId);
+					const resA = modelA.evaluations[evalId]?.latestAttempt;
+					const resB = modelB.evaluations[evalId]?.latestAttempt;
 
 					const scoreA = resA?.judge?.score;
 					const scoreB = resB?.judge?.score;
@@ -233,14 +233,14 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 							</div>
 
 							<div class="pair-run-stat stat-a">
-								<span class="stat-label">RUN A</span>
+								<span class="stat-label">MODEL A</span>
 								${resA ? `<span class="score-pill ${resA.judge?.passed ? 'pass' : 'fail'}">${scoreA}% (${tpsResA !== undefined ? tpsResA : '--'} t/s)</span>` : '<span class="untested-text">N/A</span>'}
 							</div>
 
 							<div class="pair-vs">VS</div>
 
 							<div class="pair-run-stat stat-b">
-								<span class="stat-label">RUN B</span>
+								<span class="stat-label">MODEL B</span>
 								${resB ? `<span class="score-pill ${resB.judge?.passed ? 'pass' : 'fail'}">${scoreB}% (${tpsResB !== undefined ? tpsResB : '--'} t/s)</span>` : '<span class="untested-text">N/A</span>'}
 							</div>
 
@@ -254,8 +254,8 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 								<!-- SIDE A -->
 								<div class="run-side side-a">
 									<div class="side-header">
-										<span class="side-tag amber">RUN A</span>
-										<span class="model-name">${runA.meta?.modelName || 'Run A'}</span>
+										<span class="side-tag amber">MODEL A</span>
+										<span class="model-name">${modelA.modelName || 'Model A'}</span>
 									</div>
 									${resA ? `
 										<div class="side-content">
@@ -274,19 +274,19 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 											</div>
 											${(resA.display_type === 'html-iframe' || evalId.startsWith('visual-')) && resA.artifactUrl ? `
 												<div class="lcars-split-btn">
-													<button class="launch-artifact-btn main-split" data-url="${resA.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(runA.meta?.modelName)}">⚡ LAUNCH VISUAL APP A</button>
+													<button class="launch-artifact-btn main-split" data-url="${resA.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(modelA.modelName)}">⚡ LAUNCH VISUAL APP A</button>
 													<a href="${resA.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">↗ TAB</a>
 												</div>
 											` : ''}
 										</div>
-									` : '<div class="not-executed">Not executed in Run A.</div>'}
+									` : '<div class="not-executed">Not executed by Model A.</div>'}
 								</div>
 
 								<!-- SIDE B -->
 								<div class="run-side side-b">
 									<div class="side-header">
-										<span class="side-tag blue">RUN B</span>
-										<span class="model-name">${runB.meta?.modelName || 'Run B'}</span>
+										<span class="side-tag blue">MODEL B</span>
+										<span class="model-name">${modelB.modelName || 'Model B'}</span>
 									</div>
 									${resB ? `
 										<div class="side-content">
@@ -305,12 +305,12 @@ const defaultRunB = allRuns.find(r => r.meta?.modelName !== allRuns[0]?.meta?.mo
 											</div>
 											${(resB.display_type === 'html-iframe' || evalId.startsWith('visual-')) && resB.artifactUrl ? `
 												<div class="lcars-split-btn">
-													<button class="launch-artifact-btn main-split" data-url="${resB.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(runB.meta?.modelName)}">⚡ LAUNCH VISUAL APP B</button>
+													<button class="launch-artifact-btn main-split" data-url="${resB.artifactUrl}" data-title="${escapeHtml(meta.name || evalId)}" data-model="${escapeHtml(modelB.modelName)}">⚡ LAUNCH VISUAL APP B</button>
 													<a href="${resB.artifactUrl}" target="_blank" class="launch-artifact-btn tab-split" title="Open in new tab">↗ TAB</a>
 												</div>
 											` : ''}
 										</div>
-									` : '<div class="not-executed">Not executed in Run B.</div>'}
+									` : '<div class="not-executed">Not executed by Model B.</div>'}
 								</div>
 							</div>
 						</div>

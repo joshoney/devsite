@@ -1,0 +1,29 @@
+{
+  "evalId": "coding-ts-async-error",
+  "evalName": "TypeScript Async Error Handling",
+  "category": "coding",
+  "tags": [
+    "typescript",
+    "async",
+    "error-handling"
+  ],
+  "modelName": "gpt-oss-20b-mxfp4-GGUF",
+  "prompt": "Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\n",
+  "rawOutput": "We need to produce a concise answer. The user asked: \"Write a TypeScript function named `fetchUserProfile` that takes a userId string, calls an external API, and safely handles network timeouts or 500 errors using try/catch. Include explicit type annotations for the return type.\"\n\nWe should provide a function with proper type annotations, maybe using fetch with AbortController for timeout. Provide error handling. Return type maybe Promise<UserProfile | null>. Provide interface for UserProfile. Provide example usage. Provide explanation.\n\nWe should not produce too long. Provide code snippet. Provide explanation. Let's produce final answer.Below is a minimal, type\u2011safe implementation that:\n\n1. Accepts a `userId` string.  \n2. Calls an external REST endpoint (`https://api.example.com/users/{id}`).  \n3. Uses an `AbortController` to enforce a timeout (e.g. 5\u202fs).  \n4. Catches network\u2011level errors (timeouts, DNS failures, etc.) **and** HTTP\u2011level 5xx responses.  \n5. Returns a `Promise<UserProfile | null>` \u2013 `null` signals \u201ccould not fetch\u201d.\n\n```ts\n// 1\ufe0f\u20e3  Define the shape of the data we expect back from the API\nexport interface UserProfile {\n  id: string;\n  name: string;\n  email: string;\n  // \u2026add any other fields you need\n}\n\n// 2\ufe0f\u20e3  The function itself\n/**\n * Fetches a user profile by ID.\n *\n * @param userId - The ID of the user to fetch.\n * @returns A Promise that resolves to a UserProfile or null if the request fails.\n */\nexport async function fetchUserProfile(\n  userId: string,\n  timeoutMs: number",
+  "display_type": "code",
+  "metrics": {
+    "timeToFirstTokenMs": 173.89,
+    "tokensPerSecond": 72.74,
+    "totalLatencyMs": 54914.53,
+    "inputTokens": 114,
+    "outputTokens": 3982,
+    "timestamp": "2026-07-31T07:54:45.191Z"
+  },
+  "judge": {
+    "score": 0,
+    "passed": false,
+    "reasoning": "The model output is severely truncated and fails to meet any of the rubric's requirements. The code cuts off mid-signature (`timeoutMs: number`), leaving the function body, API call, `try/catch` block, and return statement entirely absent. This results in syntactically invalid TypeScript and completely omits the required error handling logic. Per the rubric, a score of 0 is assigned when syntax is invalid or error handling is omitted."
+  },
+  "runTimestamp": "2026-07-31T07:54:45.191Z",
+  "executionMode": "sequential-loop"
+}
