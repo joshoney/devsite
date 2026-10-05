@@ -137,9 +137,15 @@ export function getModelGroups(): ModelGroup[] {
 		
 		// Map artifact URL
 		if (item.display_type === 'html-iframe') {
-			const artifactFilename = `artifact-${evalId}.html`;
-			item.artifactFilename = artifactFilename;
-			item.artifactUrl = `/evals/artifact/${modelName}/${artifactFilename}`;
+			if (item.artifactFilename) {
+				// Current evaluerBench layout: each run records its own artifact next to its JSON
+				item.artifactUrl = `/evals/artifact/${modelName}/${evalId}/${item.artifactFilename}`;
+			} else {
+				// Older runs: one shared artifact per model and eval at the model level
+				const artifactFilename = `artifact-${evalId}.html`;
+				item.artifactFilename = artifactFilename;
+				item.artifactUrl = `/evals/artifact/${modelName}/${artifactFilename}`;
+			}
 		}
 		
 		if (!item.judge) {
